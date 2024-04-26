@@ -1,0 +1,132 @@
+---
+title: "A multicentre observational study of the epidemiology and initial management pathway of thyroid nodules"
+author:
+  - name: Ovie Edafe
+    orcid: 0000-0002-6205-806X
+    corresponding: true
+    email: ovieedafe@hotmail.co.uk
+    roles:
+      - Researcher
+    affiliations:
+      - Department of Oncology & Metabolism, University of Sheffield
+  - name: Neil Shephard
+    orcid: 000-0001-8301-6857
+    corresponding: false
+    email:
+    roles:
+      - Researcher
+    affiliations:
+      - Research Software Engineer, Department of Computer Science, University of Sheffield
+  - name: Sabapathy P Balasubramanian
+    orcid: 0000-0001-5953-2843
+    corresponding: false
+    roles: Researcher
+    affiliations:
+      - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
+abstract: |
+  ### Introduction {.unnumbered}
+
+  This is the introduction.
+
+  ### Methods {.unnumbered}
+
+  This is the methods.
+
+  ### Results {.unnumbered}
+
+  This is the results.
+
+  ### Conclusion {.unnumbered}
+
+  This is the conclusion
+keywords:
+  - Thyroid nodules
+  - Thyroid cancer
+plain-language-summary: |
+    Plain language summary
+key-points:
+  - Key point 1
+  - Key point 2
+date: 2024-04-26
+bibliography: references.bib
+citation:
+  container-title: "Sheffield study on thyroid nodules"
+number-sections: true
+---
+
+```{r}
+#| label: setup
+#| eval: true
+#| echo: false
+#| warning: false
+
+# Load libraries
+library(ggplot2)
+library(knitr)
+library(rmarkdown)
+library(tidyverse)
+library(gtsummary)
+library(tableone)
+
+# Set global options
+options(digits = 3)
+
+## Set directories based on current location
+base_dir <- getwd()
+data_dir <- paste(base_dir, "data", sep = "/")
+csv_dir <- paste(data_dir, "csv", sep = "/")
+r_dir <- paste(data_dir, "r", sep = "/")
+r_scripts <- paste(base_dir, "r", sep = "/")
+
+
+# Load data
+#source("r/shf_thy_nod.R")
+#df <- readRDS(paste0(r_dir, "clean.rds", sep="/"))
+```
+
+## Introduction
+
+Some paragraphs on the background of the work can go here.
+
+
+## Methods
+
+Data was cleaned and analysed using the R Statistical Software @r_citation and the Tidyverse (@tidyverse),  Tidymodels
+(@tidymodels) collection of packages.
+
+### Modelling
+
+Description of the different models and how they are assessed can go here.
+
+
+## Results
+
+### Data Description
+
+Details of data completeness and other descriptive aspects go here.
+
+### Modelling
+
+Results of the various modelling go here. Each section will show the results along with...
+
++ LIME/Shaply analysis for explanability of models
+
+
+#### LASSO / Elastic Net
+
+#### Random Forest
+
+#### Gradient Boosting
+
+#### SVM
+
+#### Comparision
+
+Comparing the sensitivity of the different models goes here.
+
++ Table of sensitivit/specificit/other metrics.
++ ROC curves
+
+## Conclusion
+
+The take-away message is....these things are hard!

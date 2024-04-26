@@ -47,3 +47,16 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+/.quarto/
+/_freeze/
+/_manuscript/
+
+# Data files
+data/
+*.csv
+*.Rds
+
+# Emacs files
+\#*
+*~
