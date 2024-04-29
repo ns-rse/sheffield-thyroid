@@ -2,238 +2,297 @@
 ## of interest on my computer, then import file into R studio, open a new script
 ## there will be a code that is provided on the console, copy this to the script
 ## to read file in R studio, save file into r folder and then ready to go
+
 library(readr)
-shf_data <- read_csv("data/csv/sheffield_thyroid_nodule.csv")
-## changing names of variables
+## ns-rse (2024-04-29) - The following line has been tweaked to work with the environment variable csv_dir which is set
+## in ../index.qmd  as this is the file that runs all of the analysis and produces the report. Further the raw data is
+## read to `raw_data`. A copy is made further down to `df` and this is cleaned. As the data only pertains to one
+## location there is no benefit to having it as `shd`
+raw_data <- readr::read_csv(paste(csv_dir, "sheffield_thyroid_nodule.csv", sep = "/"))
+
+## Set labels for each variable
+## ns-rse (2024-04-29) : Try and keep each expression in long lists like this on a separate line, where possible having
+## them sorted alphabetically really helps make your life easier when you want to find and change something.
 var_labels <- c(
-  study_id = "Study ID", age_at_scan = "Age", ethnicity = "Ethnicity", gender = "Gender",
+  age_at_scan = "Age",
+  albumin = "Albumin",
+  bta_u_classification = "BTA U",
+  cervical_lymphadenopathy = "Cervical Lymphadenopathy",
+  compressive_symtoms = "Compressive symptoms",
+  consistency_nodule = "Nodule consistency",
+  eligibility = "Eligibility",
   ethinicity = "Ethinicity",
-  eligibility = "Eligibility", incidental_nodule = "Incidental nodule",
-  palpable_nodule = "Palpable nodule", rapid_enlargment = "Rapid enlargement",
-  compressive_symtoms = "Compressive symptoms", hypertension = "Hypertension",
-  vocal_cord_paresis = "Vocal cord paresis",
+  ethnicity = "Ethnicity",
+  exposure_radiation = "Exposure to radiation",
+  family_history_thyroid_cancer = "Family history of thyroid cancer",
+  final_pathology = "Final diagnosis",
+  fna_done = "FNA done",
+  gender = "Gender",
   graves_disease = "Graves' disease",
   hashimotos_thyroiditis = "Hashimoto's disease",
-  family_history_thyroid_cancer = "Family history of thyroid cancer",
-  exposure_radiation = "Exposure to radiation",
-  albumin = "Albumin", tsh_value = "TSH value", lymphocytes = "Lymphocytes",
-  monocyte = "Monocytes", bta_u_classification = "BTA U", size_nodule_mm = "Nodule size",
-  consistency_nodule = "Nodule consistency", cervical_lymphadenopathy = "Cervical Lymphadenopathy",
-  repeat_ultrasound = "Repeat ultrasound", repeat_bta_u_classification = "Repeat BTA U",
-  fna_done = "FNA done", thy_classification = "Thy classification", repeat_fna_done = "Repeat FNA",
-  repeat_thy_classification = "Repeat Thy class", thyroid_surgery = "Thyroid surgery",
+  hypertension = "Hypertension",
+  incidental_nodule = "Incidental nodule",
+  lymphocytes = "Lymphocytes",
+  monocyte = "Monocytes",
+  palpable_nodule = "Palpable nodule",
+  rapid_enlargment = "Rapid enlargement",
+  repeat_bta_u_classification = "Repeat BTA U",
+  repeat_fna_done = "Repeat FNA",
+  repeat_thy_classification = "Repeat Thy class",
+  repeat_ultrasound = "Repeat ultrasound",
+  size_nodule_mm = "Nodule size (mm)",
+  solitary_nodule = "Solitary nodule",
+  study_id = "Study ID",
+  thy_classification = "Thy classification",
   thyroid_histology_diagnosis = "Histology",
-  final_pathology = "Final diagnosis", solitary_nodule = "Solitary nodule"
-)
-## my data set to a data frame so I can compare it to original file (shf_raw)
-shf <- tibble(shf_data)
-Hmisc::label(shf) <- as.list(var_labels[match(names(shf), names(var_labels))])
-## inspect data type for each variable
-lapply(shf, typeof)
+  thyroid_surgery = "Thyroid surgery",
+  tsh_value = "TSH value",
+  vocal_cord_paresis = "Vocal cord paresis"
+  )
 
-## converting Yes/No columns into binary 1/0, make a list of all Yes/No Colums
+## Make a copy of the raw data so that comparisons can be made between it and the cleaned dataset. This allows checking
+## that no mistakes have been made
+df <- tibble(raw_data)
+Hmisc::label(df) <- as.list(var_labels[match(names(df), names(var_labels))])
 
+## Convert Yes/No columns into logical FALSE/TRUE.
+## 1. Make a list of all Yes/No columns (again sorted alphabetically, its easier to read)
 binary_cols <- c(
-  "incidental_nodule",
-  "palpable_nodule",
-  "rapid_enlargment",
-  "compressive_symtoms",
-  "hypertension",
-  "vocal_cord_paresis",
-  "graves_disease",
-  "hashimotos_thyroiditis",
-  "family_history_thyroid_cancer",
-  "exposure_radiation",
-  "solitary_nodule",
   "cervical_lymphadenopathy",
+  "compressive_symtoms",
+  "exposure_radiation",
+  "family_history_thyroid_cancer",
+  "fna_done",
+  "graves_disease",
+  "hashimotos_thyroiditis",
+  "hypertension",
+  "incidental_nodule",
+  "palpable_nodule",
+  "rapid_enlargment",
+  "repeat_fna_done",
   "repeat_ultrasound",
-  "fna_done",
-  "repeat_fna_done"
+  "solitary_nodule",
+  "vocal_cord_paresis"
 )
+## 2. Recode this list to "Yes" = TRUE; "No" = FALSE (Can't use as.logical() directly as that only works with variables
+##    coded as 0/1).
+df <- df |>
+    dplyr::mutate(dplyr::across(
+        dplyr::all_of(binary_cols),
+        ~ dplyr::recode(.x,
+             "Yes" = TRUE,
+             "No" = FALSE
+        )
+    ))
 
-shf <- shf |>
-  dplyr::mutate(across(
-    all_of(binary_cols),
-    ~ dplyr::recode(.x,
-      "Yes" = 1,
-      "No" = 0
-    )
-  ))
-
-## converting yes/no variables to variables to logical
-
-shf <- shf |>
-  dplyr::mutate(
-    incidental_nodule = as.logical(incidental_nodule),
-    palpable_nodule = as.logical(palpable_nodule),
-    rapid_enlargment = as.logical(rapid_enlargment),
-    compressive_symtoms = as.logical(compressive_symtoms),
-    hypertension = as.logical(hypertension),
-    vocal_cord_paresis = as.logical(vocal_cord_paresis),
-    graves_disease = as.logical(graves_disease),
-    hashimotos_thyroiditis = as.logical(hashimotos_thyroiditis),
-    family_history_thyroid_cancer = as.logical(family_history_thyroid_cancer),
-    exposure_radiation = as.logical(exposure_radiation),
-    solitary_nodule = as.logical(solitary_nodule),
-    cervical_lymphadenopathy = as.logical(cervical_lymphadenopathy),
-    repeat_ultrasound = as.logical(repeat_ultrasound),
-    fna_done = as.logical(fna_done),
-    repeat_fna_done = as.logical(repeat_fna_done)
-  )
-
-## converting character variables to factor
-
-shf <- shf |>
-  dplyr::mutate(
-    gender = as.factor(gender),
-    ethnicity = as.factor(ethnicity),
-    bta_u_classification = as.factor(bta_u_classification),
-    consistency_nodule = as.factor(consistency_nodule),
-    repeat_bta_u_classification =
-      as.factor(repeat_bta_u_classification),
-    thy_classification = as.factor(thy_classification),
-    repeat_thy_classification = as.factor(repeat_thy_classification),
-    thyroid_surgery = as.factor(thyroid_surgery),
-    thyroid_histology_diagnosis = as.factor(thyroid_histology_diagnosis),
-    final_pathology = as.factor(final_pathology)
-  )
-
-lapply(shf, typeof)
-
-table(shf$gender)
-
-demo_graphics <- select(shf, c(
-  "age_at_scan", "gender", "ethnicity"
-))
-
-shf |>
-  select(c(
-    age_at_scan, gender,
-    ethnicity,
-    final_pathology
-  )) |>
-  tbl_summary(by = final_pathology)
+## Convert character variables to factors
+##
+## 1. Make a list of all character varaibles (sorted alphabetically).
+character_cols = c(
+    "bta_u_classification",
+    "consistency_nodule",
+    "ethnicity",
+    "final_pathology",
+    "gender",
+    "repeat_bta_u_classification",
+    "repeat_thy_classification",
+    "thy_classification",
+    "thyroid_histology_diagnosis",
+    "thyroid_surgery"
+)
+## 2. Convert all to factor variables
+df <- df |>
+    dplyr::mutate(dplyr::across(
+      dplyr::all_of(character_cols),
+      ~ as.factor(.x)
+    ))
 
 
-CreateTableOne(data = shf, vars = c("age_at_scan", "gender", "ethnicity"))
+## Save a copy of the clean data (df) for loading and using in analysis
+saveRDS(df, file = paste(r_dir, "clean.rds", sep = "/"))
 
-clinical_vars <- select(shf, c(
-  "incidental_nodule",
-  "palpable_nodule",
-  "rapid_enlargment",
-  "compressive_symtoms",
-  "hypertension",
-  "vocal_cord_paresis",
-  "graves_disease",
-  "hashimotos_thyroiditis",
-  "family_history_thyroid_cancer",
-  "exposure_radiation"
-))
-CreateTableOne(data = clinical_vars, vars = c(
-  "incidental_nodule",
-  "palpable_nodule",
-  "rapid_enlargment",
-  "compressive_symtoms",
-  "hypertension",
-  "vocal_cord_paresis",
-  "graves_disease",
-  "hashimotos_thyroiditis",
-  "family_history_thyroid_cancer",
-  "exposure_radiation"
-))
 
-shf |>
-  select(c(
-    incidental_nodule,
-    palpable_nodule,
-    rapid_enlargment,
-    compressive_symtoms,
-    hypertension,
-    vocal_cord_paresis,
-    graves_disease,
-    hashimotos_thyroiditis,
-    family_history_thyroid_cancer,
-    exposure_radiation, final_pathology
-  )) |>
-  tbl_summary(by = final_pathology) |>
-  add_p()
-## need to check how the above deals with missing data
+## OBSOLETE CODE
+## The following has been replaced with more succinct versions
 
-## biochemical variables summary
+## ns-rse (2024-04-29) : Duplicates the above, no point going to 0/1 then FALSE/TRUE just go direct
+## Convert binary (yes/no) variables to logical
+## df <- df |>
+##   dplyr::mutate(
+##     incidental_nodule = as.logical(incidental_nodule),
+##     palpable_nodule = as.logical(palpable_nodule),
+##     rapid_enlargment = as.logical(rapid_enlargment),
+##     compressive_symtoms = as.logical(compressive_symtoms),
+##     hypertension = as.logical(hypertension),
+##     vocal_cord_paresis = as.logical(vocal_cord_paresis),
+##     graves_disease = as.logical(graves_disease),
+##     hashimotos_thyroiditis = as.logical(hashimotos_thyroiditis),
+##     family_history_thyroid_cancer = as.logical(family_history_thyroid_cancer),
+##     exposure_radiation = as.logical(exposure_radiation),
+##     solitary_nodule = as.logical(solitary_nodule),
+##     cervical_lymphadenopathy = as.logical(cervical_lymphadenopathy),
+##     repeat_ultrasound = as.logical(repeat_ultrasound),
+##     fna_done = as.logical(fna_done),
+##     repeat_fna_done = as.logical(repeat_fna_done)
+##   )
 
-biochem_vars <- select(shf, c(
-  "albumin",
-  "tsh_value",
-  "lymphocytes",
-  "monocyte"
-))
 
-shf |>
-  select(c(
-    albumin,
-    tsh_value,
-    lymphocytes,
-    monocyte, final_pathology
-  )) |>
-  tbl_summary(by = final_pathology) |>
-  add_p()
 
-CreateTableOne(data = biochem_vars, vars = c(
-  "albumin",
-  "tsh_value",
-  "lymphocytes",
-  "monocyte"
-))
+## Convert character variables to factor
+## df <- df |>
+##   dplyr::mutate(
+##     gender = as.factor(gender),
+##     ethnicity = as.factor(ethnicity),
+##     bta_u_classification = as.factor(bta_u_classification),
+##     consistency_nodule = as.factor(consistency_nodule),
+##     repeat_bta_u_classification = as.factor(repeat_bta_u_classification),
+##     thy_classification = as.factor(thy_classification),
+##     repeat_thy_classification = as.factor(repeat_thy_classification),
+##     thyroid_surgery = as.factor(thyroid_surgery),
+##     thyroid_histology_diagnosis = as.factor(thyroid_histology_diagnosis),
+##     final_pathology = as.factor(final_pathology)
+##   )
 
-## imaging and thyc
+## REDUNDANT CODE
+##
+## The following code tabulates variables for checking, its not essential to the cleaning of the data, most tables will
+## be summarised and presented in the manuscript.
+## table(df$gender)
 
-ultrasound_char <- select(shf, c(
-  "size_nodule_mm",
-  "solitary_nodule",
-  "bta_u_classification",
-  "consistency_nodule",
-  "cervical_lymphadenopathy"
-))
+## lapply(df, typeof)
 
-shf |>
-  select(c(
-    size_nodule_mm, solitary_nodule,
-    bta_u_classification, consistency_nodule,
-    cervical_lymphadenopathy,
-    final_pathology
-  )) |>
-  tbl_summary(by = final_pathology) |>
-  add_p()
+## demo_graphics <- select(df, c(
+##   "age_at_scan", "gender", "ethnicity"
+## ))
 
-CreateTableOne(data = ultrasound_char, vars = c(
-  "size_nodule_mm",
-  "solitary_nodule",
-  "bta_u_classification",
-  "consistency_nodule",
-  "cervical_lymphadenopathy"
-))
+## df |>
+##   select(c(
+##     age_at_scan, gender,
+##     ethnicity,
+##     final_pathology
+##   )) |>
+##   tbl_summary(by = final_pathology)
 
-cytology_char <- select(shf, c(
-  "fna_done",
-  "thy_classification",
-  "repeat_fna_done",
-  "thyroid_surgery",
-  "final_pathology"
-))
 
-CreateTableOne(data = cytology_char, vars = c(
-  "fna_done",
-  "thy_classification",
-  "repeat_fna_done",
-  "thyroid_surgery",
-  "final_pathology"
-))
+## CreateTableOne(data = df, vars = c("age_at_scan", "gender", "ethnicity"))
 
-shf |>
-  select(c(
-    thy_classification,
-    final_pathology
-  )) |>
-  tbl_summary(by = final_pathology)
+## clinical_vars <- select(df, c(
+##   "incidental_nodule",
+##   "palpable_nodule",
+##   "rapid_enlargment",
+##   "compressive_symtoms",
+##   "hypertension",
+##   "vocal_cord_paresis",
+##   "graves_disease",
+##   "hashimotos_thyroiditis",
+##   "family_history_thyroid_cancer",
+##   "exposure_radiation"
+## ))
+## CreateTableOne(data = clinical_vars, vars = c(
+##   "incidental_nodule",
+##   "palpable_nodule",
+##   "rapid_enlargment",
+##   "compressive_symtoms",
+##   "hypertension",
+##   "vocal_cord_paresis",
+##   "graves_disease",
+##   "hashimotos_thyroiditis",
+##   "family_history_thyroid_cancer",
+##   "exposure_radiation"
+## ))
 
-## create dir where file is saved
+## df |>
+##   select(c(
+##     incidental_nodule,
+##     palpable_nodule,
+##     rapid_enlargment,
+##     compressive_symtoms,
+##     hypertension,
+##     vocal_cord_paresis,
+##     graves_disease,
+##     hashimotos_thyroiditis,
+##     family_history_thyroid_cancer,
+##     exposure_radiation, final_pathology
+##   )) |>
+##   tbl_summary(by = final_pathology) |>
+##   add_p()
+## ## need to check how the above deals with missing data
+
+## ## biochemical variables summary
+
+## biochem_vars <- select(df, c(
+##   "albumin",
+##   "tsh_value",
+##   "lymphocytes",
+##   "monocyte"
+## ))
+
+## df |>
+##   select(c(
+##     albumin,
+##     tsh_value,
+##     lymphocytes,
+##     monocyte, final_pathology
+##   )) |>
+##   tbl_summary(by = final_pathology) |>
+##   add_p()
+
+## CreateTableOne(data = biochem_vars, vars = c(
+##   "albumin",
+##   "tsh_value",
+##   "lymphocytes",
+##   "monocyte"
+## ))
+
+## ## imaging and thyc
+
+## ultrasound_char <- select(df, c(
+##   "size_nodule_mm",
+##   "solitary_nodule",
+##   "bta_u_classification",
+##   "consistency_nodule",
+##   "cervical_lymphadenopathy"
+## ))
+
+## df |>
+##   select(c(
+##     size_nodule_mm, solitary_nodule,
+##     bta_u_classification, consistency_nodule,
+##     cervical_lymphadenopathy,
+##     final_pathology
+##   )) |>
+##   tbl_summary(by = final_pathology) |>
+##   add_p()
+
+## CreateTableOne(data = ultrasound_char, vars = c(
+##   "size_nodule_mm",
+##   "solitary_nodule",
+##   "bta_u_classification",
+##   "consistency_nodule",
+##   "cervical_lymphadenopathy"
+## ))
+
+## cytology_char <- select(df, c(
+##   "fna_done",
+##   "thy_classification",
+##   "repeat_fna_done",
+##   "thyroid_surgery",
+##   "final_pathology"
+## ))
+
+## CreateTableOne(data = cytology_char, vars = c(
+##   "fna_done",
+##   "thy_classification",
+##   "repeat_fna_done",
+##   "thyroid_surgery",
+##   "final_pathology"
+## ))
+
+## df |>
+##   select(c(
+##     thy_classification,
+##     final_pathology
+##   )) |>
+##   tbl_summary(by = final_pathology)
+
+## ## create dir where file is saved
