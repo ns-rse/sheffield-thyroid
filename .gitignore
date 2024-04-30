@@ -60,3 +60,8 @@ data/
 # Emacs files
 \#*
 *~
+
+# Quarto files
+index.xml
+index.subarticle.xml
+index.docx

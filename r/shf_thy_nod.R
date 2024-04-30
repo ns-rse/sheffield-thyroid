@@ -107,6 +107,10 @@ df <- df |>
       ~ as.factor(.x)
     ))
 
+## ns-rse (2024-04-30) : A Check should be made for duplicated data and any such duplicates removed, even if you think
+## there shouldn't be or aren't any duplicates in a dataset it is a simple step to make such a check and remove any that
+## are found.
+df <- unique(df)
 
 ## Save a copy of the clean data (df) for loading and using in analysis
 saveRDS(df, file = paste(r_dir, "clean.rds", sep = "/"))
