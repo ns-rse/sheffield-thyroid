@@ -24,21 +24,8 @@ author:
     affiliations:
       - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
 abstract: |
-  ### Introduction {.unnumbered}
-
-  This is the introduction.
-
-  ### Methods {.unnumbered}
-
-  This is the methods.
-
-  ### Results {.unnumbered}
-
-  This is the results.
-
-  ### Conclusion {.unnumbered}
-
-  This is the conclusion
+  An abstract summarising the work undertaken and the overall conclusions can be placed here. Sub-headings are currently
+  removed because they conflict with those in the body of the text and mess up the links in the Table of Contents.
 keywords:
   - Thyroid nodules
   - Thyroid cancer
@@ -61,7 +48,7 @@ number-sections: true
 #| echo: false
 #| warning: false
 
-# Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
+## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
 library(dplyr)
 library(ggplot2)
 library(ggdark)
@@ -71,7 +58,7 @@ library(knitr)
 library(readr)
 library(rmarkdown)
 
-# Libraries for Tidymodelling
+## Libraries for Tidymodelling
 library(dials)
 library(kernlab)
 library(knitr)
@@ -79,7 +66,8 @@ library(tidymodels)
 library(tidyverse)
 library(vip)
 
-# Set global options
+
+## Set global options
 options(digits = 3)
 train <- 0.75
 test <- 0.25
@@ -99,7 +87,7 @@ r_scripts <- paste(base_dir, "r", sep = "/")
 ## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
 source("r/shf_thy_nod.R")
 ## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
-## saved to `data/r/clean.rds` can be loaded cy commenting out the line above and uncommenting the line below.
+## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
 #df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
 ```
 
@@ -118,7 +106,7 @@ Data was cleaned and analysed using the R Statistical Software @r_citation and t
 
 Description of the different models and how they are assessed can go here.
 
-A selection of modern statistical inference approaches have been selected and tested for this work. To fit the models
+A selection of modern statistical classification approaches have been selected and tested for this work. To fit the models
 data is split into training and testing cohorts in a ratio of `r train`:`r test` and each model is fitted using the
 training cohort. The predictive accuracy of the fitted model is then assessed in the test cohort. **TODO** Expand on this.
 
@@ -210,15 +198,165 @@ The completeness of the data is shown in @tbl-data-completeness. Where variables
 given. For categorical variables that are logical `TRUE`/`FALSE` (e.g. `palpable_nodule`) the number of `TRUE`
 observations and the percentage (of those with observed data for that variable) are shown along with the number that are
 _Unknown_. For categorical variables such as `gender` and percentages in each category are
-reported. For all variables an indication of the number of missing observations is also given
+reported. For all variables an indication of the number of missing observations is also given and it is worth noting
+that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
+instances where the `final_pathology` is not known which reduces the sample size to
+`r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
+
+**IMPORTANT** You will probably want to have a the following section included which excludes those with missing
+`final_pathology`, they can't contribute anything to the modelling.
+
 
 **IMPORTANT** Once you have decided which variables you want to include in your analysis you should determine how many
-individuals have complete data for all of these, this _will_ reduce your sample size available.
+individuals have complete data for all of these, this _will_ reduce your sample size available. You could add that to
+this section.
+
+```{r}
+#| label: remove-missing-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+df <- df |>
+  dplyr::filter(!is.na(final_pathology))
+```
 
 The predictor variables selected for inclusion were.
 
-**TODO** Insert table of subset of predictor variables.
+**TODO** Insert table of subset of predictor variables that are considered important.
 
+```{r}
+#| label: fig-age-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Age by final pathology."
+df |>
+  ggplot(aes(age_at_scan, fill=final_pathology)) +
+  geom_histogram(alpha=0.6, position="identity") +
+  labs(x = "Age (years)", y = "N") +
+  labs(fill="")
+## TODO - You may want to add vertical lines to the graph for the mean of each group
+##
+## Useful resources for plotting with ggplot2
+##
+## ggplot2 - https://ggplot2.tidyverse.org/index.html
+## The R Graph Gallery - https://r-graph-gallery.com/
+## StackOverflow for - https://stackoverflow.com/ (handy for searching for answers questions like how to add the mean)
+
+```
+
+```{r}
+#| label: fig-gender-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Gender by final pathology."
+df |>
+  ggplot(aes(gender, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+```{r}
+#| label: fig-incidental-nodule-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Incidental nodule by final pathology."
+df |>
+  ggplot(aes(incidental_nodule, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+```{r}
+#| label: fig-palpable-nodule-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Palpable nodule by final pathology."
+df |>
+  ggplot(aes(palpable_nodule, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+```{r}
+#| label: fig-hypertension-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Hypertension by final pathology."
+df |>
+  ggplot(aes(hypertension, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+#### Concordance
+
+A subset of clinical data and classification were repeated by independant clinicans (`fna_done`,
+`bta_u_classification` and `thy_classification`). This affords the opportunity to invetigate the correlation/concordance
+between the two assessments, formal statistical tests for difference can be made using Chi-squared, although they have little
+
+The cross tabulation of repeated `bta_u_classifcation` and `thy_classification` are shown in tables
+@tbl-concordance-bta-u-classification and @tbl-concordance-thy-classification respectively.
+
+```{r}
+#| label: tbl-concordance-bta-u-classification
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Cross-tabulation of `bta_u_classification` and its repeat assessment."
+## Start by tabulating the variables of interest.
+concordance_bta_u_classification <- df |>
+  select(bta_u_classification, repeat_bta_u_classification) |>
+  table(useNA = "no")
+
+concordance_bta_u_classification |>
+  kable(caption="Cross-tabulation of `bta_u_classification` and its repeat assessment.")
+
+## Optionally perform a Chi-squared test (chisq.test() is the function to use).
+
+```
+
+```{r}
+#| label: tbl-concordance-thy-classification
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Cross-tabulation of `thy_classification` and its repeat assessment."
+## Start by tabulating the variables of interest.
+concordance_thy_classification <- df |>
+  select(thy_classification, repeat_thy_classification) |>
+  table(useNA = "no")
+
+concordance_thy_classification  |>
+  kable(caption="Cross-tabulation of `thy_classification` and its repeat assessment.")
+
+## Optionally perform a Chi-squared test (chisq.test() is the function to use).
+```
+
+**TODO** Cross-tabulate other variables. I noticed that whilst there is `repeat_utlrasound` and `repeat_fna_done` there
+is no counter `ultrasound` or `fna_done` variables to compare these repeat data points to, are these variables available?
+
+<!-- Section that sets up the modelling -->
 ```{r}
 #| label: test-train-split
 #| purl: true
