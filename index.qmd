@@ -211,19 +211,22 @@ instances where the `final_pathology` is not known which reduces the sample size
 individuals have complete data for all of these, this _will_ reduce your sample size available. You could add that to
 this section.
 
+The predictor variables selected for inclusion were.
+
+**TODO** Insert table of subset of predictor variables that are considered important.
+
 ```{r}
 #| label: remove-missing-final-pathology
 #| purl: true
 #| eval: true
 #| echo: false
-#| output: false
+#| output: true
+print(paste0("Before : ", nrow(df)))
 df <- df |>
   dplyr::filter(!is.na(final_pathology))
+print(paste0("After  : ", nrow(df)))
+
 ```
-
-The predictor variables selected for inclusion were.
-
-**TODO** Insert table of subset of predictor variables that are considered important.
 
 ```{r}
 #| label: fig-age-by-final-pathology
@@ -236,6 +239,7 @@ df |>
   ggplot(aes(age_at_scan, fill=final_pathology)) +
   geom_histogram(alpha=0.6, position="identity") +
   labs(x = "Age (years)", y = "N") +
+  ggtitle("Age") +
   labs(fill="")
 ## TODO - You may want to add vertical lines to the graph for the mean of each group
 ##
@@ -258,6 +262,7 @@ df |>
   ggplot(aes(gender, fill=final_pathology)) +
   geom_bar(alpha=0.6) +
   labs(x = "Final Pathology", y = "N") +
+  ggtitle("Gender") +
   labs(fill="")
 
 ```
@@ -273,6 +278,7 @@ df |>
   ggplot(aes(incidental_nodule, fill=final_pathology)) +
   geom_bar(alpha=0.6) +
   labs(x = "Final Pathology", y = "N") +
+  ggtitle("Incidental Nodule") +
   labs(fill="")
 
 ```
@@ -288,6 +294,23 @@ df |>
   ggplot(aes(palpable_nodule, fill=final_pathology)) +
   geom_bar(alpha=0.6) +
   labs(x = "Final Pathology", y = "N") +
+  ggtitle("Palpable Nodule") +
+  labs(fill="")
+
+```
+
+```{r}
+#| label: fig-vocal-cord-paresis
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Vocal cord paresis by final pathology."
+df |>
+  ggplot(aes(vocal_cord_paresis, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final pathology", y = "N") +
+  ggtitle("Vocal Cord Paresis") +
   labs(fill="")
 
 ```
@@ -302,10 +325,35 @@ df |>
 df |>
   ggplot(aes(hypertension, fill=final_pathology)) +
   geom_bar(alpha=0.6) +
+  ggtitle("Hypertension") +
   labs(x = "Final Pathology", y = "N") +
   labs(fill="")
 
 ```
+
+```{r}
+#| label: fig-size-nodule-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Nodule size (mm) by final pathology."
+df |>
+  ggplot(aes(size_nodule_mm, fill=final_pathology)) +
+  geom_histogram(alpha=0.6, position="identity") +
+  labs(x = "Nodule Size (mm)", y = "N") +
+  ggtitle("Nodule Size") +
+  labs(fill="")
+## TODO - You may want to add vertical lines to the graph for the mean of each group
+##
+## Useful resources for plotting with ggplot2
+##
+## ggplot2 - https://ggplot2.tidyverse.org/index.html
+## The R Graph Gallery - https://r-graph-gallery.com/
+## StackOverflow for - https://stackoverflow.com/ (handy for searching for answers questions like how to add the mean)
+
+```
+
 
 #### Concordance
 
