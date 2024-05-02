@@ -1,0 +1,771 @@
+---
+title: "An investigation of the predictors of Thyroid Cancer"
+author:
+  - name: Ovie Edafe
+    orcid: 0000-0002-6205-806X
+    corresponding: true
+    email: ovieedafe@hotmail.co.uk
+    roles:
+      - Researcher
+    affiliations:
+      - Department of Oncology & Metabolism, University of Sheffield
+  - name: Neil Shephard
+    orcid: 000-0001-8301-6857
+    corresponding: false
+    email:
+    roles:
+      - Researcher
+    affiliations:
+      - Research Software Engineer, Department of Computer Science, University of Sheffield
+  - name: Sabapathy P Balasubramanian
+    orcid: 0000-0001-5953-2843
+    corresponding: false
+    roles: Researcher
+    affiliations:
+      - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
+abstract: |
+  An abstract summarising the work undertaken and the overall conclusions can be placed here. Sub-headings are currently
+  removed because they conflict with those in the body of the text and mess up the links in the Table of Contents.
+keywords:
+  - Thyroid nodules
+  - Thyroid cancer
+plain-language-summary: |
+    Plain language summary
+key-points:
+  - Key point 1
+  - Key point 2
+date: 2024-04-26
+bibliography: references.bib
+citation:
+  container-title: "Sheffield study on thyroid nodules"
+number-sections: true
+---
+
+```{r}
+#| label: setup
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+
+## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
+library(dplyr)
+library(ggplot2)
+library(ggdark)
+library(gtsummary)
+library(Hmisc)
+library(knitr)
+library(readr)
+library(rmarkdown)
+
+## Libraries for Tidymodelling
+library(dials)
+library(kernlab)
+library(knitr)
+library(tidymodels)
+library(tidyverse)
+library(vip)
+
+
+## Set global options
+options(digits = 3)
+train <- 0.75
+test <- 0.25
+
+## Set directories based on current location
+base_dir <- getwd()
+data_dir <- paste(base_dir, "data", sep = "/")
+csv_dir <- paste(data_dir, "csv", sep = "/")
+r_dir <- paste(data_dir, "r", sep = "/")
+r_scripts <- paste(base_dir, "r", sep = "/")
+
+
+## Load data
+##
+## The following line runs the `r/shf_thy_nod.R` script which reads the data from CSV and cleans/tidies it.
+## If something has changed in that file or the underlying data (in `data/csv/sheffield_thyroid_module.R`) then this
+## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
+source("r/shf_thy_nod.R")
+## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
+## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
+#df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
+```
+
+
+## Introduction
+
+Some paragraphs on the background of the work can go here. **TODO** Expand on this.
+
+
+## Methods
+
+Data was cleaned and analysed using the R Statistical Software @r_citation and the Tidyverse (@tidyverse),  Tidymodels
+(@tidymodels) collection of packages.
+
+### Modelling
+
+Description of the different models and how they are assessed can go here.
+
+A selection of modern statistical classification approaches have been selected and tested for this work. To fit the models
+data is split into training and testing cohorts in a ratio of `r train`:`r test` and each model is fitted using the
+training cohort. The predictive accuracy of the fitted model is then assessed in the test cohort. **TODO** Expand on this.
+
+Cross validation is used to estimate the accuracy of the models there are a number of options available, those
+considered for this work are k-fold and leave one out (loo) cross-validation. **TODO** Expand on this.
+
+#### LASSO / Elastic Net
+
+LASSO (Least Absolute Shrinkage and Selection Operatror) and Elastic Net @zou2005 are regression methods that perform variable
+selection. The original LASSO method proposed by @tibshirani1996 allows the coefficients for independent/predictor
+variables to "shrink" down towards zero, effectively eliminating them from influencing the model, this is often referred
+to as L<sub>1</sub> regularisation. The Elastic Net @zou2005 improves on the LASSO by balancing L<sub>1</sub>
+regularisation with ridge-regression or L<sub>2</sub> regularisation which helps avoid over-fitting.
+
+Both methods avoid many of the shortcomings/pitfalls of stepwise variable selection @thompson1995 @smith2018 and have
+been shown to be more accurate in clinical decision making in small datasets with well code, externally selected
+variables @steyerberg2001
+
+
+
+#### Random Forest
+
+Blurb on what Random Forests are.
+
+#### Gradient Boosting
+
+Blurb on what Gradient Boosting is.
+
+#### SVM
+
+Blurb on what Support Vector Machines are.
+
+#### Comparision
+
+
+
+## Results
+
+### Data Description
+
+Details of data completeness and other descriptive aspects go here.
+
+
+```{r}
+#| label: tbl-variables
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."
+var_labels |>
+  as.data.frame() |>
+  kable(col.names = c("Description"),
+        caption="Description of variables in the Sheffield Thyroid dataset.")
+```
+
+A summary of the variables that are available in this data set can be found in @tbl-variables.
+
+
+```{r}
+#| label: tbl-data-completeness
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Overall summary of all variables in the Sheffield dataset."
+df_summary <- df |>
+  ## NB - We drop the study_id its not a variable, rather its an identifier
+  dplyr::select(!(study_id)) |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Baseline characteristics and referral source of included patients")
+df_summary
+
+```
+
+The completeness of the data is shown in @tbl-data-completeness. Where variables continuous (e.g. `age` or
+`size_nodule_mm`) basic summary statistics in the form of mean, standard deviation, median and inter-quartile range are
+given. For categorical variables that are logical `TRUE`/`FALSE` (e.g. `palpable_nodule`) the number of `TRUE`
+observations and the percentage (of those with observed data for that variable) are shown along with the number that are
+_Unknown_. For categorical variables such as `gender` and percentages in each category are
+reported. For all variables an indication of the number of missing observations is also given and it is worth noting
+that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
+instances where the `final_pathology` is not known which reduces the sample size to
+`r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
+
+**IMPORTANT** You will probably want to have a the following section included which excludes those with missing
+`final_pathology`, they can't contribute anything to the modelling.
+
+
+**IMPORTANT** Once you have decided which variables you want to include in your analysis you should determine how many
+individuals have complete data for all of these, this _will_ reduce your sample size available. You could add that to
+this section.
+
+```{r}
+#| label: remove-missing-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+df <- df |>
+  dplyr::filter(!is.na(final_pathology))
+```
+
+The predictor variables selected for inclusion were.
+
+**TODO** Insert table of subset of predictor variables that are considered important.
+
+```{r}
+#| label: fig-age-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Age by final pathology."
+df |>
+  ggplot(aes(age_at_scan, fill=final_pathology)) +
+  geom_histogram(alpha=0.6, position="identity") +
+  labs(x = "Age (years)", y = "N") +
+  labs(fill="")
+## TODO - You may want to add vertical lines to the graph for the mean of each group
+##
+## Useful resources for plotting with ggplot2
+##
+## ggplot2 - https://ggplot2.tidyverse.org/index.html
+## The R Graph Gallery - https://r-graph-gallery.com/
+## StackOverflow for - https://stackoverflow.com/ (handy for searching for answers questions like how to add the mean)
+
+```
+
+```{r}
+#| label: fig-gender-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Gender by final pathology."
+df |>
+  ggplot(aes(gender, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+```{r}
+#| label: fig-incidental-nodule-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Incidental nodule by final pathology."
+df |>
+  ggplot(aes(incidental_nodule, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+```{r}
+#| label: fig-palpable-nodule-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Palpable nodule by final pathology."
+df |>
+  ggplot(aes(palpable_nodule, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+```{r}
+#| label: fig-hypertension-by-final-pathology
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| fig-caption: "Hypertension by final pathology."
+df |>
+  ggplot(aes(hypertension, fill=final_pathology)) +
+  geom_bar(alpha=0.6) +
+  labs(x = "Final Pathology", y = "N") +
+  labs(fill="")
+
+```
+
+#### Concordance
+
+A subset of clinical data and classification were repeated by independant clinicans (`fna_done`,
+`bta_u_classification` and `thy_classification`). This affords the opportunity to invetigate the correlation/concordance
+between the two assessments, formal statistical tests for difference can be made using Chi-squared, although they have little
+
+The cross tabulation of repeated `bta_u_classifcation` and `thy_classification` are shown in tables
+@tbl-concordance-bta-u-classification and @tbl-concordance-thy-classification respectively.
+
+```{r}
+#| label: tbl-concordance-bta-u-classification
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Cross-tabulation of `bta_u_classification` and its repeat assessment."
+## Start by tabulating the variables of interest.
+concordance_bta_u_classification <- df |>
+  select(bta_u_classification, repeat_bta_u_classification) |>
+  table(useNA = "no")
+
+concordance_bta_u_classification |>
+  kable(caption="Cross-tabulation of `bta_u_classification` and its repeat assessment.")
+
+## Optionally perform a Chi-squared test (chisq.test() is the function to use).
+
+```
+
+```{r}
+#| label: tbl-concordance-thy-classification
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Cross-tabulation of `thy_classification` and its repeat assessment."
+## Start by tabulating the variables of interest.
+concordance_thy_classification <- df |>
+  select(thy_classification, repeat_thy_classification) |>
+  table(useNA = "no")
+
+concordance_thy_classification  |>
+  kable(caption="Cross-tabulation of `thy_classification` and its repeat assessment.")
+
+## Optionally perform a Chi-squared test (chisq.test() is the function to use).
+```
+
+**TODO** Cross-tabulate other variables. I noticed that whilst there is `repeat_utlrasound` and `repeat_fna_done` there
+is no counter `ultrasound` or `fna_done` variables to compare these repeat data points to, are these variables available?
+
+<!-- Section that sets up the modelling -->
+```{r}
+#| label: test-train-split
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
+tidymodels_prefer()
+set.seed(5039378)
+
+## This is the point at which you should subset your data for those who have data available for the variables of
+## interest. The variables here should include the outcome `final_pathology` and the predictor variables that are set in
+## the code chunk `recipe`. May want to move this to another earlier in the processing so that the number of rows can be
+## counted and reported.
+df_complete <- df |>
+  dplyr::select(
+    age_at_scan,
+    final_pathology,
+    gender,
+    palpable_nodule,
+    rapid_enlargment,
+    size_nodule_mm,
+    thy_classification) |>
+dplyr::filter(if_any(everything(), is.na))
+
+## Use the df_complete rather than df as this subset have data for all the variables of interest.
+split <- rsample::initial_split(df_complete, prop = 0.75)
+train <- rsample::training(split)
+test <- rsample::testing(split)
+```
+
+```{r}
+#| label: cv-vfold
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+cv_folds <- rsample::vfold_cv(train, v = 10, repeats = 10)
+```
+
+```{r}
+#| label: cv-loo
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+cv_loo <- rsample::loo_cv(train)
+```
+```{r}
+#| label: recipe
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: false
+## NB This is the key section where the variables that are to be used in the model are defined. A dependant variable
+## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
+## this appears on the left-hand side of the equation (before the tilde `~`). On the right of the equation are the
+## predictor or dependant variables
+thyroid_recipe <- recipes::recipe(final_pathology ~ gender + size_nodule_mm + age_at_scan + palpable_nodule +
+  rapid_enlargment + thy_classification, data = train) |>
+  recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
+  recipes::step_dummy(gender, palpable_nodule, rapid_enlargment, thy_classification) |>
+  recipes::step_normalize(all_numeric())
+```
+
+```{r}
+#| label: workflow
+#| eval: true
+#| echo: true
+#| output: false
+thyroid_workflow <- workflows::workflow() |>
+  workflows::add_recipe(thyroid_recipe)
+```
+
+### Modelling
+
+A total of `r df_complete |> nrow()` patients had complete data for the selected predictor variables (see
+@tbl-predictors).
+
+Results of the various modelling go here. Each section will show the results along with...
+
++ LIME/Shaply analysis for explanability of models
+
+
+#### LASSO / Elastic Net
+
+```{r}
+#| label: lasso
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## Specify the LASSO model using parsnip, the key here is the use of the glmnet engine which is the R package for
+## fitting LASSO regression. Technically the package fits Elastic Net but with a mixture value of 1 it is equivalent to
+## a plain LASSO (mixture value of 0 is equivalent to Ridge Regression in an Elastic Net)
+tune_spec_lasso <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 1) |>
+  parsnip::set_engine("glmnet")
+
+## Tune the LASSO parameters via cross-validation
+lasso_grid <- tune::tune_grid(
+  object = workflows::add_model(thyroid_workflow, tune_spec_lasso),
+  resamples = cv_folds,
+  grid = dials::grid_regular(penalty(), levels = 50)
+)
+
+## K-fold best fit for LASSO
+lasso_kfold_roc_auc <- lasso_grid |>
+  tune::select_best(metric = "roc_auc")
+
+## Fit the final LASSO model
+final_lasso_kfold <- tune::finalize_workflow(
+  workflows::add_model(thyroid_workflow, tune_spec_lasso),
+  lasso_kfold_roc_auc
+)
+```
+
+```{r}
+#| label: lasso-kfold-eval-importance
+#| purl: true
+#| eval: false
+#| echo: true
+#| output: true
+final_lasso_kfold |>
+  fit(train) |>
+  hardhat::extract_fit_parsnip() |>
+  vip::vi(lambda = lasso_kfold_roc_auc$penalty) |>
+  dplyr::mutate(
+    Importance = abs(Importance),
+    Variable = fct_reorder(Variable, Importance)
+  ) |>
+  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  dark_theme_minimal()
+```
+
+``` {r}
+#| label: lasso-save
+#| purl: true
+#| eval: false
+#| echo: true
+#| output: false
+save(lasso_tune_spec, lasso_grid, final_lasso, lasso_highest_roc_auc,
+  file = "data/r/lasso.RData"
+)
+```
+
+#### Elastic Net
+
+
+```{r}
+#| label: elastic-net-specification
+#| purl: true
+#| eval: false
+#| echo: true
+#| output: false
+## Elastic Net model specification, as with LASSO it uses glmnet package but the mixture is 0.5 which is 50% LASSO (L1
+## regularisation) and 50% Ridge Regression (L2 regularisation)
+elastic_net_tune_spec <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 0.5) |>
+  parsnip::set_engine("glmnet")
+
+## Tune the model using `tune::tune_grid()` (https://tune.tidymodels.org/reference/tune_grid.html), calculates the
+## accuracy or the Root Mean Square Error
+elastic_net_grid <- tune::tune_grid(
+  object = workflows::add_model(thyroid_workflow, elastic_net_tune_spec),
+  resamples = cv_folds,
+  grid = dials::grid_regular(penalty(), levels = 50)
+)
+
+## Perform K-fold cross validation
+elastic_net_highest_roc_auc <- elastic_net_grid |>
+  tune::select_best(metric = "roc_auc")
+
+## Make the final best fit based on K-fold cross validation
+final_elastic_net <- tune::finalize_workflow(
+  workflows::add_model(thyroid_workflow, elastic_net_tune_spec),
+  elastic_net_highest_roc_auc
+)
+```
+
+```{r}
+#| label: elastic-net-kfold-eval-importance
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: true
+final_elastic_net |>
+  fit(train) |>
+  hardhat::extract_fit_parsnip() |>
+  vip::vi(lambda = elastic_net_highest_roc_auc$penalty) |>
+  dplyr::mutate(
+    Importance = abs(Importance),
+    Variable = fct_reorder(Variable, Importance)
+  ) |>
+  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  dark_theme_minimal()
+```
+
+``` {r}
+#| label: elastic-net-save
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+save(elastic_net_tune_spec, elastic_net_grid, final_elastic_net, elastic_net_highest_roc_auc,
+  file = "data/r/elastic_net.RData"
+)
+```
+
+
+#### Random Forest
+
+``` {r}
+#| label: random-forest-specify
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## Specify the Random Forest model
+rf_tune <- parsnip::rand_forest(
+  mtry = tune(),
+  trees = 100,
+  min_n = tune()
+) |>
+  set_mode("classification") |>
+  set_engine("ranger", importance = "impurity")
+
+
+## Tune the parameters via Cross-validation
+rf_grid <- tune::tune_grid(
+  add_model(thyroid_workflow, rf_tune),
+  resamples = cv_folds, ## cv_loo,
+  grid = grid_regular(mtry(range = c(5, 10)), # smaller ranges will run quicker
+    min_n(range = c(2, 25)),
+    levels = 3
+  )
+)
+
+## Get the best fitting model with the highest ROC AUC
+rf_highest_roc_auc <- rf_grid |>
+  select_best("roc_auc")
+final_rf <- tune::finalize_workflow(
+  add_model(thyroid_workflow, rf_tune),
+  rf_highest_roc_auc
+)
+```
+
+``` {r}
+#| label: rf-kfold-eval-importance
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: true
+final_rf |>
+  fit(train) |>
+  hardhat::extract_fit_parsnip() |>
+  vip::vi(lambda = final_rf$penalty) |>
+  dplyr::mutate(
+    Importance = abs(Importance),
+    Variable = fct_reorder(Variable, Importance)
+  ) |>
+  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  dark_theme_minimal()
+```
+
+``` {r}
+#| label: random-forest-save
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+save(random_forest_tune_spec, random_forest_grid, final_random_forest, random_forest_highest_roc_auc,
+  file = "data/r/random_forest.RData"
+)
+```
+
+#### Gradient Boosting
+
+``` {r}
+#| label: xgboost-model
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## Specify the Gradient boosting model
+xgboost_model <- parsnip::boost_tree(
+  mode = "classification",
+  trees = 100,
+  min_n = tune(),
+  tree_depth = tune(),
+  learn_rate = tune(),
+  loss_reduction = tune()
+) |>
+  set_engine("xgboost", objective = "binary:logistic")
+
+## Specify the models tuning parameters using the `dials` package along (https://dials.tidymodels.org/) with the grid
+## space. This helps identify the hyperparameters with the lowest prediction error.
+xgboost_params <- dials::parameters(
+  min_n(),
+  tree_depth(),
+  learn_rate(),
+  loss_reduction()
+)
+xgboost_grid <- dials::grid_max_entropy(
+  xgboost_params,
+  size = 10
+)
+
+## Tune the model via cross-validation
+xgboost_tuned <- tune::tune_grid(workflows::add_model(thyroid_workflow, spec = xgboost_model),
+  resamples = cv_folds,
+  grid = xgboost_grid,
+  metrics = yardstick::metric_set(roc_auc, accuracy, ppv),
+  control = tune::control_grid(verbose = FALSE)
+)
+```
+
+
+
+``` {r}
+#| label: xgboost-final
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## We get the best final fit from the Gradient Boosting model.
+xgboost_highest_roc_auc <- xgboost_tuned |>
+  tune::select_best("roc_auc")
+final_xgboost <- tune::finalize_workflow(
+  add_model(thyroid_workflow, xgboost_model),
+  xgboost_highest_roc_auc
+)
+```
+
+``` {r}
+#| label: xgboost-save
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+save(xgboost_tune_spec, xgboost_grid, final_xgboost, xgboost_highest_roc_auc,
+  file = "data/r/xgboost.RData"
+)
+```
+
+#### SVM
+
+``` {r}
+#| label: svm-specify
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## Specify
+svm_tune_spec <- parsnip::svm_rbf(cost = tune()) |>
+  set_engine("kernlab") |>
+  set_mode("classification")
+
+## The hyperparameters are then tuned, in effect running the model in multiple subsets of the cross-validation to
+## get a "best fit".
+svm_grid <- tune::tune_grid(
+  workflows::add_model(thyroid_workflow, svm_tune_spec),
+  resamples = cv_folds, ## cv_loo,
+  grid = dials::grid_regular(cost(), levels = 20)
+)
+
+## The best fit is selected and fit to the overall training data set.
+svm_highest_roc_auc <- svm_grid |>
+  tune::select_best("roc_auc")
+final_svm <- tune::finalize_workflow(
+  add_model(thyroid_workflow, svm_tune_spec),
+  svm_highest_roc_auc
+)
+
+
+## Finally an assessment is made on the accuracy -->
+tune::last_fit(final_svm, split,
+  metrics = yardstick::metric_set(roc_auc, accuracy, ppv)
+) |>
+  tune::collect_metrics()
+```
+
+```{r}
+#| label: svm-save
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+save(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
+  file = "data/r/svm.RData"
+)
+```
+
+#### Explainability
+
+Which factors are important to classification can be assessed not just by the "importance" but by methods know as
+[LIME](https://search.r-project.org/CRAN/refmans/lime/html/lime-package.html) (Local Interpretable Model-Agnostic
+Explanations)  @ribeiro2016 and [Shapley
+values](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html)
+@lundberg2017
+
+#### Comparision
+
+Comparing the sensitivity of the different models goes here.
+
++ Table of sensitivity/specificity/other metrics.
++ ROC curves
+
+## Conclusion
+
+The take-away message is....these things are hard!
