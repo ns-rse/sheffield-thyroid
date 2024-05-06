@@ -1,5 +1,5 @@
 ---
-title: "An investigation of the predictors of Thyroid Cancer"
+title: "An investigation of the predictors of thyroid cancer in patients with thyroid nodules"
 author:
   - name: Ovie Edafe
     orcid: 0000-0002-6205-806X
@@ -156,6 +156,28 @@ Blurb on what Support Vector Machines are.
 
 
 ## Results
+
+```{r}
+n_obs <- nrow(df)
+```
+
+
+```{r}
+#| label: patient_demo
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: ""
+patient_demo <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("age_at_scan", "gender", "ethnicity")) |>
+    gtsummary::tbl_summary() |>
+  gtsummary::modify_caption("Demographics of study population")
+patient_demo
+print(colnames(patient_demo))
+```
+
+A total of `r n_obs` patients were included in this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, variable="age_at_scan")`.
 
 ### Data Description
 
