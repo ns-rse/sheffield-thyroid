@@ -177,7 +177,36 @@ patient_demo
 print(colnames(patient_demo))
 ```
 
-A total of `r n_obs` patients were included in this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, variable="age_at_scan")`.
+@patient_demo shows the demographics of patients included in this study. A total of `r n_obs` patients were included in
+this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, variable="age_at_scan")`.
+
+```{r}
+#| label: clinical_charac
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: ""
+clinical_charac <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("incidental_nodule",
+                  "palpable_nodule",
+                  "rapid_enlargment",
+                  "compressive_symtoms",
+                  "hypertension",
+                  "vocal_cord_paresis",
+                  "graves_disease",
+                  "hashimotos_thyroiditis",
+                  "family_history_thyroid_cancer",
+                  "exposure_radiation",
+                  "final_pathology",
+                  )) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
+clinical_charac
+print(colnames(clinical_charac))
+```
+
+@clinical_charac shows the destribution of clinical variables evaluated between benign and malignant thyroid nodules.
 
 ### Data Description
 
