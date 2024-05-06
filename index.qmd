@@ -208,6 +208,61 @@ print(colnames(clinical_charac))
 
 @clinical_charac shows the destribution of clinical variables evaluated between benign and malignant thyroid nodules.
 
+```{r}
+#| label: biochem_vars
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: ""
+biochem_vars <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("albumin",
+                  "tsh_value",
+                  "lymphocytes",
+                  "monocyte",
+                  "final_pathology")) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
+biochem_vars
+print(colnames(biochem_vars))
+```
+
+```{r}
+#| label: ultrasound_char
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: ""
+ultrasound_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("size_nodule_mm",
+                  "solitary_nodule",
+                  "bta_u_classification",
+                  "consistency_nodule",
+                  "cervical_lymphadenopathy",
+                  "final_pathology")) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
+ultrasound_char
+print(colnames(ultrasound_char))
+```
+
+```{r}
+#| label: cytology_char
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: ""
+cytology_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("thy_classification",
+                  "final_pathology")) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Cytological characteristics of benign and malignant nodules")
+cytology_char
+print(colnames(cytology_char))
+```
+
 ### Data Description
 
 Details of data completeness and other descriptive aspects go here.
