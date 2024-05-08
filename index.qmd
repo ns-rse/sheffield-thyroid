@@ -200,7 +200,7 @@ clinical_charac <- df |>
                   "exposure_radiation",
                   "final_pathology",
                   )) |>
-    gtsummary::tbl_summary(by = final_pathology) |>
+    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
   gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
 clinical_charac
 print(colnames(clinical_charac))
@@ -221,7 +221,7 @@ biochem_vars <- df |>
                   "lymphocytes",
                   "monocyte",
                   "final_pathology")) |>
-    gtsummary::tbl_summary(by = final_pathology) |>
+    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
   gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
 biochem_vars
 print(colnames(biochem_vars))
@@ -241,7 +241,7 @@ ultrasound_char <- df |>
                   "consistency_nodule",
                   "cervical_lymphadenopathy",
                   "final_pathology")) |>
-    gtsummary::tbl_summary(by = final_pathology) |>
+    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
   gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
 ultrasound_char
 print(colnames(ultrasound_char))
