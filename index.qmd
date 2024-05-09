@@ -106,10 +106,55 @@ source("r/shf_thy_nod.R")
 
 ## Introduction
 
-Some paragraphs on the background of the work can go here. **TODO** Expand on this.
+Thyroid nodules are common. The challenge in the management of thyroid nodules is differentiating between benign and
+malignant nodule thyroid nodules.The use fine needle aspiration and cytology (FNAC) still leaves around 20% of
+patients that cannot be classify as benign or malignant. This scenario traditionally leads to diagnostic
+hemithyroidectomy for definitive histology. Other clinical variables such as patients' demographics, clinical and
+biochemical factors have been shown to be
+associated with thyroid cancer in patients with thyroid nodules. This has been utilised in studies evaluating
+predictors of thyroid cancer with a view of creating a model to aid prediction.
+Standard practice on the management of thyroid nodules does not utilise these non ultrasound and non cytological
+factors. Combination of these variables considered to be significant with ultrasound and cytological characteristics may improve management of patients with thyroid nodules.
+Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluated of non thyroid related
+pathologies. Thus, leading to increase investigation of thyroid nodules and subsequent increased number of thyroid
+operations in non diagnostic cases.
+There are morbidities associated with thyroid surgery including scar, recurrent laryngeal nerve injury,
+hypothyroidism and hypoparathyroidism.
+We performed a systematic review to evaluate for predictors of thyroid cancer specifically in patients presenting
+with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
+improving prediction of thyroid cancer using machine learning techniques.
 
 
 ## Methods
+This study was reported as per the Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) guidelines
+
+### Study design
+This was a retrospective cohort study. 
+
+### Setting
+The study was conducted at the Sheffield Teaching hospitals NHS Foundation Trusts. This is a tertiary referral centre
+for the management of thyroid cancer
+
+### Participants
+We included all consecutive patients who presented with thyroid nodule(s) or that were found to have thyroid nodule(s) on ultrasound done for thyroid pathology or for other non thyroid related pathologies
+
+### Variables
+Variable evaluated was based on findings from a systematic review evaluating predictors of thyroid cancer in patients
+with thyroid nodules. Data on the following variables were collected: patient demographics (age, gender, ethnicity),
+nodule presentation (incidental nodule, palpable nodule, rapid enlargement, compressive symptoms, vocal paresis), past
+medical history (hypertension, Graves' disease, Hashimotos' thyroiditis, family history of thyroid cancer, exposure to
+neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics (British
+Thyroid Association ultrasound (BTA U), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
+Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, and histological diagnosis.
+
+### Data source
+
+Data will be collected from electronical case notes 
+
+### Study size
+A large data set will be required to obtain precise effect size; the size will be based on information available on our hospital electronic database. 
+
+### Data analysis
 
 Data was cleaned and analysed using the R Statistical Software @r_citation and the Tidyverse (@tidyverse),  Tidymodels
 (@tidymodels) collection of packages.
@@ -163,11 +208,11 @@ n_obs <- nrow(df)
 
 
 ```{r}
-#| label: patient_demo
+#| label: patient_demographics
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: ""
+#| tbl-caption: "Demographics of study population"
 patient_demo <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("age_at_scan", "gender", "ethnicity")) |>
@@ -177,15 +222,15 @@ patient_demo
 print(colnames(patient_demo))
 ```
 
-@patient_demo shows the demographics of patients included in this study. A total of `r n_obs` patients were included in
+@patient_demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were included in
 this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, variable="age_at_scan")`.
 
 ```{r}
-#| label: clinical_charac
+#| label: clinical_characteristics
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: ""
+#| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules"
 clinical_charac <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("incidental_nodule",
@@ -200,20 +245,20 @@ clinical_charac <- df |>
                   "exposure_radiation",
                   "final_pathology",
                   )) |>
-    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
+    gtsummary::tbl_summary(by = final_pathology) |>
   gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
 clinical_charac
 print(colnames(clinical_charac))
 ```
 
-@clinical_charac shows the destribution of clinical variables evaluated between benign and malignant thyroid nodules.
+@clinical_characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
 
 ```{r}
-#| label: biochem_vars
+#| label: biochem_variables
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: ""
+#| tbl-caption: "Biochemical variables evaluated between benign and malignant thyroid nodules"
 biochem_vars <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("albumin",
@@ -221,18 +266,18 @@ biochem_vars <- df |>
                   "lymphocytes",
                   "monocyte",
                   "final_pathology")) |>
-    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
+    gtsummary::tbl_summary(by = final_pathology) |>
   gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
 biochem_vars
 print(colnames(biochem_vars))
 ```
 
 ```{r}
-#| label: ultrasound_char
+#| label: ultrasound_characteristics
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: ""
+#| tbl-caption: "Ultrasound characteristics of benign and malignant nodules"
 ultrasound_char <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("size_nodule_mm",
@@ -241,18 +286,18 @@ ultrasound_char <- df |>
                   "consistency_nodule",
                   "cervical_lymphadenopathy",
                   "final_pathology")) |>
-    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
+    gtsummary::tbl_summary(by = final_pathology) |>
   gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
 ultrasound_char
 print(colnames(ultrasound_char))
 ```
 
 ```{r}
-#| label: cytology_char
+#| label: cytology_characteristics
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: ""
+#| tbl-caption: "Cytological characteristics of benign and malignant nodules"
 cytology_char <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("thy_classification",
