@@ -149,10 +149,18 @@ Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, 
 
 ### Data source
 
-Data will be collected from electronical case notes 
+Data was collected from patients' case notes and electronic patients' database. Data was collected using a standardised
+data collection proforma. This was initially piloted on 30 patients  and revised to improve data entry. In addition a
+number of variables that were not standard collected during workout of patients were not further checked; these include
+body mass index (BMI), serum thyroglobulin, serum triiodothyronine (T3), thyroxine (T4), thyroglobulin antibody (TgAb),
+thyroid peroxidase antibody (TP0Ab), and urinary iodine. 
 
 ### Study size
-A large data set will be required to obtain precise effect size; the size will be based on information available on our hospital electronic database. 
+We sought to have a large data set of at least 100 thyroid nodules with a cancer diagnosis using consecutive sampling
+technique. 
+We aimed for a total of 1500 patients with thyroid nodules to achieve our target sample size. With the use
+of modern statistical techniques, we proposed such number will be appropriate to detect important variables if it
+exists.
 
 ### Data analysis
 
@@ -161,14 +169,24 @@ Data was cleaned and analysed using the R Statistical Software @r_citation and t
 
 ### Modelling
 
-Description of the different models and how they are assessed can go here.
+We used a selection of statistic modelling techniques to evaluate association between variables and thyroid cancer in patients with thyroid nodules.
+We used the training and test methodology to split the patient population into training and testing cohorts in a ratio
+of `r train`:`r test` and each model is fitted using the
+training cohort. This split ratio is generally used in traditional machine learning techniques. The training set of the
+data was used to estimate the relation between variables and thyroid cancer. The larger the training data, the better
+it is for the model to learn the trends. The test set was used to determine the accuracy of the model in predicting
+thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used
+randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
+data sets so any test data was not accidentally trained.
+Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
+The k-fold techniques splits the data in ?10 folds, and the data was trained on all but one of the the fold, and the
+one fold not trained is used to test the data. This was repeated multiple times using a different fold for test and
+the others for training until all the folds is utilised for training and testing. Following multiple training process
+with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort. 
+We also used the leave one out (loo) cross-validation to train and test the data set.In this technique, all but one
+observation is use to train the data set and one observation is use to test the data; this is repeated until all the
+data test is used for testing and training. The model with the best predictive value was selected.
 
-A selection of modern statistical inference approaches have been selected and tested for this work. To fit the models
-data is split into training and testing cohorts in a ratio of `r train`:`r test` and each model is fitted using the
-training cohort. The predictive accuracy of the fitted model is then assessed in the test cohort. **TODO** Expand on this.
-
-Cross validation is used to estimate the accuracy of the models there are a number of options available, those
-considered for this work are k-fold and leave one out (loo) cross-validation. **TODO** Expand on this.
 
 #### LASSO / Elastic Net
 
