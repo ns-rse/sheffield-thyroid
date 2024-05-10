@@ -203,8 +203,8 @@ variables @steyerberg2001
 
 
 #### Random Forest
+The random forest plot is an extension of the decision tree methodology to reduce the variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the data set to create multiple decision trees. Random variables are selected for each tree to use in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate. The random forest methology is associated with reduced variance.
 
-Blurb on what Random Forests are.
 
 #### Gradient Boosting
 
