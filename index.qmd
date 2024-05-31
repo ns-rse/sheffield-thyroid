@@ -115,13 +115,14 @@ associated with thyroid cancer in patients with thyroid nodules. This has been u
 predictors of thyroid cancer with a view of creating a model to aid prediction.
 Standard practice on the management of thyroid nodules does not utilise these non ultrasound and non cytological
 factors. Combination of these variables considered to be significant with ultrasound and cytological characteristics may improve management of patients with thyroid nodules.
-Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluated of non thyroid related
+Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluation of non thyroid related
 pathologies. Thus, leading to increase investigation of thyroid nodules and subsequent increased number of thyroid
 operations in non diagnostic cases.
 There are morbidities associated with thyroid surgery including scar, recurrent laryngeal nerve injury,
 hypothyroidism and hypoparathyroidism.
 We performed a systematic review to evaluate for predictors of thyroid cancer specifically in patients presenting
-with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
+with thyroid nodules.
+The systematic review a number of potential important variables that may be useful in the prediction of thyroid cancer in patients with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
 improving prediction of thyroid cancer using machine learning techniques.
 
 
@@ -175,7 +176,7 @@ of `r train`:`r test` and each model is fitted using the
 training cohort. This split ratio is generally used in traditional machine learning techniques. The training set of the
 data was used to estimate the relation between variables and thyroid cancer. The larger the training data, the better
 it is for the model to learn the trends. The test set was used to determine the accuracy of the model in predicting
-thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used
+thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
 randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
 data sets so any test data was not accidentally trained.
 Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
@@ -203,10 +204,12 @@ variables @steyerberg2001
 
 
 #### Random Forest
-The random forest plot is an extension of the decision tree methodology to reduce the variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the data set to create multiple decision trees. Random variables are selected for each tree to use in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate. The random forest methology is associated with reduced variance.
+To add reference
+The random forest plot is an extension of the decision tree methodology to reduce the variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the data set to create multiple decision trees. Random variables are selected for each tree to use in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate.
 
 
 #### Gradient Boosting
+Gradient boosting is a machine learning algorithm that uses decision tree a a base model. The data is initially trained on this decision tree, and initial prediction is weak, thus termed a weak based model. In gradient boosting the process is iterative, thus further decision tree is sequentially added, each tree learns from the prior tree(s) to each model to give strength to the model and reduce errror.
 
 Blurb on what Gradient Boosting is.
 
