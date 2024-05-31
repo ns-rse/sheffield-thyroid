@@ -393,9 +393,38 @@ reported. For all variables an indication of the number of missing observations 
 **IMPORTANT** Once you have decided which variables you want to include in your analysis you should determine how many
 individuals have complete data for all of these, this _will_ reduce your sample size available.
 
-The predictor variables selected for inclusion were.
+The predictor variables selected for inclusion were age, gender, ethnicity, incidental nodule, palpable nodule, rapid
+enlargement, compressive symptoms, hypertension, vocal cord paresis, Graves' disease, Hashimotos' thyroiditis, family
+history of thyroid cancer, exposure to radiation, serum albumin, serum TSH, serum monocytes, serum lymphocytes, BTA U
+classification, nodule size, FNA Thy classification, final pathology.
 
-**TODO** Insert table of subset of predictor variables.
+```{r}
+#| label: predictors-evaluated
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "predictors-evaluated"
+df_predictors_evaluated <- df |>
+  ## dropped variables 
+  dplyr::select(-any_of(c("study_id", "eligibility", "consistency_nodule", "repeat_ultrasound", "repeat_bta_u_classification", "fna_done", "repeat_fna_done", "repeat_thy_classification", "thyroid_surgery", "thyroid_histology_diagnosis"))) |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Variables evaluated in the model")
+df_predictors_evaluated
+
+```
+
 
 ```{r}
 #| label: test-train-split
@@ -414,12 +443,27 @@ set.seed(5039378)
 df_complete <- df |>
   dplyr::select(
     age_at_scan,
-    final_pathology,
     gender,
+    ethnicity,
+    incidental_nodule,
     palpable_nodule,
     rapid_enlargment,
+    compressive_symtoms,
+    hypertension,
+    vocal_cord_paresis,
+    graves_disease,
+    hashimotos_thyroiditis,
+    family_history_thyroid_cancer,
+    exposure_radiation,
+    albumin,
+    tsh_value,
+    lymphocytes,
+    monocyte,
+    bta_u_classification,
     size_nodule_mm,
-    thy_classification) |>
+    cervical_lymphadenopathy,
+    thy_classification,
+    final_pathology) |>
 dplyr::filter(if_any(everything(), is.na))
 
 ## Use the df_complete rather than df as this subset have data for all the variables of interest.
