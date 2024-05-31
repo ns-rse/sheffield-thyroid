@@ -209,13 +209,19 @@ The random forest plot is an extension of the decision tree methodology to reduc
 
 
 #### Gradient Boosting
-Gradient boosting is a machine learning algorithm that uses decision tree a a base model. The data is initially trained on this decision tree, and initial prediction is weak, thus termed a weak based model. In gradient boosting the process is iterative, thus further decision tree is sequentially added, each tree learns from the prior tree(s) to each model to give strength to the model and reduce errror.
+Gradient boosting is a machine learning algorithm that uses decision tree a a base model. The data is initially trained
+on this decision tree, and initial prediction is weak, thus termed a weak based model. In gradient boosting the process
+is iterative, thus further decision tree is sequentially added, each tree learns from the prior tree(s) to each model to
+give strength to the model and reduce errror.
 
-Blurb on what Gradient Boosting is.
 
 #### SVM
 
-Blurb on what Support Vector Machines are.
+Support Vector Machines is an approach that allows observation with a binary classifications to be separated using a
+hyperplane. It finds a hyperplane that best stratify the two classes i.e benign versus malignant nodules. SVM finds the
+hyperplane with the maximum margin of separation between the two classes. The support vectors are the data point that
+are positioned close to the margin of the hyperplane and these used to select the most appropraite hyperplane. The
+support vectors are the only data points that have an influence of the maximum margin in SVM.
 
 #### Comparision
 
