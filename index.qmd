@@ -17,10 +17,18 @@ author:
       - Researcher
     affiliations:
       - Research Software Engineer, Department of Computer Science, University of Sheffield
+  - name: Karen Sisley
+    orcid: 0000-0002-5565-2618
+    corresponding: false
+    roles:
+      - Researcher
+    affiliations:
+      - Senior Lecturer, Clinical Medicine, School of Medicine and Population Health, University of Sheffield
   - name: Sabapathy P Balasubramanian
     orcid: 0000-0001-5953-2843
     corresponding: false
-    roles: Researcher
+    roles:
+      - Researcher
     affiliations:
       - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
 abstract: |
@@ -130,7 +138,7 @@ improving prediction of thyroid cancer using machine learning techniques.
 This study was reported as per the Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) guidelines
 
 ### Study design
-This was a retrospective cohort study. 
+This was a retrospective cohort study.
 
 ### Setting
 The study was conducted at the Sheffield Teaching hospitals NHS Foundation Trusts. This is a tertiary referral centre
@@ -154,11 +162,11 @@ Data was collected from patients' case notes and electronic patients' database. 
 data collection proforma. This was initially piloted on 30 patients  and revised to improve data entry. In addition a
 number of variables that were not standard collected during workout of patients were not further checked; these include
 body mass index (BMI), serum thyroglobulin, serum triiodothyronine (T3), thyroxine (T4), thyroglobulin antibody (TgAb),
-thyroid peroxidase antibody (TP0Ab), and urinary iodine. 
+thyroid peroxidase antibody (TP0Ab), and urinary iodine.
 
 ### Study size
 We sought to have a large data set of at least 100 thyroid nodules with a cancer diagnosis using consecutive sampling
-technique. 
+technique.
 We aimed for a total of 1500 patients with thyroid nodules to achieve our target sample size. With the use
 of modern statistical techniques, we proposed such number will be appropriate to detect important variables if it
 exists.
@@ -179,6 +187,7 @@ it is for the model to learn the trends. The test set was used to determine the 
 thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
 randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
 data sets so any test data was not accidentally trained.
+<<<<<<< HEAD
 Cross validation was used to estimate the accuracy of the various machine learning models.
 The k-fold techniques was used to splits the data in ?10 folds, and the data trained on all but one of the the fold; the single fold not trained is then and the
 used to test the data. This was repeated multiple times using a different fold for test and
@@ -186,6 +195,15 @@ the others folds for training until all the folds is utilised for training and t
 with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort. 
 We also used the leave one out (loo) cross-validation to train and test the datasets. In this technique, all but one
 observation is use to train the data set and one observation is use to test the data; this was repeated until all the
+=======
+Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
+The k-fold techniques splits the data in ?10 folds, and the data was trained on all but one of the the fold, and the
+one fold not trained is used to test the data. This was repeated multiple times using a different fold for test and
+the others for training until all the folds is utilised for training and testing. Following multiple training process
+with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort.
+We also used the leave one out (loo) cross-validation to train and test the data set.In this technique, all but one
+observation is use to train the data set and one observation is use to test the data; this is repeated until all the
+>>>>>>> 41e9babebd30a0c96c2522d73a479db4a7f6d1a0
 data test is used for testing and training. The model with the best predictive value was selected.
 
 
@@ -404,7 +422,7 @@ classification, nodule size, FNA Thy classification, final pathology.
 #| warning: false
 #| tbl-caption: "predictors-evaluated"
 df_predictors_evaluated <- df |>
-  ## dropped variables 
+  ## dropped variables
   dplyr::select(-any_of(c("study_id", "eligibility", "consistency_nodule", "repeat_ultrasound", "repeat_bta_u_classification", "fna_done", "repeat_fna_done", "repeat_thy_classification", "thyroid_surgery", "thyroid_histology_diagnosis"))) |>
   dplyr::ungroup() |>
   gtsummary::tbl_summary(
