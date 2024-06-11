@@ -508,18 +508,18 @@ cv_folds <- rsample::vfold_cv(train, v = 10, repeats = 10)
 #| output: false
 cv_loo <- rsample::loo_cv(train)
 ```
+
 ```{r}
 #| label: recipe
 #| purl: true
 #| eval: true
 #| echo: true
 #| output: false
-## NB This is the key section where the variables that are to be used in the model are defined. A dependant variable
+## NB This is the key section where the variables that are to be used in the model are defined. A dependent variable
 ## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
 ## this appears on the left-hand side of the equation (before the tilde `~`). On the right of the equation are the
 ## predictor or dependant variables
-thyroid_recipe <- recipes::recipe(final_pathology ~ gender + size_nodule_mm + age_at_scan + palpable_nodule +
-  rapid_enlargment + thy_classification, data = train) |>
+thyroid_recipe <- recipes::recipe(final_pathology ~ age_at_scan + gender + ethnicity + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hypertension + vocal_cord_paresis + graves_disease + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation + albumin + tsh_value + lymphocytes + monocyte + bta_u_classification + size_nodule_mm + cervical_lymphadenopathy + thy_classification, data = train) |>
   #recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
   recipes::step_dummy(gender, palpable_nodule, rapid_enlargment, thy_classification) |>
   recipes::step_normalize(all_numeric())
