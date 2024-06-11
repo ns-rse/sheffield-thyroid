@@ -179,13 +179,13 @@ it is for the model to learn the trends. The test set was used to determine the 
 thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
 randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
 data sets so any test data was not accidentally trained.
-Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
-The k-fold techniques splits the data in ?10 folds, and the data was trained on all but one of the the fold, and the
-one fold not trained is used to test the data. This was repeated multiple times using a different fold for test and
-the others for training until all the folds is utilised for training and testing. Following multiple training process
+Cross validation was used to estimate the accuracy of the various machine learning models.
+The k-fold techniques was used to splits the data in ?10 folds, and the data trained on all but one of the the fold; the single fold not trained is then and the
+used to test the data. This was repeated multiple times using a different fold for test and
+the others folds for training until all the folds is utilised for training and testing. Following multiple training process
 with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort. 
-We also used the leave one out (loo) cross-validation to train and test the data set.In this technique, all but one
-observation is use to train the data set and one observation is use to test the data; this is repeated until all the
+We also used the leave one out (loo) cross-validation to train and test the datasets. In this technique, all but one
+observation is use to train the data set and one observation is use to test the data; this was repeated until all the
 data test is used for testing and training. The model with the best predictive value was selected.
 
 
@@ -205,15 +205,13 @@ variables @steyerberg2001
 
 #### Random Forest
 To add reference
-The random forest plot is an extension of the decision tree methodology to reduce the variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the data set to create multiple decision trees. Random variables are selected for each tree to use in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate.
+The random forest plot is an extension of the decision tree methodology to reduce variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the dataset to create multiple decision trees. Random variables are selected for each tree in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate.
 
 
 #### Gradient Boosting
-Gradient boosting is a machine learning algorithm that uses decision tree a a base model. The data is initially trained
-on this decision tree, and initial prediction is weak, thus termed a weak based model. In gradient boosting the process
-is iterative, thus further decision tree is sequentially added, each tree learns from the prior tree(s) to each model to
-give strength to the model and reduce errror.
-
+Gradient boosting is a machine learning algorithm that uses decision tree as a base model. The data is initially trained
+on this decision tree, but the initial prediction is weak, thus termed a weak based model. In gradient boosting the process
+is iterative; a sequence of decision trees is added to the initial tree. Each tree learns from the prior tree(s) to improve the model, increasing strength and minimising error.
 
 #### SVM
 
@@ -221,7 +219,7 @@ Support Vector Machines is an approach that allows observation with a binary cla
 hyperplane. It finds a hyperplane that best stratify the two classes i.e benign versus malignant nodules. SVM finds the
 hyperplane with the maximum margin of separation between the two classes. The support vectors are the data point that
 are positioned close to the margin of the hyperplane and these used to select the most appropraite hyperplane. The
-support vectors are the only data points that have an influence of the maximum margin in SVM.
+support vectors are the only data points that have an influence on the maximum margin in SVM.
 
 #### Comparision
 
@@ -422,7 +420,6 @@ df_predictors_evaluated <- df |>
   ) |>
   gtsummary::modify_caption("Variables evaluated in the model")
 df_predictors_evaluated
-
 ```
 
 
@@ -472,6 +469,10 @@ train <- rsample::training(split)
 test <- rsample::testing(split)
 ```
 
+view(df_complete)
+view(df)
+<!--this still has 1299 data set, fairly complete or analysis not applied-->
+
 ```{r}
 #| label: cv-vfold
 #| purl: true
@@ -501,7 +502,7 @@ cv_loo <- rsample::loo_cv(train)
 ## predictor or dependant variables
 thyroid_recipe <- recipes::recipe(final_pathology ~ gender + size_nodule_mm + age_at_scan + palpable_nodule +
   rapid_enlargment + thy_classification, data = train) |>
-  recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
+  #recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
   recipes::step_dummy(gender, palpable_nodule, rapid_enlargment, thy_classification) |>
   recipes::step_normalize(all_numeric())
 ```
