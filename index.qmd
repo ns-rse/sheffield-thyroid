@@ -521,7 +521,7 @@ cv_loo <- rsample::loo_cv(train)
 ## predictor or dependant variables
 thyroid_recipe <- recipes::recipe(final_pathology ~ age_at_scan + gender + ethnicity + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hypertension + vocal_cord_paresis + graves_disease + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation + albumin + tsh_value + lymphocytes + monocyte + bta_u_classification + size_nodule_mm + cervical_lymphadenopathy + thy_classification, data = train) |>
   #recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
-  recipes::step_dummy(gender, palpable_nodule, rapid_enlargment, thy_classification) |>
+  recipes::step_dummy(age_at_scan, gender, ethnicity, incidental_nodule, palpable_nodule, rapid_enlargment, compressive_symtoms, hypertension, vocal_cord_paresis, graves_disease, hashimotos_thyroiditis, family_history_thyroid_cancer, exposure_radiation, albumin, tsh_value, lymphocytes, monocyte, bta_u_classification, size_nodule_mm, cervical_lymphadenopathy, thy_classification, data = train) |>
   recipes::step_normalize(all_numeric())
 ```
 
