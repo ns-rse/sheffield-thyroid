@@ -1,5 +1,5 @@
 ---
-title: "An investigation of the predictors of Thyroid Cancer"
+title: "An investigation of the predictors of thyroid cancer in patients with thyroid nodules"
 author:
   - name: Ovie Edafe
     orcid: 0000-0002-6205-806X
@@ -17,10 +17,18 @@ author:
       - Researcher
     affiliations:
       - Research Software Engineer, Department of Computer Science, University of Sheffield
+  - name: Karen Sisley
+    orcid: 0000-0002-5565-2618
+    corresponding: false
+    roles:
+      - Researcher
+    affiliations:
+      - Senior Lecturer, Clinical Medicine, School of Medicine and Population Health, University of Sheffield
   - name: Sabapathy P Balasubramanian
     orcid: 0000-0001-5953-2843
     corresponding: false
-    roles: Researcher
+    roles:
+      - Researcher
     affiliations:
       - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
 abstract: |
@@ -94,24 +102,88 @@ source("r/shf_thy_nod.R")
 
 ## Introduction
 
-Some paragraphs on the background of the work can go here. **TODO** Expand on this.
+Thyroid nodules are common. The challenge in the management of thyroid nodules is differentiating between benign and
+malignant nodule thyroid nodules.The use fine needle aspiration and cytology (FNAC) still leaves around 20% of
+patients that cannot be classify as benign or malignant. This scenario traditionally leads to diagnostic
+hemithyroidectomy for definitive histology. Other clinical variables such as patients' demographics, clinical and
+biochemical factors have been shown to be
+associated with thyroid cancer in patients with thyroid nodules. This has been utilised in studies evaluating
+predictors of thyroid cancer with a view of creating a model to aid prediction.
+Standard practice on the management of thyroid nodules does not utilise these non ultrasound and non cytological
+factors. Combination of these variables considered to be significant with ultrasound and cytological characteristics may improve management of patients with thyroid nodules.
+Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluation of non thyroid related
+pathologies. Thus, leading to increase investigation of thyroid nodules and subsequent increased number of thyroid
+operations in non diagnostic cases.
+There are morbidities associated with thyroid surgery including scar, recurrent laryngeal nerve injury,
+hypothyroidism and hypoparathyroidism.
+We performed a systematic review to evaluate for predictors of thyroid cancer specifically in patients presenting
+with thyroid nodules.
+The systematic review a number of potential important variables that may be useful in the prediction of thyroid cancer in patients with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
+improving prediction of thyroid cancer using machine learning techniques.
 
 
 ## Methods
+This study was reported as per the Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) guidelines
+
+### Study design
+This was a retrospective cohort study.
+
+### Setting
+The study was conducted at the Sheffield Teaching hospitals NHS Foundation Trusts. This is a tertiary referral centre
+for the management of thyroid cancer
+
+### Participants
+We included all consecutive patients who presented with thyroid nodule(s) or that were found to have thyroid nodule(s) on ultrasound done for thyroid pathology or for other non thyroid related pathologies
+
+### Variables
+Variable evaluated was based on findings from a systematic review evaluating predictors of thyroid cancer in patients
+with thyroid nodules. Data on the following variables were collected: patient demographics (age, gender, ethnicity),
+nodule presentation (incidental nodule, palpable nodule, rapid enlargement, compressive symptoms, vocal paresis), past
+medical history (hypertension, Graves' disease, Hashimotos' thyroiditis, family history of thyroid cancer, exposure to
+neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics (British
+Thyroid Association ultrasound (BTA U), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
+Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, and histological diagnosis.
+
+### Data source
+
+Data was collected from patients' case notes and electronic patients' database using a standardised
+data collection proforma. This was initially piloted on 30 patients  and revised to improve data entry. In addition a
+number of variables that were not standard collected during workout of patients were not further checked; these include
+body mass index (BMI), serum thyroglobulin, serum triiodothyronine (T3), thyroxine (T4), thyroglobulin antibody (TgAb),
+thyroid peroxidase antibody (TP0Ab), and urinary iodine.
+
+### Study size
+We sought to have a large data set of at least 100 thyroid nodules with a cancer diagnosis using consecutive sampling
+technique.
+We aimed for a total of 1500 patients with thyroid nodules to achieve our target sample size. With the use
+of modern statistical techniques, we proposed such number will be appropriate to detect important variables if it
+exists.
+
+### Data analysis
 
 Data was cleaned and analysed using the R Statistical Software @r_citation and the Tidyverse (@tidyverse),  Tidymodels
 (@tidymodels) collection of packages.
 
 ### Modelling
 
-Description of the different models and how they are assessed can go here.
+We used a selection of statistic modelling techniques to evaluate association between variables and thyroid cancer in patients with thyroid nodules.
+We used the training and test methodology to split the patient population into training and testing cohorts in a ratio
+of `r train`:`r test` and each model is fitted using the
+training cohort. This split ratio is generally used in traditional machine learning techniques. The training set of the
+data was used to estimate the relation between variables and thyroid cancer. The larger the training data, the better
+it is for the model to learn the trends. The test set was used to determine the accuracy of the model in predicting
+thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
+randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
+data sets so any test data was not accidentally trained.
+Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
+The k-fold techniques splits the data in ?10 folds, and the data was trained on all but one of the the fold, and the
+one fold not trained is used to test the data. This was repeated multiple times using a different fold for test and
+the others for training until all the folds is utilised for training and testing. Following multiple training process
+with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort.
+We also used the leave one out (loo) cross-validation to train and test the data set.In this technique, all but one
+observation is use to train the data set and one observation is use to test the data; this is repeated until all the
+data test is used for testing and training. The model with the best predictive value was selected.
 
-A selection of modern statistical classification approaches have been selected and tested for this work. To fit the models
-data is split into training and testing cohorts in a ratio of `r train`:`r test` and each model is fitted using the
-training cohort. The predictive accuracy of the fitted model is then assessed in the test cohort. **TODO** Expand on this.
-
-Cross validation is used to estimate the accuracy of the models there are a number of options available, those
-considered for this work are k-fold and leave one out (loo) cross-validation. **TODO** Expand on this.
 
 #### LASSO / Elastic Net
 
@@ -128,22 +200,134 @@ variables @steyerberg2001
 
 
 #### Random Forest
+To add reference
+The random forest plot is an extension of the decision tree methodology to reduce variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the dataset to create multiple decision trees. Random variables are selected for each tree in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate.
 
-Blurb on what Random Forests are.
 
 #### Gradient Boosting
-
-Blurb on what Gradient Boosting is.
+Gradient boosting is a machine learning algorithm that uses decision tree as a base model. The data is initially trained
+on this decision tree, but the initial prediction is weak, thus termed a weak based model. In gradient boosting the process
+is iterative; a sequence of decision trees is added to the initial tree. Each tree learns from the prior tree(s) to improve the model, increasing strength and minimising error.
 
 #### SVM
 
-Blurb on what Support Vector Machines are.
+Support Vector Machines is an approach that allows observation with a binary classifications to be separated using a
+hyperplane. It finds a hyperplane that best stratify the two classes i.e benign versus malignant nodules. SVM finds the
+hyperplane with the maximum margin of separation between the two classes. The support vectors are the data point that
+are positioned close to the margin of the hyperplane and these used to select the most appropraite hyperplane. The
+support vectors are the only data points that have an influence on the maximum margin in SVM.
 
 #### Comparision
 
 
 
 ## Results
+
+```{r}
+n_obs <- nrow(df)
+```
+
+
+```{r}
+#| label: patient_demographics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Demographics of study population"
+patient_demo <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("age_at_scan", "gender", "ethnicity")) |>
+    gtsummary::tbl_summary() |>
+  gtsummary::modify_caption("Demographics of study population")
+patient_demo
+print(colnames(patient_demo))
+```
+
+@patient_demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were included in
+this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, variable="age_at_scan")`.
+
+```{r}
+#| label: clinical_characteristics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules"
+clinical_charac <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("incidental_nodule",
+                  "palpable_nodule",
+                  "rapid_enlargment",
+                  "compressive_symtoms",
+                  "hypertension",
+                  "vocal_cord_paresis",
+                  "graves_disease",
+                  "hashimotos_thyroiditis",
+                  "family_history_thyroid_cancer",
+                  "exposure_radiation",
+                  "final_pathology",
+                  )) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
+clinical_charac
+print(colnames(clinical_charac))
+```
+
+@clinical_characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
+
+```{r}
+#| label: biochem_variables
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Biochemical variables evaluated between benign and malignant thyroid nodules"
+biochem_vars <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("albumin",
+                  "tsh_value",
+                  "lymphocytes",
+                  "monocyte",
+                  "final_pathology")) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
+biochem_vars
+print(colnames(biochem_vars))
+```
+
+```{r}
+#| label: ultrasound_characteristics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Ultrasound characteristics of benign and malignant nodules"
+ultrasound_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("size_nodule_mm",
+                  "solitary_nodule",
+                  "bta_u_classification",
+                  "consistency_nodule",
+                  "cervical_lymphadenopathy",
+                  "final_pathology")) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
+ultrasound_char
+print(colnames(ultrasound_char))
+```
+
+```{r}
+#| label: cytology_characteristics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Cytological characteristics of benign and malignant nodules"
+cytology_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("thy_classification",
+                  "final_pathology")) |>
+    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Cytological characteristics of benign and malignant nodules")
+cytology_char
+print(colnames(cytology_char))
+```
 
 ### Data Description
 
@@ -211,198 +395,36 @@ instances where the `final_pathology` is not known which reduces the sample size
 individuals have complete data for all of these, this _will_ reduce your sample size available. You could add that to
 this section.
 
-The predictor variables selected for inclusion were.
-
-**TODO** Insert table of subset of predictor variables that are considered important.
+The predictor variables selected for inclusion were age, gender, ethnicity, incidental nodule, palpable nodule, rapid
+enlargement, compressive symptoms, hypertension, vocal cord paresis, Graves' disease, Hashimotos' thyroiditis, family
+history of thyroid cancer, exposure to radiation, serum albumin, serum TSH, serum monocytes, serum lymphocytes, BTA U
+classification, nodule size, FNA Thy classification, final pathology.
 
 ```{r}
-#| label: remove-missing-final-pathology
+#| label: predictors-evaluated
 #| purl: true
 #| eval: true
 #| echo: false
-#| output: true
-print(paste0("Before : ", nrow(df)))
-df <- df |>
-  dplyr::filter(!is.na(final_pathology))
-print(paste0("After  : ", nrow(df)))
-
+#| warning: false
+#| tbl-caption: "predictors-evaluated"
+df_predictors_evaluated <- df |>
+  ## dropped variables
+  dplyr::select(-any_of(c("study_id", "eligibility", "consistency_nodule", "repeat_ultrasound", "repeat_bta_u_classification", "fna_done", "repeat_fna_done", "repeat_thy_classification", "thyroid_surgery", "thyroid_histology_diagnosis"))) |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Variables evaluated in the model")
+df_predictors_evaluated
 ```
-
-```{r}
-#| label: fig-age-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Age by final pathology."
-df |>
-  ggplot(aes(age_at_scan, fill=final_pathology)) +
-  geom_histogram(alpha=0.6, position="identity") +
-  labs(x = "Age (years)", y = "N") +
-  ggtitle("Age") +
-  labs(fill="")
-## TODO - You may want to add vertical lines to the graph for the mean of each group
-##
-## Useful resources for plotting with ggplot2
-##
-## ggplot2 - https://ggplot2.tidyverse.org/index.html
-## The R Graph Gallery - https://r-graph-gallery.com/
-## StackOverflow for - https://stackoverflow.com/ (handy for searching for answers questions like how to add the mean)
-
-```
-
-```{r}
-#| label: fig-gender-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Gender by final pathology."
-df |>
-  ggplot(aes(gender, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final Pathology", y = "N") +
-  ggtitle("Gender") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-incidental-nodule-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Incidental nodule by final pathology."
-df |>
-  ggplot(aes(incidental_nodule, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final Pathology", y = "N") +
-  ggtitle("Incidental Nodule") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-palpable-nodule-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Palpable nodule by final pathology."
-df |>
-  ggplot(aes(palpable_nodule, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final Pathology", y = "N") +
-  ggtitle("Palpable Nodule") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-vocal-cord-paresis
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Vocal cord paresis by final pathology."
-df |>
-  ggplot(aes(vocal_cord_paresis, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final pathology", y = "N") +
-  ggtitle("Vocal Cord Paresis") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-hypertension-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Hypertension by final pathology."
-df |>
-  ggplot(aes(hypertension, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  ggtitle("Hypertension") +
-  labs(x = "Final Pathology", y = "N") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-size-nodule-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Nodule size (mm) by final pathology."
-df |>
-  ggplot(aes(size_nodule_mm, fill=final_pathology)) +
-  geom_histogram(alpha=0.6, position="identity") +
-  labs(x = "Nodule Size (mm)", y = "N") +
-  ggtitle("Nodule Size") +
-  labs(fill="")
-## TODO - You may want to add vertical lines to the graph for the mean of each group
-##
-## Useful resources for plotting with ggplot2
-##
-## ggplot2 - https://ggplot2.tidyverse.org/index.html
-## The R Graph Gallery - https://r-graph-gallery.com/
-## StackOverflow for - https://stackoverflow.com/ (handy for searching for answers questions like how to add the mean)
-
-```
-
-
-#### Concordance
-
-A subset of clinical data and classification were repeated by independant clinicans (`fna_done`,
-`bta_u_classification` and `thy_classification`). This affords the opportunity to invetigate the correlation/concordance
-between the two assessments, formal statistical tests for difference can be made using Chi-squared, although they have little
-
-The cross tabulation of repeated `bta_u_classifcation` and `thy_classification` are shown in tables
-@tbl-concordance-bta-u-classification and @tbl-concordance-thy-classification respectively.
-
-```{r}
-#| label: tbl-concordance-bta-u-classification
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| tbl-caption: "Cross-tabulation of `bta_u_classification` and its repeat assessment."
-## Start by tabulating the variables of interest.
-concordance_bta_u_classification <- df |>
-  select(bta_u_classification, repeat_bta_u_classification) |>
-  table(useNA = "no")
-
-concordance_bta_u_classification |>
-  kable(caption="Cross-tabulation of `bta_u_classification` and its repeat assessment.")
-
-## Optionally perform a Chi-squared test (chisq.test() is the function to use).
-
-```
-
-```{r}
-#| label: tbl-concordance-thy-classification
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| tbl-caption: "Cross-tabulation of `thy_classification` and its repeat assessment."
-## Start by tabulating the variables of interest.
-concordance_thy_classification <- df |>
-  select(thy_classification, repeat_thy_classification) |>
-  table(useNA = "no")
-
-concordance_thy_classification  |>
-  kable(caption="Cross-tabulation of `thy_classification` and its repeat assessment.")
-
-## Optionally perform a Chi-squared test (chisq.test() is the function to use).
-```
-
-**TODO** Cross-tabulate other variables. I noticed that whilst there is `repeat_utlrasound` and `repeat_fna_done` there
-is no counter `ultrasound` or `fna_done` variables to compare these repeat data points to, are these variables available?
 
 <!-- Section that sets up the modelling -->
 ```{r}
@@ -422,12 +444,27 @@ set.seed(5039378)
 df_complete <- df |>
   dplyr::select(
     age_at_scan,
-    final_pathology,
     gender,
+    ethnicity,
+    incidental_nodule,
     palpable_nodule,
     rapid_enlargment,
+    compressive_symtoms,
+    hypertension,
+    vocal_cord_paresis,
+    graves_disease,
+    hashimotos_thyroiditis,
+    family_history_thyroid_cancer,
+    exposure_radiation,
+    albumin,
+    tsh_value,
+    lymphocytes,
+    monocyte,
+    bta_u_classification,
     size_nodule_mm,
-    thy_classification) |>
+    cervical_lymphadenopathy,
+    thy_classification,
+    final_pathology) |>
 dplyr::filter(if_any(everything(), is.na))
 
 ## Use the df_complete rather than df as this subset have data for all the variables of interest.
@@ -435,6 +472,10 @@ split <- rsample::initial_split(df_complete, prop = 0.75)
 train <- rsample::training(split)
 test <- rsample::testing(split)
 ```
+
+view(df_complete)
+view(df)
+<!--this still has 1299 data set, fairly complete or analysis not applied-->
 
 ```{r}
 #| label: cv-vfold
@@ -453,20 +494,20 @@ cv_folds <- rsample::vfold_cv(train, v = 10, repeats = 10)
 #| output: false
 cv_loo <- rsample::loo_cv(train)
 ```
+
 ```{r}
 #| label: recipe
 #| purl: true
 #| eval: true
 #| echo: true
 #| output: false
-## NB This is the key section where the variables that are to be used in the model are defined. A dependant variable
+## NB This is the key section where the variables that are to be used in the model are defined. A dependent variable
 ## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
 ## this appears on the left-hand side of the equation (before the tilde `~`). On the right of the equation are the
 ## predictor or dependant variables
-thyroid_recipe <- recipes::recipe(final_pathology ~ gender + size_nodule_mm + age_at_scan + palpable_nodule +
-  rapid_enlargment + thy_classification, data = train) |>
-  recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
-  recipes::step_dummy(gender, palpable_nodule, rapid_enlargment, thy_classification) |>
+thyroid_recipe <- recipes::recipe(final_pathology ~ age_at_scan + gender + ethnicity + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hypertension + vocal_cord_paresis + graves_disease + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation + albumin + tsh_value + lymphocytes + monocyte + bta_u_classification + size_nodule_mm + cervical_lymphadenopathy + thy_classification, data = train) |>
+  #recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
+  recipes::step_dummy(age_at_scan, gender, ethnicity, incidental_nodule, palpable_nodule, rapid_enlargment, compressive_symtoms, hypertension, vocal_cord_paresis, graves_disease, hashimotos_thyroiditis, family_history_thyroid_cancer, exposure_radiation, albumin, tsh_value, lymphocytes, monocyte, bta_u_classification, size_nodule_mm, cervical_lymphadenopathy, thy_classification, data = train) |>
   recipes::step_normalize(all_numeric())
 ```
 
