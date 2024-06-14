@@ -55,37 +55,9 @@ var_labels <- c(
 df <- tibble(raw_data)
 Hmisc::label(df) <- as.list(var_labels[match(names(df), names(var_labels))])
 
-## Convert Yes/No columns into logical FALSE/TRUE.
-## 1. Make a list of all Yes/No columns (again sorted alphabetically, its easier to read)
-binary_cols <- c(
-  "cervical_lymphadenopathy",
-  "compressive_symtoms",
-  "exposure_radiation",
-  "family_history_thyroid_cancer",
-  "fna_done",
-  "graves_disease",
-  "hashimotos_thyroiditis",
-  "hypertension",
-  "incidental_nodule",
-  "palpable_nodule",
-  "rapid_enlargment",
-  "repeat_fna_done",
-  "repeat_ultrasound",
-  "solitary_nodule",
-  "vocal_cord_paresis"
-)
-## 2. Recode this list to "Yes" = TRUE; "No" = FALSE (Can't use as.logical() directly as that only works with variables
-##    coded as 0/1).
-df <- df |>
-    dplyr::mutate(dplyr::across(
-        dplyr::all_of(binary_cols),
-        ~ dplyr::recode(.x,
-             "Yes" = TRUE,
-             "No" = FALSE
-        )
-    ))
-
-## Convert character variables to factors
+## Convert character variables to factors, this now includes binary variables that are 'No'/'Yes' which will now be
+## treated as factors /nominal variables and the required dummies generated when we use
+## recipes::step_dummy(recipes::all_nominal_predictors()) to encode them to dummy variables.
 df <- df |>
     dplyr::mutate_if(is.character, as.factor)
 

@@ -1,7 +1,7 @@
 
 
 ```{r}
-#| label: lasso
+#| label: lasso-tune
 #| purl: true
 #| eval: true
 #| echo: false
@@ -19,9 +19,23 @@ lasso_grid <- tune::tune_grid(
   grid = dials::grid_regular(penalty(), levels = 50)
 )
 
+```{r}
+#| label: lasso-best-fit
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
 ## K-fold best fit for LASSO
 lasso_kfold_roc_auc <- lasso_grid |>
   tune::select_best(metric = "roc_auc")
+```
+
+```{r}
+#| label: lasso-final
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
 
 ## Fit the final LASSO model
 final_lasso_kfold <- tune::finalize_workflow(
