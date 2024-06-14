@@ -8,6 +8,8 @@ format:
   html:
     comments:
       hypothesis: true
+    toc-location: right
+
   docx: default
   jats: default
 
@@ -16,6 +18,3 @@ format:
 
 execute:
   freeze: true
-
-
-

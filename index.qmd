@@ -32,21 +32,8 @@ author:
     affiliations:
       - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
 abstract: |
-  ### Introduction {.unnumbered}
-
-  This is the introduction.
-
-  ### Methods {.unnumbered}
-
-  This is the methods.
-
-  ### Results {.unnumbered}
-
-  This is the results.
-
-  ### Conclusion {.unnumbered}
-
-  This is the conclusion
+  An abstract summarising the work undertaken and the overall conclusions can be placed here. Sub-headings are currently
+  removed because they conflict with those in the body of the text and mess up the links in the Table of Contents.
 keywords:
   - Thyroid nodules
   - Thyroid cancer
@@ -69,7 +56,7 @@ number-sections: true
 #| echo: false
 #| warning: false
 
-# Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
+## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
 library(dplyr)
 library(ggplot2)
 library(ggdark)
@@ -79,7 +66,7 @@ library(knitr)
 library(readr)
 library(rmarkdown)
 
-# Libraries for Tidymodelling
+## Libraries for Tidymodelling
 library(dials)
 library(kernlab)
 library(knitr)
@@ -87,7 +74,8 @@ library(tidymodels)
 library(tidyverse)
 library(vip)
 
-# Set global options
+
+## Set global options
 options(digits = 3)
 train <- 0.75
 test <- 0.25
@@ -107,7 +95,7 @@ r_scripts <- paste(base_dir, "r", sep = "/")
 ## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
 source("r/shf_thy_nod.R")
 ## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
-## saved to `data/r/clean.rds` can be loaded cy commenting out the line above and uncommenting the line below.
+## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
 #df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
 ```
 
@@ -187,15 +175,6 @@ it is for the model to learn the trends. The test set was used to determine the 
 thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
 randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
 data sets so any test data was not accidentally trained.
-<<<<<<< HEAD
-Cross validation was used to estimate the accuracy of the various machine learning models.
-The k-fold techniques was used to splits the data in ?10 folds, and the data trained on all but one of the the fold; the single fold not trained is then and the
-used to test the data. This was repeated multiple times using a different fold for test and
-the others folds for training until all the folds is utilised for training and testing. Following multiple training process
-with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort. 
-We also used the leave one out (loo) cross-validation to train and test the datasets. In this technique, all but one
-observation is use to train the data set and one observation is use to test the data; this was repeated until all the
-=======
 Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
 The k-fold techniques splits the data in ?10 folds, and the data was trained on all but one of the the fold, and the
 one fold not trained is used to test the data. This was repeated multiple times using a different fold for test and
@@ -203,7 +182,6 @@ the others for training until all the folds is utilised for training and testing
 with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort.
 We also used the leave one out (loo) cross-validation to train and test the data set.In this technique, all but one
 observation is use to train the data set and one observation is use to test the data; this is repeated until all the
->>>>>>> 41e9babebd30a0c96c2522d73a479db4a7f6d1a0
 data test is used for testing and training. The model with the best predictive value was selected.
 
 
@@ -404,10 +382,18 @@ The completeness of the data is shown in @tbl-data-completeness. Where variables
 given. For categorical variables that are logical `TRUE`/`FALSE` (e.g. `palpable_nodule`) the number of `TRUE`
 observations and the percentage (of those with observed data for that variable) are shown along with the number that are
 _Unknown_. For categorical variables such as `gender` and percentages in each category are
-reported. For all variables an indication of the number of missing observations is also given
+reported. For all variables an indication of the number of missing observations is also given and it is worth noting
+that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
+instances where the `final_pathology` is not known which reduces the sample size to
+`r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
+
+**IMPORTANT** You will probably want to have a the following section included which excludes those with missing
+`final_pathology`, they can't contribute anything to the modelling.
+
 
 **IMPORTANT** Once you have decided which variables you want to include in your analysis you should determine how many
-individuals have complete data for all of these, this _will_ reduce your sample size available.
+individuals have complete data for all of these, this _will_ reduce your sample size available. You could add that to
+this section.
 
 The predictor variables selected for inclusion were age, gender, ethnicity, incidental nodule, palpable nodule, rapid
 enlargement, compressive symptoms, hypertension, vocal cord paresis, Graves' disease, Hashimotos' thyroiditis, family
@@ -440,7 +426,7 @@ df_predictors_evaluated <- df |>
 df_predictors_evaluated
 ```
 
-
+<!-- Section that sets up the modelling -->
 ```{r}
 #| label: test-train-split
 #| purl: true
