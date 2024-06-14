@@ -507,7 +507,7 @@ cv_loo <- rsample::loo_cv(train)
 ## predictor or dependant variables
 thyroid_recipe <- recipes::recipe(final_pathology ~ age_at_scan + gender + ethnicity + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hypertension + vocal_cord_paresis + graves_disease + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation + albumin + tsh_value + lymphocytes + monocyte + bta_u_classification + size_nodule_mm + cervical_lymphadenopathy + thy_classification, data = train) |>
   #recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
-  recipes::step_dummy(age_at_scan, gender, ethnicity, incidental_nodule, palpable_nodule, rapid_enlargment, compressive_symtoms, hypertension, vocal_cord_paresis, graves_disease, hashimotos_thyroiditis, family_history_thyroid_cancer, exposure_radiation, albumin, tsh_value, lymphocytes, monocyte, bta_u_classification, size_nodule_mm, cervical_lymphadenopathy, thy_classification, data = train) |>
+  recipes::step_dummy(gender, ethnicity, incidental_nodule, palpable_nodule, rapid_enlargment, compressive_symtoms, hypertension, vocal_cord_paresis, graves_disease, hashimotos_thyroiditis, family_history_thyroid_cancer, exposure_radiation, bta_u_classification, cervical_lymphadenopathy, thy_classification, data = train) |>
   recipes::step_normalize(all_numeric())
 ```
 
@@ -532,65 +532,7 @@ Results of the various modelling go here. Each section will show the results alo
 
 #### LASSO / Elastic Net
 
-```{r}
-#| label: lasso
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-## Specify the LASSO model using parsnip, the key here is the use of the glmnet engine which is the R package for
-## fitting LASSO regression. Technically the package fits Elastic Net but with a mixture value of 1 it is equivalent to
-## a plain LASSO (mixture value of 0 is equivalent to Ridge Regression in an Elastic Net)
-tune_spec_lasso <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 1) |>
-  parsnip::set_engine("glmnet")
-
-## Tune the LASSO parameters via cross-validation
-lasso_grid <- tune::tune_grid(
-  object = workflows::add_model(thyroid_workflow, tune_spec_lasso),
-  resamples = cv_folds,
-  grid = dials::grid_regular(penalty(), levels = 50)
-)
-
-## K-fold best fit for LASSO
-lasso_kfold_roc_auc <- lasso_grid |>
-  tune::select_best(metric = "roc_auc")
-
-## Fit the final LASSO model
-final_lasso_kfold <- tune::finalize_workflow(
-  workflows::add_model(thyroid_workflow, tune_spec_lasso),
-  lasso_kfold_roc_auc
-)
-```
-
-```{r}
-#| label: lasso-kfold-eval-importance
-#| purl: true
-#| eval: false
-#| echo: true
-#| output: true
-final_lasso_kfold |>
-  fit(train) |>
-  hardhat::extract_fit_parsnip() |>
-  vip::vi(lambda = lasso_kfold_roc_auc$penalty) |>
-  dplyr::mutate(
-    Importance = abs(Importance),
-    Variable = fct_reorder(Variable, Importance)
-  ) |>
-  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  dark_theme_minimal()
-```
-
-``` {r}
-#| label: lasso-save
-#| purl: true
-#| eval: false
-#| echo: true
-#| output: false
-save(lasso_tune_spec, lasso_grid, final_lasso, lasso_highest_roc_auc,
-  file = "data/r/lasso.RData"
-)
-```
+{{< include sections/lasso.qmd >}}
 
 #### Elastic Net
 
