@@ -86,26 +86,8 @@ df <- df |>
     ))
 
 ## Convert character variables to factors
-##
-## 1. Make a list of all character varaibles (sorted alphabetically).
-character_cols = c(
-    "bta_u_classification",
-    "consistency_nodule",
-    "ethnicity",
-    "final_pathology",
-    "gender",
-    "repeat_bta_u_classification",
-    "repeat_thy_classification",
-    "thy_classification",
-    "thyroid_histology_diagnosis",
-    "thyroid_surgery"
-)
-## 2. Convert all to factor variables
 df <- df |>
-    dplyr::mutate(dplyr::across(
-      dplyr::all_of(character_cols),
-      ~ as.factor(.x)
-    ))
+    dplyr::mutate_if(is.character, as.factor)
 
 ## ns-rse (2024-04-30) : A Check should be made for duplicated data and any such duplicates removed, even if you think
 ## there shouldn't be or aren't any duplicates in a dataset it is a simple step to make such a check and remove any that
