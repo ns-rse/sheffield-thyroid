@@ -146,7 +146,7 @@ Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, 
 
 ### Data source
 
-Data was collected from patients' case notes and electronic patients' database. Data was collected using a standardised
+Data was collected from patients' case notes and electronic patients' database using a standardised
 data collection proforma. This was initially piloted on 30 patients  and revised to improve data entry. In addition a
 number of variables that were not standard collected during workout of patients were not further checked; these include
 body mass index (BMI), serum thyroglobulin, serum triiodothyronine (T3), thyroxine (T4), thyroglobulin antibody (TgAb),
