@@ -47,6 +47,8 @@ bibliography: references.bib
 citation:
   container-title: "Sheffield study on thyroid nodules"
 number-sections: true
+notebook-preview-options:
+  preview: false
 ---
 
 ```{r}
@@ -224,12 +226,16 @@ support vectors are the only data points that have an influence on the maximum m
 ## Results
 
 ```{r}
+#| label: n_obs
+#| eval: true
+#| echo: false
+#| warning: false
 n_obs <- nrow(df)
 ```
 
 
 ```{r}
-#| label: patient_demographics
+#| label: tbl-patient-demographics
 #| eval: true
 #| echo: false
 #| warning: false
@@ -243,11 +249,11 @@ patient_demo
 print(colnames(patient_demo))
 ```
 
-@patient_demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were included in
+@tbl-patient-demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were included in
 this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, variable="age_at_scan")`.
 
 ```{r}
-#| label: clinical_characteristics
+#| label: tbl-clinical-characteristics
 #| eval: true
 #| echo: false
 #| warning: false
@@ -272,10 +278,10 @@ clinical_charac
 print(colnames(clinical_charac))
 ```
 
-@clinical_characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
+@tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
 
 ```{r}
-#| label: biochem_variables
+#| label: tbl-biochem-variables
 #| eval: true
 #| echo: false
 #| warning: false
@@ -294,7 +300,7 @@ print(colnames(biochem_vars))
 ```
 
 ```{r}
-#| label: ultrasound_characteristics
+#| label: tbl-ultrasound-characteristics
 #| eval: true
 #| echo: false
 #| warning: false
@@ -314,7 +320,7 @@ print(colnames(ultrasound_char))
 ```
 
 ```{r}
-#| label: cytology_characteristics
+#| label: tbl-cytology-characteristics
 #| eval: true
 #| echo: false
 #| warning: false
@@ -387,21 +393,12 @@ that there are `r gtsummary::inline_text(df_summary, variable="final_pathology",
 instances where the `final_pathology` is not known which reduces the sample size to
 `r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
 
-**IMPORTANT** You will probably want to have a the following section included which excludes those with missing
-`final_pathology`, they can't contribute anything to the modelling.
+### Modelling
 
-
-**IMPORTANT** Once you have decided which variables you want to include in your analysis you should determine how many
-individuals have complete data for all of these, this _will_ reduce your sample size available. You could add that to
-this section.
-
-The predictor variables selected for inclusion were age, gender, ethnicity, incidental nodule, palpable nodule, rapid
-enlargement, compressive symptoms, hypertension, vocal cord paresis, Graves' disease, Hashimotos' thyroiditis, family
-history of thyroid cancer, exposure to radiation, serum albumin, serum TSH, serum monocytes, serum lymphocytes, BTA U
-classification, nodule size, FNA Thy classification, final pathology.
+The predictor variables selected to predict `final_pathology` are shown in @tbl-predictors
 
 ```{r}
-#| label: predictors-evaluated
+#| label: tbl-predictors
 #| purl: true
 #| eval: true
 #| echo: false
@@ -434,7 +431,9 @@ df_predictors_evaluated
 #| echo: false
 #| output: false
 ## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
-tidymodels_prefer()
+library(tidyverse)
+library(tidymodels)
+tidymodels::tidymodels_prefer()
 set.seed(5039378)
 
 ## This is the point at which you should subset your data for those who have data available for the variables of
@@ -465,7 +464,12 @@ df_complete <- df |>
     cervical_lymphadenopathy,
     thy_classification,
     final_pathology) |>
-dplyr::filter(if_any(everything(), is.na))
+## @ns-rse 2024-06-14 :
+## I would consider removing this dplyr::filter() and instead using the recipes::step_filter_missing() as is now in
+## place below
+## dplyr::filter(if_any(everything(), is.na))
+## Instead I think it might be useful to remove individuals who do not have a value for final_pathology here
+  dplyr::filter(!is.na(final_pathology))
 
 ## Use the df_complete rather than df as this subset have data for all the variables of interest.
 split <- rsample::initial_split(df_complete, prop = 0.75)
@@ -473,9 +477,6 @@ train <- rsample::training(split)
 test <- rsample::testing(split)
 ```
 
-view(df_complete)
-view(df)
-<!--this still has 1299 data set, fairly complete or analysis not applied-->
 
 ```{r}
 #| label: cv-vfold
@@ -505,7 +506,19 @@ cv_loo <- rsample::loo_cv(train)
 ## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
 ## this appears on the left-hand side of the equation (before the tilde `~`). On the right of the equation are the
 ## predictor or dependant variables
-thyroid_recipe <- recipes::recipe(final_pathology ~ age_at_scan + gender + ethnicity + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hypertension + vocal_cord_paresis + graves_disease + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation + albumin + tsh_value + lymphocytes + monocyte + bta_u_classification + size_nodule_mm + cervical_lymphadenopathy + thy_classification, data = train) |>
+##
+## @ns-rse 2024-06-14 :
+## Because we have used dplyr::select() to choose _just_ the columns of interest we can use the '.'
+## notation to refer to "all other variables" as being predictors. This is useful as it saves duplication of writing
+## everything out which leaves scope for some being missed.
+thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
+  ## @ns-rse 2024-06-14 :
+  ## This step can be used to filter observations with missing data, see the manual pages for more details
+  ## https://recipes.tidymodels.org/reference/step_filter_missing.html
+  recipes::step_filter_missing(recipes::all_predictors(), threshold = 0) |>
+  ## @ns-rse 2024-06-14 :
+  ## We first normalise the data _before_ we generate dummies otherwise the dummies, which are numerical, get normalised
+  ## too
   recipes::step_normalize(recipes::all_numeric_predictors()) |>
   recipes::step_dummy(recipes::all_nominal_predictors())
 ```
@@ -517,9 +530,9 @@ thyroid_recipe <- recipes::recipe(final_pathology ~ age_at_scan + gender + ethni
 #| output: false
 thyroid_workflow <- workflows::workflow() |>
   workflows::add_recipe(thyroid_recipe)
-```
 
-### Modelling
+```
+<!-- {{< include sections/recipe.qmd >}} -->
 
 A total of `r df_complete |> nrow()` patients had complete data for the selected predictor variables (see
 @tbl-predictors).

@@ -18,3 +18,7 @@ format:
 
 execute:
   freeze: true
+
+render:
+  - "*.qmd"
+  - "!sections/"
