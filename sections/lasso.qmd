@@ -4,8 +4,9 @@
 #| label: lasso-tune
 #| purl: true
 #| eval: true
-#| echo: false
+#| echo: true
 #| output: false
+#| cache: true
 ## Specify the LASSO model using parsnip, the key here is the use of the glmnet engine which is the R package for
 ## fitting LASSO regression. Technically the package fits Elastic Net but with a mixture value of 1 it is equivalent to
 ## a plain LASSO (mixture value of 0 is equivalent to Ridge Regression in an Elastic Net)
@@ -18,6 +19,23 @@ lasso_grid <- tune::tune_grid(
   resamples = cv_folds,
   grid = dials::grid_regular(penalty(), levels = 50)
 )
+```
+
+```{r}
+#| label: fig-lasso-tune-autoplot
+#| fig-cap: Autoplot of LASSO grid search
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
+## Plot the tuning search results, see https://tune.tidymodels.org/reference/autoplot.tune_results.html
+##
+## This shows how the evaluation metrics change over time with each iteration of the Lasso (we know we are running a
+## LASSO because when we setup tune_spec_lasso the mixture = 1 when we define parsnip::logistic_reg()
+tune::autoplot(lasso_grid)
+```
+
+
 
 ```{r}
 #| label: lasso-best-fit
@@ -45,9 +63,10 @@ final_lasso_kfold <- tune::finalize_workflow(
 ```
 
 ```{r}
-#| label: lasso-kfold-eval-importance
+#| label: fig-lasso-kfold-eval-importance
+#| fig-cap: Importance of variables fitted using LASSO
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: true
 #| output: true
 final_lasso_kfold |>
@@ -63,13 +82,22 @@ final_lasso_kfold |>
   dark_theme_minimal()
 ```
 
+**NB** - We may wish to inspect the coefficients at each step of tuning. A related example of how to do this can be found in
+the [Tidymodels documentation](https://www.tidymodels.org/learn/) under the [Tuning a `glmnet`
+model](https://www.tidymodels.org/learn/models/coefficients/#tuning-a-glmnet-model). This would be desirable as it looks
+like only two features are selected as being important by this method and so rather than just accepting this I would
+want to investigate and see how the coefficients changed over iterations. Another useful resource is the
+[glmnet](https://glmnet.stanford.edu/articles/glmnet.html) documentation, although note that since we are using the
+Tidymodels framework the model `fit` is wrapped up inside (hence the above article on how to extract this information).
+
+
 ``` {r}
 #| label: lasso-save
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: true
 #| output: false
-save(lasso_tune_spec, lasso_grid, final_lasso, lasso_highest_roc_auc,
+save(tune_spec_lasso, lasso_grid, final_lasso_kfold, lasso_kfold_roc_auc,
   file = "data/r/lasso.RData"
 )
 ```
