@@ -1,5 +1,7 @@
 project:
   type: manuscript
+  preview:
+    port: 4681
 
 manuscript:
   article: index.qmd
@@ -8,6 +10,10 @@ format:
   html:
     comments:
       hypothesis: true
+    toc: true
+    toc-depth: 4
+    toc-expand: 3
+    toc-title: "Table of Contents"
     toc-location: right
 
   docx: default

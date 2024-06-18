@@ -168,10 +168,10 @@ Data was cleaned and analysed using the R Statistical Software @r_citation and t
 
 ### Modelling
 
-We used a selection of statistic modelling techniques to evaluate association between variables and thyroid cancer in patients with thyroid nodules.
-We used the training and test methodology to split the patient population into training and testing cohorts in a ratio
-of `r train`:`r test` and each model is fitted using the
-training cohort. This split ratio is generally used in traditional machine learning techniques. The training set of the
+We used a selection of statistic modelling techniques to evaluate association between variables and thyroid cancer in
+patients with thyroid nodules. The patient population was split into training and testing cohorts in a ratio
+of `r train`:`r test` and each model is fitted using the training cohort.
+This split ratio is generally used in traditional machine learning techniques. The training set of the
 data was used to estimate the relation between variables and thyroid cancer. The larger the training data, the better
 it is for the model to learn the trends. The test set was used to determine the accuracy of the model in predicting
 thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
@@ -202,11 +202,13 @@ variables @steyerberg2001
 
 
 #### Random Forest
+
 To add reference
 The random forest plot is an extension of the decision tree methodology to reduce variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the dataset to create multiple decision trees. Random variables are selected for each tree in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate.
 
 
 #### Gradient Boosting
+
 Gradient boosting is a machine learning algorithm that uses decision tree as a base model. The data is initially trained
 on this decision tree, but the initial prediction is weak, thus termed a weak based model. In gradient boosting the process
 is iterative; a sequence of decision trees is added to the initial tree. Each tree learns from the prior tree(s) to improve the model, increasing strength and minimising error.
@@ -404,38 +406,11 @@ The predictor variables selected to predict `final_pathology` are shown in @tbl-
 #| echo: false
 #| warning: false
 #| tbl-caption: "predictors-evaluated"
-df_predictors_evaluated <- df |>
-  ## dropped variables
-  dplyr::select(-any_of(c("study_id", "eligibility", "consistency_nodule", "repeat_ultrasound", "repeat_bta_u_classification", "fna_done", "repeat_fna_done", "repeat_thy_classification", "thyroid_surgery", "thyroid_histology_diagnosis"))) |>
-  dplyr::ungroup() |>
-  gtsummary::tbl_summary(
-    type = all_continuous() ~ "continuous2",
-    statistic = all_continuous() ~ c(
-      "{N_nonmiss}",
-      "{mean} ({sd})",
-      "{median} ({p25}, {p75})",
-      "{min}, {max}"
-    ),
-    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
-    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
-  ) |>
-  gtsummary::modify_caption("Variables evaluated in the model")
-df_predictors_evaluated
-```
-
-<!-- Section that sets up the modelling -->
-```{r}
-#| label: test-train-split
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: false
-## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
-library(tidyverse)
-library(tidymodels)
-tidymodels::tidymodels_prefer()
-set.seed(5039378)
-
+## @ns-rse 2024-06-18:
+## We want this table to match the model, therefore rather than repeat ourselves we move the subsetting to give us
+## df_complete to here and assign to df_complete. This is then passed into gtsummary::tbl_summary() and is available for
+## the next code chunk.
+##
 ## This is the point at which you should subset your data for those who have data available for the variables of
 ## interest. The variables here should include the outcome `final_pathology` and the predictor variables that are set in
 ## the code chunk `recipe`. May want to move this to another earlier in the processing so that the number of rows can be
@@ -471,7 +446,37 @@ df_complete <- df |>
 ## Instead I think it might be useful to remove individuals who do not have a value for final_pathology here
   dplyr::filter(!is.na(final_pathology))
 
-## Use the df_complete rather than df as this subset have data for all the variables of interest.
+df_predictors_evaluated <- df_complete |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Variables evaluated in the model")
+df_predictors_evaluated
+```
+
+<!-- Section that sets up the modelling -->
+```{r}
+#| label: test-train-split
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
+library(tidyverse)
+library(tidymodels)
+tidymodels::tidymodels_prefer()
+set.seed(5039378)
+
+## Use df_complete rather than df as this subset have data for all the variables of interest.
 split <- rsample::initial_split(df_complete, prop = 0.75)
 train <- rsample::training(split)
 test <- rsample::testing(split)
@@ -542,7 +547,7 @@ Results of the various modelling go here. Each section will show the results alo
 + LIME/Shaply analysis for explanability of models
 
 
-#### LASSO / Elastic Net
+#### LASSO
 
 {{< include sections/lasso.qmd >}}
 
