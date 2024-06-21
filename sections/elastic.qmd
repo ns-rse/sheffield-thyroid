@@ -1,0 +1,103 @@
+
+
+```{r}
+#| label: elastic-tune
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: false
+#| cache: true
+## Specify the Elastic Net model using parsnip, the key here is the use of the glmnet engine which is the R package for
+## fitting Elastic Net regression. Technically the package fits Elastic Net but with a mixture value of 1 it is equivalent to
+## a plain Elastic Net (mixture value of 0 is equivalent to Ridge Regression in an Elastic Net)
+tune_spec_elastic <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 0.5) |>
+  parsnip::set_engine("glmnet")
+
+## Tune the Elastic Net parameters via cross-validation
+lasso_grid <- tune::tune_grid(
+  object = workflows::add_model(thyroid_workflow, tune_spec_elastic),
+  resamples = cv_folds,
+  grid = dials::grid_regular(penalty(), levels = 50)
+)
+```
+
+```{r}
+#| label: fig-elastic-tune-autoplot
+#| fig-cap: Autoplot of Elastic Net grid search
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
+## Plot the tuning search results, see https://tune.tidymodels.org/reference/autoplot.tune_results.html
+##
+## This shows how the evaluation metrics change over time with each iteration of the Lasso (we know we are running a
+## Elastic Net because when we setup tune_spec_elastic the mixture = 1 when we define parsnip::logistic_reg()
+tune::autoplot(lasso_grid)
+```
+
+
+
+```{r}
+#| label: elastic-best-fit
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
+## K-fold best fit for Elastic Net
+lasso_kfold_roc_auc <- lasso_grid |>
+  tune::select_best(metric = "roc_auc")
+```
+
+```{r}
+#| label: elastic-final
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
+
+## Fit the final Elastic Net model
+final_elastic_kfold <- tune::finalize_workflow(
+  workflows::add_model(thyroid_workflow, tune_spec_elastic),
+  lasso_kfold_roc_auc
+)
+```
+
+```{r}
+#| label: fig-elastic-kfold-eval-importance
+#| fig-cap: Importance of variables fitted using Elastic Net
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
+final_elastic_kfold |>
+  fit(train) |>
+  hardhat::extract_fit_parsnip() |>
+  vip::vi(lambda = lasso_kfold_roc_auc$penalty) |>
+  dplyr::mutate(
+    Importance = abs(Importance),
+    Variable = fct_reorder(Variable, Importance)
+  ) |>
+  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  dark_theme_minimal()
+```
+
+**NB** - We may wish to inspect the coefficients at each step of tuning. A related example of how to do this can be found in
+the [Tidymodels documentation](https://www.tidymodels.org/learn/) under the [Tuning a `glmnet`
+model](https://www.tidymodels.org/learn/models/coefficients/#tuning-a-glmnet-model). This would be desirable as it looks
+like only two features are selected as being important by this method and so rather than just accepting this I would
+want to investigate and see how the coefficients changed over iterations. Another useful resource is the
+[glmnet](https://glmnet.stanford.edu/articles/glmnet.html) documentation, although note that since we are using the
+Tidymodels framework the model `fit` is wrapped up inside (hence the above article on how to extract this information).
+
+
+``` {r}
+#| label: elastic-save
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: false
+save(tune_spec_elastic, lasso_grid, final_elastic_kfold, lasso_kfold_roc_auc,
+  file = "data/r/lasso.RData"
+)
+```

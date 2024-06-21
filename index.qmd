@@ -553,66 +553,67 @@ Results of the various modelling go here. Each section will show the results alo
 
 #### Elastic Net
 
+{{< include sections/elastic.qmd >}}
 
-```{r}
-#| label: elastic-net-specification
-#| purl: true
-#| eval: false
-#| echo: true
-#| output: false
-## Elastic Net model specification, as with LASSO it uses glmnet package but the mixture is 0.5 which is 50% LASSO (L1
-## regularisation) and 50% Ridge Regression (L2 regularisation)
-elastic_net_tune_spec <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 0.5) |>
-  parsnip::set_engine("glmnet")
+<!-- ```{r} -->
+<!-- #| label: elastic-net-specification -->
+<!-- #| purl: true -->
+<!-- #| eval: false -->
+<!-- #| echo: true -->
+<!-- #| output: false -->
+<!-- ## Elastic Net model specification, as with LASSO it uses glmnet package but the mixture is 0.5 which is 50% LASSO (L1 -->
+<!-- ## regularisation) and 50% Ridge Regression (L2 regularisation) -->
+<!-- elastic_net_tune_spec <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 0.5) |> -->
+<!--   parsnip::set_engine("glmnet") -->
 
-## Tune the model using `tune::tune_grid()` (https://tune.tidymodels.org/reference/tune_grid.html), calculates the
-## accuracy or the Root Mean Square Error
-elastic_net_grid <- tune::tune_grid(
-  object = workflows::add_model(thyroid_workflow, elastic_net_tune_spec),
-  resamples = cv_folds,
-  grid = dials::grid_regular(penalty(), levels = 50)
-)
+<!-- ## Tune the model using `tune::tune_grid()` (https://tune.tidymodels.org/reference/tune_grid.html), calculates the -->
+<!-- ## accuracy or the Root Mean Square Error -->
+<!-- elastic_net_grid <- tune::tune_grid( -->
+<!--   object = workflows::add_model(thyroid_workflow, elastic_net_tune_spec), -->
+<!--   resamples = cv_folds, -->
+<!--   grid = dials::grid_regular(penalty(), levels = 50) -->
+<!-- ) -->
 
-## Perform K-fold cross validation
-elastic_net_highest_roc_auc <- elastic_net_grid |>
-  tune::select_best(metric = "roc_auc")
+<!-- ## Perform K-fold cross validation -->
+<!-- elastic_net_highest_roc_auc <- elastic_net_grid |> -->
+<!--   tune::select_best(metric = "roc_auc") -->
 
-## Make the final best fit based on K-fold cross validation
-final_elastic_net <- tune::finalize_workflow(
-  workflows::add_model(thyroid_workflow, elastic_net_tune_spec),
-  elastic_net_highest_roc_auc
-)
-```
+<!-- ## Make the final best fit based on K-fold cross validation -->
+<!-- final_elastic_net <- tune::finalize_workflow( -->
+<!--   workflows::add_model(thyroid_workflow, elastic_net_tune_spec), -->
+<!--   elastic_net_highest_roc_auc -->
+<!-- ) -->
+<!-- ``` -->
 
-```{r}
-#| label: elastic-net-kfold-eval-importance
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: true
-final_elastic_net |>
-  fit(train) |>
-  hardhat::extract_fit_parsnip() |>
-  vip::vi(lambda = elastic_net_highest_roc_auc$penalty) |>
-  dplyr::mutate(
-    Importance = abs(Importance),
-    Variable = fct_reorder(Variable, Importance)
-  ) |>
-  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  dark_theme_minimal()
-```
+<!-- ```{r} -->
+<!-- #| label: elastic-net-kfold-eval-importance -->
+<!-- #| purl: true -->
+<!-- #| eval: false -->
+<!-- #| echo: false -->
+<!-- #| output: true -->
+<!-- final_elastic_net |> -->
+<!--   fit(train) |> -->
+<!--   hardhat::extract_fit_parsnip() |> -->
+<!--   vip::vi(lambda = elastic_net_highest_roc_auc$penalty) |> -->
+<!--   dplyr::mutate( -->
+<!--     Importance = abs(Importance), -->
+<!--     Variable = fct_reorder(Variable, Importance) -->
+<!--   ) |> -->
+<!--   ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) + -->
+<!--   geom_col() + -->
+<!--   dark_theme_minimal() -->
+<!-- ``` -->
 
-``` {r}
-#| label: elastic-net-save
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-save(elastic_net_tune_spec, elastic_net_grid, final_elastic_net, elastic_net_highest_roc_auc,
-  file = "data/r/elastic_net.RData"
-)
-```
+<!-- ``` {r} -->
+<!-- #| label: elastic-net-save -->
+<!-- #| purl: true -->
+<!-- #| eval: false -->
+<!-- #| echo: false -->
+<!-- #| output: false -->
+<!-- save(elastic_net_tune_spec, elastic_net_grid, final_elastic_net, elastic_net_highest_roc_auc, -->
+<!--   file = "data/r/elastic_net.RData" -->
+<!-- ) -->
+<!-- ``` -->
 
 
 #### Random Forest
