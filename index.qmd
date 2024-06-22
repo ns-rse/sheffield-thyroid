@@ -262,7 +262,9 @@ this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, v
 #| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules"
 clinical_charac <- df |>
   dplyr::ungroup() |>
-  dplyr::select(c("incidental_nodule",
+  dplyr::select(c("age_at_scan",
+                  "gender",
+                  "incidental_nodule",
                   "palpable_nodule",
                   "rapid_enlargment",
                   "compressive_symtoms",
@@ -274,10 +276,13 @@ clinical_charac <- df |>
                   "exposure_radiation",
                   "final_pathology",
                   )) |>
-    gtsummary::tbl_summary(by = final_pathology) |>
+    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
   gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
 clinical_charac
 print(colnames(clinical_charac))
+
+binary_logistics_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hypertension + graves_disease + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation, data = df, family = binomial)
+summary(binary_logistics_clin)
 ```
 
 @tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
@@ -299,7 +304,11 @@ biochem_vars <- df |>
   gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
 biochem_vars
 print(colnames(biochem_vars))
+
+binary_logistic_biochem <- glm(final_pathology ~ age_at_scan + gender + tsh_value + albumin + lymphocytes + monocyte, data = df, family = binomial)
+summary(binary_logistic_biochem)
 ```
+
 
 ```{r}
 #| label: tbl-ultrasound-characteristics
@@ -319,6 +328,14 @@ ultrasound_char <- df |>
   gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
 ultrasound_char
 print(colnames(ultrasound_char))
+
+binary_logistic_ultrasound <- glm(final_pathology ~ age_at_scan + gender + bta_u_classification + thy_classification, data = df, family = binomial)
+summary(binary_logistic_ultrasound)
+```
+
+```{r}
+binary_logistic_vars <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy + bta_u_classification + cervical_lymphadenopathy + thy_classification, data = df, family = binomial)
+summary(binary_logistic_ultrasound)
 ```
 
 ```{r}
@@ -435,6 +452,7 @@ df_complete <- df |>
     lymphocytes,
     monocyte,
     bta_u_classification,
+    solitary_nodule,
     size_nodule_mm,
     cervical_lymphadenopathy,
     thy_classification,
@@ -481,7 +499,6 @@ split <- rsample::initial_split(df_complete, prop = 0.75)
 train <- rsample::training(split)
 test <- rsample::testing(split)
 ```
-
 
 ```{r}
 #| label: cv-vfold
@@ -535,8 +552,28 @@ thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
 #| output: false
 thyroid_workflow <- workflows::workflow() |>
   workflows::add_recipe(thyroid_recipe)
-
 ```
+
+```{r}
+#| label: binary-logistic-train
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+
+binary_logistic_model <- logistic_reg() |>
+  set_engine("glm")
+binary_log_thyroid_workflow <- thyroid_workflow |>
+  add_model(binary_logistic_model)
+binary_log_thyroid_fit <- fit(binary_log_thyroid_workflow, data = train)
+str(thyroid_fit)
+binary_logistic_model_predictions <- predict(binary_log_thyroid_fit, test) |> bind_cols(test)
+binary_log_thyroid_fit |> extract_recipe()
+binary_log_thyroid_fit |> extract_fit_parsnip()
+binary_log_thyroid_fit$trained
+```
+
+
 <!-- {{< include sections/recipe.qmd >}} -->
 
 A total of `r df_complete |> nrow()` patients had complete data for the selected predictor variables (see
