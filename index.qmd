@@ -281,8 +281,14 @@ clinical_charac <- df |>
 clinical_charac
 print(colnames(clinical_charac))
 
-binary_logistics_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hypertension + graves_disease + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation, data = df, family = binomial)
+binary_logistics_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation + tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy, data = df, family = binomial(link = "logit"))
 summary(binary_logistics_clin)
+coefficients_clin <- coef(binary_logistics_clin)
+odds_ratios_clin <- exp(coefficients)
+print(odds_ratios_clin)
+conf_interval <- exp(confint(binary_logistics_clin))
+results <- cbind(OddsRatio = odds_ratios_clin, conf_interval)
+print(results)
 ```
 
 @tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
@@ -332,6 +338,35 @@ print(colnames(ultrasound_char))
 binary_logistic_ultrasound <- glm(final_pathology ~ age_at_scan + gender + bta_u_classification + thy_classification, data = df, family = binomial)
 summary(binary_logistic_ultrasound)
 ```
+
+```{r}
+#| label: u-class-final-path
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "U class path"
+ultrasound_final_path <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("bta_u_classification", "final_pathology")) |>
+    gtsummary::tbl_summary(by = bta_u_classification)
+ultrasound_final_path
+print(colnames(ultrasound_final_path))
+```
+
+```{r}
+#| label: thy-class-final-path
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Thy class path"
+thy_class_final_path <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("thy_classification", "final_pathology")) |>
+    gtsummary::tbl_summary(by = thy_classification)
+thy_class_final_path
+print(colnames(thy_class_final_path))
+```
+
 
 ```{r}
 binary_logistic_vars <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy + bta_u_classification + cervical_lymphadenopathy + thy_classification, data = df, family = binomial)
@@ -580,13 +615,6 @@ binary_log_thyroid_fit |> extract_fit_parsnip()
 ## to check if the workflow has been trained
 binary_log_thyroid_fit$trained
 ## I can only see age and gender, unsure why the other variable not present.? excluded due to lack of data ?because they are simply not important ? issue with workflow set up
-extracted_recipe <- binary_log_thyroid_fit |> extract_recipe()
-print(extracted_recipe)
-str(train)
-print(binary_logistic_model)
-print(thyroid_workflow)
-extracted_fit <- binary_log_thyroid_fit |> extract_fit_parsnip()
-summary(extracted_fit$fit)
 ```
 
 
