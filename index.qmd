@@ -561,16 +561,25 @@ thyroid_workflow <- workflows::workflow() |>
 #| echo: false
 #| output: true
 
+## define binary logistic regression model
 binary_logistic_model <- logistic_reg() |>
   set_engine("glm")
+## add the binary logistic regression model to the thyroid workflow
 binary_log_thyroid_workflow <- thyroid_workflow |>
   add_model(binary_logistic_model)
+## fit the the workflow to the training data
 binary_log_thyroid_fit <- fit(binary_log_thyroid_workflow, data = train)
-str(thyroid_fit)
+## to inspect the fit object
+str(binary_log_thyroid_fit)
+## use fitted model to make prediction 
 binary_logistic_model_predictions <- predict(binary_log_thyroid_fit, test) |> bind_cols(test)
+## examine the processing steps
 binary_log_thyroid_fit |> extract_recipe()
+## examine the model
 binary_log_thyroid_fit |> extract_fit_parsnip()
+## to check if the workflow has been trained
 binary_log_thyroid_fit$trained
+## I can only see age and gender, unsure why the other variable not present.? excluded due to lack of data ?because they are simply not important ? issue with workflow set up
 ```
 
 
