@@ -580,6 +580,13 @@ binary_log_thyroid_fit |> extract_fit_parsnip()
 ## to check if the workflow has been trained
 binary_log_thyroid_fit$trained
 ## I can only see age and gender, unsure why the other variable not present.? excluded due to lack of data ?because they are simply not important ? issue with workflow set up
+extracted_recipe <- binary_log_thyroid_fit |> extract_recipe()
+print(extracted_recipe)
+str(train)
+print(binary_logistic_model)
+print(thyroid_workflow)
+extracted_fit <- binary_log_thyroid_fit |> extract_fit_parsnip()
+summary(extracted_fit$fit)
 ```
 
 
@@ -663,8 +670,9 @@ Results of the various modelling go here. Each section will show the results alo
 
 
 #### Random Forest
+{{< include sections/rforest.qmd >}}
 
-``` {r}
+<!--``` {r}
 #| label: random-forest-specify
 #| purl: true
 #| eval: false
@@ -728,6 +736,8 @@ save(random_forest_tune_spec, random_forest_grid, final_random_forest, random_fo
   file = "data/r/random_forest.RData"
 )
 ```
+-->
+
 
 #### Gradient Boosting
 

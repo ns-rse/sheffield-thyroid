@@ -1,0 +1,67 @@
+
+
+
+``` {r}
+#| label: random-forest-specify
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## Specify the Random Forest model
+rf_tune <- parsnip::rand_forest(
+  mtry = tune(),
+  trees = 100,
+  min_n = tune()
+) |>
+  set_mode("classification") |>
+  set_engine("ranger", importance = "impurity")
+
+
+## Tune the parameters via Cross-validation
+rf_grid <- tune::tune_grid(
+  add_model(thyroid_workflow, rf_tune),
+  resamples = cv_folds, ## cv_loo,
+  grid = grid_regular(mtry(range = c(5, 10)), # smaller ranges will run quicker
+    min_n(range = c(2, 25)),
+    levels = 3
+  )
+)
+
+## Get the best fitting model with the highest ROC AUC
+rf_highest_roc_auc <- rf_grid |>
+  select_best("roc_auc")
+final_rf <- tune::finalize_workflow(
+  add_model(thyroid_workflow, rf_tune),
+  rf_highest_roc_auc
+)
+```
+
+``` {r}
+#| label: rf-kfold-eval-importance
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: true
+final_rf |>
+  fit(train) |>
+  hardhat::extract_fit_parsnip() |>
+  vip::vi(lambda = final_rf$penalty) |>
+  dplyr::mutate(
+    Importance = abs(Importance),
+    Variable = fct_reorder(Variable, Importance)
+  ) |>
+  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  dark_theme_minimal()
+```
+
+``` {r}
+#| label: random-forest-save
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+save(random_forest_tune_spec, random_forest_grid, final_random_forest, random_forest_highest_roc_auc,
+  file = "data/r/random_forest.RData"
+)
+```
