@@ -1,0 +1,55 @@
+
+
+``` {r}
+#| label: svm-specify
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## Specify
+svm_tune_spec <- parsnip::svm_rbf(cost = tune()) |>
+  set_engine("kernlab") |>
+  set_mode("classification")
+
+## The hyperparameters are then tuned, in effect running the model in multiple subsets of the cross-validation to
+## get a "best fit".
+svm_grid <- tune::tune_grid(
+  workflows::add_model(thyroid_workflow, svm_tune_spec),
+  resamples = cv_folds, ## cv_loo,
+  grid = dials::grid_regular(cost(), levels = 20)
+)
+
+## The best fit is selected and fit to the overall training data set.
+svm_highest_roc_auc <- svm_grid |>
+  tune::select_best("roc_auc")
+final_svm <- tune::finalize_workflow(
+  add_model(thyroid_workflow, svm_tune_spec),
+  svm_highest_roc_auc
+)
+
+
+## Finally an assessment is made on the accuracy -->
+tune::last_fit(final_svm, split,
+  metrics = yardstick::metric_set(roc_auc, accuracy, ppv)
+) |>
+  tune::collect_metrics()
+```
+
+```{r}
+#| label: svm-save
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+save(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
+  file = "data/r/svm.RData"
+)
+```
+
+```{r}
+tune::last_fit(final_svm, split,
+  metrics = yardstick::metric_set(roc_auc, accuracy, ppv)
+) |>
+  tune::collect_metrics()
+```
+

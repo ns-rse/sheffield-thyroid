@@ -811,8 +811,9 @@ xgboost_tuned <- tune::tune_grid(workflows::add_model(thyroid_workflow, spec = x
 
 
 #### SVM
+{{< include sections/svm.qmd >}}
 
-``` {r}
+<!--``` {r}
 #| label: svm-specify
 #| purl: true
 #| eval: false
@@ -837,14 +838,14 @@ svm_highest_roc_auc <- svm_grid |>
 final_svm <- tune::finalize_workflow(
   add_model(thyroid_workflow, svm_tune_spec),
   svm_highest_roc_auc
-)
+) -->
 
 
-## Finally an assessment is made on the accuracy -->
+<!--## Finally an assessment is made on the accuracy
 tune::last_fit(final_svm, split,
   metrics = yardstick::metric_set(roc_auc, accuracy, ppv)
 ) |>
-  tune::collect_metrics()
+  tune::collect_metrics()-->
 ```
 
 ```{r}
