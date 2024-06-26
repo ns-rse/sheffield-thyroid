@@ -1,0 +1,74 @@
+
+
+``` {r}
+#| label: xgboost-model
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+## Specify the Gradient boosting model
+xgboost_model <- parsnip::boost_tree(
+  mode = "classification",
+  trees = 100,
+  min_n = tune(),
+  tree_depth = tune(),
+  learn_rate = tune(),
+  loss_reduction = tune()
+) |>
+  set_engine("xgboost", objective = "binary:logistic")
+
+## Specify the models tuning parameters using the `dials` package along (https://dials.tidymodels.org/) with the grid
+## space. This helps identify the hyperparameters with the lowest prediction error.
+xgboost_params <- dials::parameters(
+  min_n(),
+  tree_depth(),
+  learn_rate(),
+  loss_reduction()
+)
+xgboost_grid <- dials::grid_max_entropy(
+  xgboost_params,
+  size = 10
+)
+
+## Tune the model via cross-validation
+xgboost_tuned <- tune::tune_grid(workflows::add_model(thyroid_workflow, spec = xgboost_model),
+  resamples = cv_folds,
+  grid = xgboost_grid,
+  metrics = yardstick::metric_set(roc_auc, accuracy, ppv),
+  control = tune::control_grid(verbose = FALSE)
+)
+```
+
+``` {r}
+#| label: xgboost-final
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: true
+## We get the best final fit from the Gradient Boosting model.
+xgboost_highest_roc_auc <- xgboost_tuned |>
+  tune::select_best("roc_auc")
+final_xgboost <- tune::finalize_workflow(
+  add_model(thyroid_workflow, xgboost_model),
+  xgboost_highest_roc_auc
+)
+final_fit <- final_xgboost |> fit (data = train)
+summary(final_fit)
+## it is unclear from the output what predictors were significant, so i need to examin the model to see what predictors were used
+preprocessor <- final_fit |> extract_preprocessor()
+## view the predictors evaluated
+summary(preprocessor)
+## above showed the variables used
+```
+
+
+``` {r}
+#| label: xgboost-save
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+save(xgboost_tune_spec, xgboost_grid, final_xgboost, xgboost_highest_roc_auc,
+  file = "data/r/xgboost.RData"
+)
+```

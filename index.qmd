@@ -768,8 +768,9 @@ save(random_forest_tune_spec, random_forest_grid, final_random_forest, random_fo
 
 
 #### Gradient Boosting
+{{< include sections/gradientboost.qmd >}}
 
-``` {r}
+<!--``` {r}
 #| label: xgboost-model
 #| purl: true
 #| eval: false
@@ -806,35 +807,8 @@ xgboost_tuned <- tune::tune_grid(workflows::add_model(thyroid_workflow, spec = x
   metrics = yardstick::metric_set(roc_auc, accuracy, ppv),
   control = tune::control_grid(verbose = FALSE)
 )
-```
+```-->
 
-
-
-``` {r}
-#| label: xgboost-final
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-## We get the best final fit from the Gradient Boosting model.
-xgboost_highest_roc_auc <- xgboost_tuned |>
-  tune::select_best("roc_auc")
-final_xgboost <- tune::finalize_workflow(
-  add_model(thyroid_workflow, xgboost_model),
-  xgboost_highest_roc_auc
-)
-```
-
-``` {r}
-#| label: xgboost-save
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-save(xgboost_tune_spec, xgboost_grid, final_xgboost, xgboost_highest_roc_auc,
-  file = "data/r/xgboost.RData"
-)
-```
 
 #### SVM
 
