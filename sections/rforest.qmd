@@ -4,9 +4,9 @@
 ``` {r}
 #| label: random-forest-specify
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
-#| output: false
+#| output: true
 ## Specify the Random Forest model
 rf_tune <- parsnip::rand_forest(
   mtry = tune(),
@@ -50,7 +50,7 @@ final_rf |>
     Importance = abs(Importance),
     Variable = fct_reorder(Variable, Importance)
   ) |>
-  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
+  ggplot(mapping = aes(x = Importance, y = Variable, fill = Importance)) +
   geom_col() +
   dark_theme_minimal()
 ```
