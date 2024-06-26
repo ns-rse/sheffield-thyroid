@@ -59,6 +59,13 @@ preprocessor <- final_fit |> extract_preprocessor()
 ## view the predictors evaluated
 summary(preprocessor)
 ## above showed the variables used
+## the next line shows the extracts the fitted model from the work flow
+xgboost_model <- extract_fit_parsnip(final_fit)$fit
+summary(xgboost_model)
+## the next code evaluate the important variables
+importance_xgboost <- xgboost::xgb.importance(model = xgboost_model)
+print(importance_xgboost)
+## the print shows age and gender as important
 ```
 
 
