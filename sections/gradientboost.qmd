@@ -66,6 +66,14 @@ summary(xgboost_model)
 importance_xgboost <- xgboost::xgb.importance(model = xgboost_model)
 print(importance_xgboost)
 ## the print shows age and gender as important
+## to make a prediction on the train set
+xgboost_predictions <- predict(final_fit, test, type = "prob") |> 
+  bind_cols(predict(final_fit, test)) |>
+  bind_cols(test)
+colnames(xgboost_predictions)
+## analyse model performance using roc curves, need to figure out what "truth" and estimate refers to here, as final_pathology and .pred_Cancer do not run
+##roc_auc <- xgboost_predictions |>
+## roc_auc(truth = , estimate = )
 ```
 
 
