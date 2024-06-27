@@ -1,0 +1,72 @@
+```{r}
+#| label: test-train-split
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
+library(tidyverse)
+library(tidymodels)
+tidymodels::tidymodels_prefer()
+set.seed(5039378)
+
+## Use df_complete rather than df as this subset have data for all the variables of interest.
+split <- rsample::initial_split(df_complete, prop = 0.75)
+train <- rsample::training(split)
+test <- rsample::testing(split)
+```
+
+```{r}
+#| label: cv-vfold
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+cv_folds <- rsample::vfold_cv(train, v = 10, repeats = 10)
+```
+
+```{r}
+#| label: cv-loo
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+cv_loo <- rsample::loo_cv(train)
+```
+
+```{r}
+#| label: recipe
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: false
+## NB This is the key section where the variables that are to be used in the model are defined. A dependent variable
+## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
+## this appears on the left-hand side of the equation (before the tilde `~`). On the right of the equation are the
+## predictor or dependant variables
+##
+## @ns-rse 2024-06-14 :
+## Because we have used dplyr::select() to choose _just_ the columns of interest we can use the '.'
+## notation to refer to "all other variables" as being predictors. This is useful as it saves duplication of writing
+## everything out which leaves scope for some being missed.
+thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
+  ## @ns-rse 2024-06-14 :
+  ## This step can be used to filter observations with missing data, see the manual pages for more details
+  ## https://recipes.tidymodels.org/reference/step_filter_missing.html
+  recipes::step_filter_missing(recipes::all_predictors(), threshold = 0) |>
+  ## @ns-rse 2024-06-14 :
+  ## We first normalise the data _before_ we generate dummies otherwise the dummies, which are numerical, get normalised
+  ## too
+  recipes::step_normalize(recipes::all_numeric_predictors()) |>
+  recipes::step_dummy(recipes::all_nominal_predictors())
+```
+
+```{r}
+#| label: workflow
+#| eval: true
+#| echo: true
+#| output: false
+thyroid_workflow <- workflows::workflow() |>
+  workflows::add_recipe(thyroid_recipe)
+saveRDS(thyroid_workflow, file = paste(r_dir, "thyroid_workflow.rds", sep = "/"))
+```
