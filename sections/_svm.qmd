@@ -47,9 +47,13 @@ save(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
 ```
 
 ```{r}
+#| label: svm-metrics
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
 tune::last_fit(final_svm, split,
   metrics = yardstick::metric_set(roc_auc, accuracy, ppv)
 ) |>
   tune::collect_metrics()
 ```
-

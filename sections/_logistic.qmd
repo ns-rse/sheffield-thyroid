@@ -1,0 +1,66 @@
+
+```{r}
+#| label: tbl-logistic-regression
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Logistic regression of Clinical characteristics between benign and malignant thyrioid nodules."
+binary_logistics_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule +
+rapid_enlargement + compressive_symptoms + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation +
+tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy, data = df, family = binomial(link = "logit"))
+
+## Use the packages to summarise the output
+gtsummary::tbl_regression(binary_logistics_clin,
+    exponentiate = TRUE,
+    show_single_row = c(gender,
+                        incidental_nodule,
+                        palpable_nodule,
+                        rapid_enlargement,
+                        compressive_symptoms,
+                        hashimotos_thyroiditis,
+                        family_history_thyroid_cancer,
+                        exposure_radiation,
+                        solitary_nodule,
+                        cervical_lymphadenopathy))
+
+```
+
+```{r}
+#| label: tbl-logistic-regression-biochem
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Logistic regression of Biochemical characteristics between benign and malignant thyrioid nodules."
+binary_logistic_biochem <- glm(final_pathology ~ age_at_scan + gender + tsh_value + albumin + lymphocytes + monocyte, data = df, family = binomial)
+gtsummary::tbl_regression(binary_logistic_biochem,
+    exponentiate = TRUE,
+    show_single_row = c(gender))
+```
+
+
+```{r}
+#| label: tbl-logistic-regression-ultrasound1
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Logistic regression of Ultrasound characteristics between benign and malignant thyrioid nodules."
+binary_logistic_ultrasound <- glm(final_pathology ~ age_at_scan + gender + bta_u_classification + thy_classification, data = df, family = binomial)
+gtsummary::tbl_regression(binary_logistic_ultrasound,
+    exponentiate = TRUE,
+    show_single_row = c(gender))
+```
+
+```{r}
+#| label: logistic-regression-ultrasound2
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Expanded logistic regression of Ultrasound characteristics between benign and malignant thyroid noduules."
+binary_logistic_ultrasound <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy + bta_u_classification + thy_classification, data = df, family = binomial)
+gtsummary::tbl_regression(binary_logistic_ultrasound,
+    exponentiate = TRUE,
+    show_single_row = c(gender,
+                        incidental_nodule,
+                        solitary_nodule,
+                        cervical_lymphadenopathy))
+```

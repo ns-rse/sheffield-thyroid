@@ -4,7 +4,7 @@
 ``` {r}
 #| label: random-forest-specify
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 ## Specify the Random Forest model
@@ -29,7 +29,7 @@ rf_grid <- tune::tune_grid(
 
 ## Get the best fitting model with the highest ROC AUC
 rf_highest_roc_auc <- rf_grid |>
-  select_best("roc_auc")
+  select_best()
 final_rf <- tune::finalize_workflow(
   add_model(thyroid_workflow, rf_tune),
   rf_highest_roc_auc

@@ -51,55 +51,7 @@ notebook-preview-options:
   preview: false
 ---
 
-```{r}
-#| label: setup
-#| purl: true
-#| eval: true
-#| echo: false
-#| warning: false
-
-## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
-library(dplyr)
-library(ggplot2)
-library(ggdark)
-library(gtsummary)
-library(Hmisc)
-library(knitr)
-library(readr)
-library(rmarkdown)
-
-## Libraries for Tidymodelling
-library(dials)
-library(kernlab)
-library(knitr)
-library(tidymodels)
-library(tidyverse)
-library(vip)
-
-
-## Set global options
-options(digits = 3)
-train <- 0.75
-test <- 0.25
-
-## Set directories based on current location
-base_dir <- getwd()
-data_dir <- paste(base_dir, "data", sep = "/")
-csv_dir <- paste(data_dir, "csv", sep = "/")
-r_dir <- paste(data_dir, "r", sep = "/")
-r_scripts <- paste(base_dir, "r", sep = "/")
-
-
-## Load data
-##
-## The following line runs the `r/shf_thy_nod.R` script which reads the data from CSV and cleans/tidies it.
-## If something has changed in that file or the underlying data (in `data/csv/sheffield_thyroid_module.R`) then this
-## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
-source("r/shf_thy_nod.R")
-## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
-## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
-#df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
-```
+{{< include sections/_setup.qmd >}}
 
 
 ## Introduction
@@ -282,31 +234,6 @@ clinical_charac
 print(colnames(clinical_charac))
 ```
 
-```{r}
-#| label: logistic-regression
-#| eval: true
-#| echo: false
-#| warning: false
-#| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules"
-binary_logistics_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule +
-rapid_enlargement + compressive_symptoms + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation +
-tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy, data = df, family = binomial(link = "logit"))
-
-## Use the packages to summarise the output
-regression_summary <- gtsummary::tbl_regression(binary_logistics_clin,
-    exponentiate = TRUE,
-    show_single_row = c(gender,
-                        incidental_nodule,
-                        palpable_nodule,
-                        rapid_enlargement,
-                        compressive_symptoms,
-                        hashimotos_thyroiditis,
-                        family_history_thyroid_cancer,
-                        exposure_radiation,
-                        solitary_nodule,
-                        cervical_lymphadenopathy))
-print(regression_summary)
-```
 
 @tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
 
@@ -327,11 +254,6 @@ biochem_vars <- df |>
   gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
 biochem_vars
 print(colnames(biochem_vars))
-
-binary_logistic_biochem <- glm(final_pathology ~ age_at_scan + gender + tsh_value + albumin + lymphocytes + monocyte, data = df, family = binomial)
-gtsummary::tbl_regression(binary_logistic_biochem,
-    exponentiate = TRUE,
-    show_single_row = c(gender))
 ```
 
 
@@ -353,11 +275,6 @@ ultrasound_char <- df |>
   gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
 ultrasound_char
 print(colnames(ultrasound_char))
-
-binary_logistic_ultrasound <- glm(final_pathology ~ age_at_scan + gender + bta_u_classification + thy_classification, data = df, family = binomial)
-gtsummary::tbl_regression(binary_logistic_ultrasound,
-    exponentiate = TRUE,
-    show_single_row = c(gender))
 ```
 
 ```{r}
@@ -379,7 +296,7 @@ print(colnames(ultrasound_final_path))
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: "Thy class path"
+#| tbl-caption: "Thyroid classification by Final Pathology"
 thy_class_final_path <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("thy_classification", "final_pathology")) |>
@@ -389,10 +306,6 @@ print(colnames(thy_class_final_path))
 ```
 
 
-```{r}
-binary_logistic_vars <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy + bta_u_classification + cervical_lymphadenopathy + thy_classification, data = df, family = binomial)
-summary(binary_logistic_ultrasound)
-```
 
 ```{r}
 #| label: tbl-cytology-characteristics
@@ -538,108 +451,40 @@ df_predictors_evaluated
 ```
 
 <!-- Section that sets up the modelling -->
-```{r}
-#| label: test-train-split
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: false
-## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
-library(tidyverse)
-library(tidymodels)
-tidymodels::tidymodels_prefer()
-set.seed(5039378)
+{{< include sections/_recipe.qmd >}}
 
-## Use df_complete rather than df as this subset have data for all the variables of interest.
-split <- rsample::initial_split(df_complete, prop = 0.75)
-train <- rsample::training(split)
-test <- rsample::testing(split)
-```
+The following section is output from a Tidymodel approach to logistic regression to try and work out why variables are
+not being included.
 
 ```{r}
-#| label: cv-vfold
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: false
-cv_folds <- rsample::vfold_cv(train, v = 10, repeats = 10)
-```
-
-```{r}
-#| label: cv-loo
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: false
-cv_loo <- rsample::loo_cv(train)
-```
-
-```{r}
-#| label: recipe
-#| purl: true
-#| eval: true
-#| echo: true
-#| output: false
-## NB This is the key section where the variables that are to be used in the model are defined. A dependent variable
-## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
-## this appears on the left-hand side of the equation (before the tilde `~`). On the right of the equation are the
-## predictor or dependant variables
-##
-## @ns-rse 2024-06-14 :
-## Because we have used dplyr::select() to choose _just_ the columns of interest we can use the '.'
-## notation to refer to "all other variables" as being predictors. This is useful as it saves duplication of writing
-## everything out which leaves scope for some being missed.
-thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
-  ## @ns-rse 2024-06-14 :
-  ## This step can be used to filter observations with missing data, see the manual pages for more details
-  ## https://recipes.tidymodels.org/reference/step_filter_missing.html
-  recipes::step_filter_missing(recipes::all_predictors(), threshold = 0) |>
-  ## @ns-rse 2024-06-14 :
-  ## We first normalise the data _before_ we generate dummies otherwise the dummies, which are numerical, get normalised
-  ## too
-  recipes::step_normalize(recipes::all_numeric_predictors()) |>
-  recipes::step_dummy(recipes::all_nominal_predictors())
-```
-
-```{r}
-#| label: workflow
-#| eval: true
-#| echo: true
-#| output: false
-thyroid_workflow <- workflows::workflow() |>
-  workflows::add_recipe(thyroid_recipe)
-```
-
-```{r}
-#| label: binary-logistic-train
+#| label: logistic-train
 #| purl: true
 #| eval: true
 #| echo: false
 #| output: true
 
 ## define binary logistic regression model
-binary_logistic_model <- logistic_reg() |>
+logistic_model <- logistic_reg() |>
   set_engine("glm")
 ## add the binary logistic regression model to the thyroid workflow
-binary_log_thyroid_workflow <- thyroid_workflow |>
-  add_model(binary_logistic_model)
+log_thyroid_workflow <- thyroid_workflow |>
+  add_model(logistic_model)
 ## fit the the workflow to the training data
-binary_log_thyroid_fit <- fit(binary_log_thyroid_workflow, data = train)
+log_thyroid_fit <- fit(log_thyroid_workflow, data = train)
 ## to inspect the fit object
-str(binary_log_thyroid_fit)
+str(log_thyroid_fit)
 ## use fitted model to make prediction
-binary_logistic_model_predictions <- predict(binary_log_thyroid_fit, test) |> bind_cols(test)
+logistic_model_predictions <- predict(log_thyroid_fit, test) |> bind_cols(test)
 ## examine the processing steps
-binary_log_thyroid_fit |> extract_recipe()
+log_thyroid_fit |> extract_recipe()
 ## examine the model
-binary_log_thyroid_fit |> extract_fit_parsnip()
+log_thyroid_fit |> extract_fit_parsnip()
 ## to check if the workflow has been trained
-binary_log_thyroid_fit$trained
+log_thyroid_fit$trained
 ## I can only see age and gender, unsure why the other variable not present.? excluded due to lack of data ?because they are simply not important ? issue with workflow set up
 ```
 
 
-<!-- {{< include sections/recipe.qmd >}} -->
 
 A total of `r df_complete |> nrow()` patients had complete data for the selected predictor variables (see
 @tbl-predictors).
@@ -648,28 +493,31 @@ Results of the various modelling go here. Each section will show the results alo
 
 + LIME/Shaply analysis for explanability of models
 
+#### Logistic Regression
+
+{{< include sections/_logistic.qmd >}}
 
 #### LASSO
 
-{{< include sections/lasso.qmd >}}
+{{< include sections/_lasso.qmd >}}
 
 #### Elastic Net
 
-{{< include sections/elastic.qmd >}}
+{{< include sections/_elastic.qmd >}}
 
 
 
 #### Random Forest
-{{< include sections/rforest.qmd >}}
+{{< include sections/_rforest.qmd >}}
 
 #### Gradient Boosting
 
-{{< include sections/gradientboost.qmd >}}
+{{< include sections/_gradientboost.qmd >}}
 
 
 #### SVM
 
-{{< include sections/svm.qmd >}}
+{{< include sections/_svm.qmd >}}
 
 
 #### Explainability
