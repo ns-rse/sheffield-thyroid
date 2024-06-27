@@ -266,8 +266,8 @@ clinical_charac <- df |>
                   "gender",
                   "incidental_nodule",
                   "palpable_nodule",
-                  "rapid_enlargment",
-                  "compressive_symtoms",
+                  "rapid_enlargement",
+                  "compressive_symptoms",
                   "hypertension",
                   "vocal_cord_paresis",
                   "graves_disease",
@@ -280,15 +280,32 @@ clinical_charac <- df |>
   gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
 clinical_charac
 print(colnames(clinical_charac))
+```
 
-binary_logistics_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule + rapid_enlargment + compressive_symtoms + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation + tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy, data = df, family = binomial(link = "logit"))
-summary(binary_logistics_clin)
-coefficients_clin <- coef(binary_logistics_clin)
-odds_ratios_clin <- exp(coefficients)
-print(odds_ratios_clin)
-conf_interval <- exp(confint(binary_logistics_clin))
-results <- cbind(OddsRatio = odds_ratios_clin, conf_interval)
-print(results)
+```{r}
+#| label: logistic-regression
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules"
+binary_logistics_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule +
+rapid_enlargement + compressive_symptoms + hashimotos_thyroiditis + family_history_thyroid_cancer + exposure_radiation +
+tsh_value + size_nodule_mm + solitary_nodule + cervical_lymphadenopathy, data = df, family = binomial(link = "logit"))
+
+## Use the packages to summarise the output
+regression_summary <- gtsummary::tbl_regression(binary_logistics_clin,
+    exponentiate = TRUE,
+    show_single_row = c(gender,
+                        incidental_nodule,
+                        palpable_nodule,
+                        rapid_enlargement,
+                        compressive_symptoms,
+                        hashimotos_thyroiditis,
+                        family_history_thyroid_cancer,
+                        exposure_radiation,
+                        solitary_nodule,
+                        cervical_lymphadenopathy))
+print(regression_summary)
 ```
 
 @tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
@@ -312,7 +329,9 @@ biochem_vars
 print(colnames(biochem_vars))
 
 binary_logistic_biochem <- glm(final_pathology ~ age_at_scan + gender + tsh_value + albumin + lymphocytes + monocyte, data = df, family = binomial)
-summary(binary_logistic_biochem)
+gtsummary::tbl_regression(binary_logistic_biochem,
+    exponentiate = TRUE,
+    show_single_row = c(gender))
 ```
 
 
@@ -336,7 +355,9 @@ ultrasound_char
 print(colnames(ultrasound_char))
 
 binary_logistic_ultrasound <- glm(final_pathology ~ age_at_scan + gender + bta_u_classification + thy_classification, data = df, family = binomial)
-summary(binary_logistic_ultrasound)
+gtsummary::tbl_regression(binary_logistic_ultrasound,
+    exponentiate = TRUE,
+    show_single_row = c(gender))
 ```
 
 ```{r}
@@ -474,8 +495,8 @@ df_complete <- df |>
     ethnicity,
     incidental_nodule,
     palpable_nodule,
-    rapid_enlargment,
-    compressive_symtoms,
+    rapid_enlargement,
+    compressive_symptoms,
     hypertension,
     vocal_cord_paresis,
     graves_disease,
