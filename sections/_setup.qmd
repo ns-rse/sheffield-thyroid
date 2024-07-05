@@ -14,6 +14,8 @@ library(Hmisc)
 library(knitr)
 library(readr)
 library(rmarkdown)
+library(visdat)
+library(naniar)
 
 ## Libraries for Tidymodelling
 library(dials)
