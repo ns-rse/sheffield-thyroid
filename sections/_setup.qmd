@@ -1,0 +1,49 @@
+```{r}
+#| label: setup
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+
+## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
+library(dplyr)
+library(ggplot2)
+library(ggdark)
+library(gtsummary)
+library(Hmisc)
+library(knitr)
+library(readr)
+library(rmarkdown)
+
+## Libraries for Tidymodelling
+library(dials)
+library(kernlab)
+library(knitr)
+library(tidymodels)
+library(tidyverse)
+library(vip)
+
+
+## Set global options
+options(digits = 3)
+train <- 0.75
+test <- 0.25
+
+## Set directories based on current location
+base_dir <- getwd()
+data_dir <- paste(base_dir, "data", sep = "/")
+csv_dir <- paste(data_dir, "csv", sep = "/")
+r_dir <- paste(data_dir, "r", sep = "/")
+r_scripts <- paste(base_dir, "r", sep = "/")
+
+
+## Load data
+##
+## The following line runs the `r/shf_thy_nod.R` script which reads the data from CSV and cleans/tidies it.
+## If something has changed in that file or the underlying data (in `data/csv/sheffield_thyroid_module.R`) then this
+## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
+source("r/shf_thy_nod.R")
+## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
+## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
+#df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
+```
