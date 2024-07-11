@@ -1,0 +1,168 @@
+More detailed tabulations of missing data by variable are shown in @tbl-naniar-miss-var-summary which shows the number
+and percentage of missing data for each variable and by case in @tbl-naniar-miss-case-table which shows how much missing
+data each case has. A visualisation of this is shown in @fig-visdat-vis-missing .
+
+**NB** - Currently there is a [bug in the stable release of
+Quarto](https://github.com/quarto-dev/quarto-cli/issues/10196) which prevents rendering of the missing data figures. It
+is fixed in development version [`v1.6.1`](https://github.com/quarto-dev/quarto-cli/releases/tag/v1.6.1) (currently
+available as pre-release, so if things don't render try upgrading).
+
+::: {.panel-tabset}
+
+## Variables
+
+```{r}
+#| label: tbl-naniar-miss-var-summary
+#| tbl-caption: Summary of missing data by variable.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+naniar::miss_var_summary(df_complete) |>
+  knitr::kable(col.names=c("Variable", "N", "%"),
+               caption="Summary of missing data by variable.")
+```
+
+## Observations
+
+```{r}
+#| label: tbl-naniar-miss-case-table
+#| tbl-caption: Summary of missing data by case, how much missing data is there per person?
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+naniar::miss_case_table(df_complete) |>
+  knitr::kable(col.names=c("Missing Variables", "N", "%"),
+               caption="Summary of missing data by case, how much missing data is there per person?")
+```
+
+:::
+
+```{r}
+#| label: fig-visdat-vis-missing
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+visdat::vis_miss(df_complete)
+```
+
+The [MICE][mice] package also provides tools for visualising missing data and these are shown in figures
+@fig-mice-vis-missing-clinical, @fig-mice-vis-missing-biomarker and @fig-mice-vis-missing-ultrasound.
+
+The columns of these plots, labelled along the top, show the variable, if a cell is blue it indicates data is present,
+if it is red it indicates there is missing data. The left-hand side shows the total number of observations for that rows
+particular combination of variables with number of missing variables indicated on the right. The first row shows that
+for these variables there are 604 observations with zero missing data across the listed variables, the second row
+indicates there are 166 observations with _just_ `family_history_thyroid_cancer` but there are some with this missing
+_and other variables_. The numbers on the bottom of the figure indicate the total number of missing observations for
+that variable (e.g. for `family_history_thyroid_cancer` there is a total of
+`r dplyr::filter(df_complete, is.na(family_history_thyroid_cancer)) |> nrow()`  missing observations).
+
+**TODO** - Workout why `out-width: "80%"` isn't applied to these figures and/or how to make the `All` figure readable.
+
+::: {.panel-tabset}
+
+## Clinical
+
+```{r}
+#| label: fig-mice-vis-missing-clinical
+#| fig-caption: Patterns of missing data for clinical variables.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+mice_missing_clinical <- df_complete |>
+  dplyr::select(final_pathology,
+                age_at_scan,
+                gender,
+                incidental_nodule,
+                palpable_nodule,
+                rapid_enlargement,
+                compressive_symptoms,
+                hashimotos_thyroiditis,
+                family_history_thyroid_cancer,
+                cervical_lymphadenopathy) |>
+  mice::md.pattern(rotate.names = TRUE)
+```
+
+## Biomarkers
+
+```{r}
+#| label: fig-mice-vis-missing-biomarkers
+#| fig-caption: Patterns of missing data for biomarkers.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+mice_missing_biomarkers <- df_complete |>
+  dplyr::select(final_pathology,
+                age_at_scan,
+                gender,
+                tsh_value,
+                albumin,
+                lymphocytes,
+                monocyte) |>
+  mice::md.pattern(rotate.names = TRUE)
+```
+
+## Ultrasound
+
+```{r}
+#| label: fig-mice-vis-missing-ultrasound
+#| fig-caption: Patterns of missing data for ultrasound.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+mice_missing_ultrasound <- df_complete |>
+  dplyr::select(final_pathology,
+                age_at_scan,
+                gender,
+                bta_u_classification,
+                thy_classification,
+                size_nodule_mm,
+                solitary_nodule) |>
+  mice::md.pattern(rotate.names = TRUE)
+```
+
+## All
+
+```{r}
+#| label: fig-mice-vis-missing-all
+#| fig-caption: Patterns of missing data across all variables.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+mice_missing_ultrasound <- df_complete |>
+  dplyr::select(final_pathology,
+                age_at_scan,
+                gender,
+                incidental_nodule,
+                palpable_nodule,
+                rapid_enlargement,
+                compressive_symptoms,
+                hashimotos_thyroiditis,
+                family_history_thyroid_cancer,
+                cervical_lymphadenopathy,
+                tsh_value,
+                albumin,
+                lymphocytes,
+                monocyte,
+                bta_u_classification,
+                thy_classification,
+                size_nodule_mm,
+                solitary_nodule) |>
+  mice::md.pattern(rotate.names = TRUE)
+```
+
+:::
+
+[mice]: https://amices.org/mice/

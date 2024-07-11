@@ -38,7 +38,7 @@ cv_loo <- rsample::loo_cv(train)
 #| label: recipe
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: false
 ## NB This is the key section where the variables that are to be used in the model are defined. A dependent variable
 ## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
