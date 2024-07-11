@@ -371,15 +371,60 @@ df_summary
 
 ```
 
-The completeness of the data is shown in @tbl-data-completeness. Where variables continuous (e.g. `age` or
-`size_nodule_mm`) basic summary statistics in the form of mean, standard deviation, median and inter-quartile range are
-given. For categorical variables that are logical `TRUE`/`FALSE` (e.g. `palpable_nodule`) the number of `TRUE`
-observations and the percentage (of those with observed data for that variable) are shown along with the number that are
-_Unknown_. For categorical variables such as `gender` and percentages in each category are
-reported. For all variables an indication of the number of missing observations is also given and it is worth noting
-that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
+The completeness of the data is shown in @tbl-data-completeness . Where
+variables continuous (e.g. `age` or `size_nodule_mm`) basic summary statistics in the form of mean, standard deviation,
+median and inter-quartile range are given. For categorical variables that are logical `TRUE`/`FALSE`
+(e.g. `palpable_nodule`) the number of `TRUE` observations and the percentage (of those with observed data for that
+variable) are shown along with the number that are _Unknown_. For categorical variables such as `gender` and percentages
+in each category are reported. For all variables an indication of the number of missing observations is also given and
+it is worth noting that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
 instances where the `final_pathology` is not known which reduces the sample size to
 `r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
+
+
+#### Missing Data
+
+More detailed tabulations of missing data by variable are shown in @tbl-naniar-miss-var-summary which shows the number
+and percentage of missing data for each variable and by case in @tbl-naniar-miss-case-table which shows how much missing
+data each case has. A visualisation of this is shown in @fig-visdat-vis-missing .
+
+```{r}
+#| label: tbl-naniar-miss-var-summary
+#| tbl-caption: Summary of missing data by variable.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+naniar::miss_var_summary(df_complete) |>
+  knitr::kable(col.names=c("Variable", "N", "%"),
+               caption="Summary of missing data by variable.")
+```
+
+```{r}
+#| label: tbl-naniar-miss-case-table
+#| tbl-caption: Summary of missing data by case, how much missing data is there per person?
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+naniar::miss_case_table(df_complete) |>
+  knitr::kable(col.names=c("Missing Variables", "N", "%"),
+               caption="Summary of missing data by case, how much missing data is there per person?")
+```
+
+```{r}
+#| label: fig-visdat-vis-missing
+#| purl: true
+#| eval: true
+#| echo: true
+#| output: true
+## This prevents the document from preview/rendering for some reason???
+## visdat::vis_miss(df_complete)
+```
+
+
+
+
 
 ### Modelling
 
@@ -391,47 +436,7 @@ The predictor variables selected to predict `final_pathology` are shown in @tbl-
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: "predictors-evaluated"
-## @ns-rse 2024-06-18:
-## We want this table to match the model, therefore rather than repeat ourselves we move the subsetting to give us
-## df_complete to here and assign to df_complete. This is then passed into gtsummary::tbl_summary() and is available for
-## the next code chunk.
-##
-## This is the point at which you should subset your data for those who have data available for the variables of
-## interest. The variables here should include the outcome `final_pathology` and the predictor variables that are set in
-## the code chunk `recipe`. May want to move this to another earlier in the processing so that the number of rows can be
-## counted and reported.
-df_complete <- df |>
-  dplyr::select(
-    age_at_scan,
-    gender,
-    ethnicity,
-    incidental_nodule,
-    palpable_nodule,
-    rapid_enlargement,
-    compressive_symptoms,
-    hypertension,
-    vocal_cord_paresis,
-    graves_disease,
-    hashimotos_thyroiditis,
-    family_history_thyroid_cancer,
-    exposure_radiation,
-    albumin,
-    tsh_value,
-    lymphocytes,
-    monocyte,
-    bta_u_classification,
-    solitary_nodule,
-    size_nodule_mm,
-    cervical_lymphadenopathy,
-    thy_classification,
-    final_pathology) |>
-## @ns-rse 2024-06-14 :
-## I would consider removing this dplyr::filter() and instead using the recipes::step_filter_missing() as is now in
-## place below
-## dplyr::filter(if_any(everything(), is.na))
-## Instead I think it might be useful to remove individuals who do not have a value for final_pathology here
-  dplyr::filter(!is.na(final_pathology))
+#| tbl-caption: "Predictors evaluated in modelling."
 
 df_predictors_evaluated <- df_complete |>
   dplyr::ungroup() |>
@@ -471,6 +476,7 @@ log_thyroid_workflow <- thyroid_workflow |>
   add_model(logistic_model)
 ## fit the the workflow to the training data
 log_thyroid_fit <- fit(log_thyroid_workflow, data = train)
+log_thyroid_fit
 ## to inspect the fit object
 str(log_thyroid_fit)
 ## use fitted model to make prediction
