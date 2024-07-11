@@ -49,6 +49,8 @@ citation:
 number-sections: true
 notebook-preview-options:
   preview: false
+execute:
+  cache: true
 ---
 
 {{< include sections/_setup.qmd >}}
@@ -64,30 +66,37 @@ biochemical factors have been shown to be
 associated with thyroid cancer in patients with thyroid nodules. This has been utilised in studies evaluating
 predictors of thyroid cancer with a view of creating a model to aid prediction.
 Standard practice on the management of thyroid nodules does not utilise these non ultrasound and non cytological
-factors. Combination of these variables considered to be significant with ultrasound and cytological characteristics may improve management of patients with thyroid nodules.
-Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluation of non thyroid related
-pathologies. Thus, leading to increase investigation of thyroid nodules and subsequent increased number of thyroid
-operations in non diagnostic cases.
+factors. Combination of these variables considered to be significant with ultrasound and cytological characteristics may
+improve management of patients with thyroid nodules.
+Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluation of non
+thyroid related pathologies. Thus, leading to increase investigation of thyroid nodules and subsequent increased number
+of thyroid operations in non diagnostic cases.
 There are morbidities associated with thyroid surgery including scar, recurrent laryngeal nerve injury,
 hypothyroidism and hypoparathyroidism.
 We performed a systematic review to evaluate for predictors of thyroid cancer specifically in patients presenting
 with thyroid nodules.
-The systematic review a number of potential important variables that may be useful in the prediction of thyroid cancer in patients with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
+The systematic review a number of potential important variables that may be useful in the prediction of thyroid cancer
+in patients with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
 improving prediction of thyroid cancer using machine learning techniques.
 
 
 ## Methods
+
 This study was reported as per the Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) guidelines
 
 ### Study design
+
 This was a retrospective cohort study.
 
 ### Setting
+
 The study was conducted at the Sheffield Teaching hospitals NHS Foundation Trusts. This is a tertiary referral centre
 for the management of thyroid cancer
 
 ### Participants
-We included all consecutive patients who presented with thyroid nodule(s) or that were found to have thyroid nodule(s) on ultrasound done for thyroid pathology or for other non thyroid related pathologies
+
+We included all consecutive patients who presented with thyroid nodule(s) or that were found to have thyroid nodule(s)
+on ultrasound done for thyroid pathology or for other non thyroid related pathologies
 
 ### Variables
 Variable evaluated was based on findings from a systematic review evaluating predictors of thyroid cancer in patients
@@ -117,6 +126,16 @@ exists.
 
 Data was cleaned and analysed using the R Statistical Software @r_citation and the Tidyverse (@tidyverse),  Tidymodels
 (@tidymodels) collection of packages.
+
+### Imputation
+
+The dataset is incomplete and there are missing observations across all variables to varying degrees. In order to
+maximise the sample available for analysis imputation was used to infer missing values. The Multivariat Imputation via
+Chained Equations ([MICE][mice] and implemented in the eponymous R package @vanBuuren2011Dec) was employed which assumes data is
+missing at random (a difficult assumption to formally test). The approach takes each variable with missing data and
+attempts to predict it using statistical modelling based on the observed values. In essence it is the same approach as
+the statistical methods being employed to try and predict Thyroid Cancer and there are a range of statistical techniques
+available which include
 
 ### Modelling
 
@@ -156,14 +175,19 @@ variables @steyerberg2001
 #### Random Forest
 
 To add reference
-The random forest plot is an extension of the decision tree methodology to reduce variance. Decision trees are very sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the model. The random forest plot selects random observation of the dataset to create multiple decision trees. Random variables are selected for each tree in the training of the data set. The aggregated output of the generated decision trees is then used to create an estimate.
+The random forest plot is an extension of the decision tree methodology to reduce variance. Decision trees are very
+sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the
+model. The random forest plot selects random observation of the dataset to create multiple decision trees. Random
+variables are selected for each tree in the training of the data set. The aggregated output of the generated decision
+trees is then used to create an estimate.
 
 
 #### Gradient Boosting
 
 Gradient boosting is a machine learning algorithm that uses decision tree as a base model. The data is initially trained
 on this decision tree, but the initial prediction is weak, thus termed a weak based model. In gradient boosting the process
-is iterative; a sequence of decision trees is added to the initial tree. Each tree learns from the prior tree(s) to improve the model, increasing strength and minimising error.
+is iterative; a sequence of decision trees is added to the initial tree. Each tree learns from the prior tree(s) to
+improve the model, increasing strength and minimising error.
 
 #### SVM
 
@@ -188,6 +212,10 @@ n_obs <- nrow(df)
 ```
 
 
+::: {.panel-tabset}
+
+## Demographics
+
 ```{r}
 #| label: tbl-patient-demographics
 #| eval: true
@@ -197,14 +225,13 @@ n_obs <- nrow(df)
 patient_demo <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("age_at_scan", "gender", "ethnicity")) |>
-    gtsummary::tbl_summary() |>
+  gtsummary::tbl_summary() |>
   gtsummary::modify_caption("Demographics of study population")
 patient_demo
-print(colnames(patient_demo))
+
 ```
 
-@tbl-patient-demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were included in
-this study with a median (IQR) age of  `r gtsummary::inline_text(patient_demo, variable="age_at_scan")`.
+## Clinical Characteristics
 
 ```{r}
 #| label: tbl-clinical-characteristics
@@ -228,17 +255,16 @@ clinical_charac <- df |>
                   "exposure_radiation",
                   "final_pathology",
                   )) |>
-    gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
+  gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
   gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
 clinical_charac
-print(colnames(clinical_charac))
+
 ```
 
-
-@tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant thyroid nodules.
+## Biomarkers
 
 ```{r}
-#| label: tbl-biochem-variables
+#| label: tbl-biomarkers-variables
 #| eval: true
 #| echo: false
 #| warning: false
@@ -250,12 +276,12 @@ biochem_vars <- df |>
                   "lymphocytes",
                   "monocyte",
                   "final_pathology")) |>
-    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
   gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
 biochem_vars
-print(colnames(biochem_vars))
-```
 
+```
+## Ultrasound
 
 ```{r}
 #| label: tbl-ultrasound-characteristics
@@ -271,12 +297,13 @@ ultrasound_char <- df |>
                   "consistency_nodule",
                   "cervical_lymphadenopathy",
                   "final_pathology")) |>
-    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
   gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
 ultrasound_char
-print(colnames(ultrasound_char))
+
 ```
 
+## BTA U
 ```{r}
 #| label: u-class-final-path
 #| eval: true
@@ -286,10 +313,13 @@ print(colnames(ultrasound_char))
 ultrasound_final_path <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("bta_u_classification", "final_pathology")) |>
-    gtsummary::tbl_summary(by = bta_u_classification)
+  gtsummary::tbl_summary(by = bta_u_classification) |>
+  gtsummary::modify_caption("BTA U classification by final pathology.")
 ultrasound_final_path
-print(colnames(ultrasound_final_path))
+
 ```
+
+## Thyroid Classification
 
 ```{r}
 #| label: thy-class-final-path
@@ -300,12 +330,13 @@ print(colnames(ultrasound_final_path))
 thy_class_final_path <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("thy_classification", "final_pathology")) |>
-    gtsummary::tbl_summary(by = thy_classification)
+  gtsummary::tbl_summary(by = thy_classification) |>
+  gtsummary::modify_caption("Thyroid classification by final pathology.")
 thy_class_final_path
-print(colnames(thy_class_final_path))
+
 ```
 
-
+## Cytology
 
 ```{r}
 #| label: tbl-cytology-characteristics
@@ -317,29 +348,24 @@ cytology_char <- df |>
   dplyr::ungroup() |>
   dplyr::select(c("thy_classification",
                   "final_pathology")) |>
-    gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
   gtsummary::modify_caption("Cytological characteristics of benign and malignant nodules")
 cytology_char
-print(colnames(cytology_char))
 ```
+
+:::
+
+@tbl-patient-demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were
+included in this study with a median (IQR) age of  `r df$age_at_scan |> stats::quantile(probs=c(0.5))` (
+`r df$age_at_scan |> stats::quantile(probs=c(0.25))`-`r df$age_at_scan |> stats::quantile(probs=c(0.75))`).
+@tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant
+thyroid nodules.
 
 ### Data Description
 
 Details of data completeness and other descriptive aspects go here.
 
 
-```{r}
-#| label: tbl-variables
-#| purl: true
-#| eval: true
-#| echo: false
-#| warning: false
-#| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."
-var_labels |>
-  as.data.frame() |>
-  kable(col.names = c("Description"),
-        caption="Description of variables in the Sheffield Thyroid dataset.")
-```
 
 A summary of the variables that are available in this data set can be found in @tbl-variables.
 
@@ -375,7 +401,7 @@ The completeness of the data is shown in @tbl-data-completeness . Where
 variables continuous (e.g. `age` or `size_nodule_mm`) basic summary statistics in the form of mean, standard deviation,
 median and inter-quartile range are given. For categorical variables that are logical `TRUE`/`FALSE`
 (e.g. `palpable_nodule`) the number of `TRUE` observations and the percentage (of those with observed data for that
-variable) are shown along with the number that are _Unknown_. For categorical variables such as `gender` and percentages
+variable) are shown along with the number that are _Unknown_. For categorical variables such as `gender` percentages
 in each category are reported. For all variables an indication of the number of missing observations is also given and
 it is worth noting that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
 instances where the `final_pathology` is not known which reduces the sample size to
@@ -384,49 +410,15 @@ instances where the `final_pathology` is not known which reduces the sample size
 
 #### Missing Data
 
-More detailed tabulations of missing data by variable are shown in @tbl-naniar-miss-var-summary which shows the number
-and percentage of missing data for each variable and by case in @tbl-naniar-miss-case-table which shows how much missing
-data each case has. A visualisation of this is shown in @fig-visdat-vis-missing .
+{{< include sections/_missing.qmd >}}
 
-```{r}
-#| label: tbl-naniar-miss-var-summary
-#| tbl-caption: Summary of missing data by variable.
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-naniar::miss_var_summary(df_complete) |>
-  knitr::kable(col.names=c("Variable", "N", "%"),
-               caption="Summary of missing data by variable.")
-```
+#### Imputation
 
-```{r}
-#| label: tbl-naniar-miss-case-table
-#| tbl-caption: Summary of missing data by case, how much missing data is there per person?
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-naniar::miss_case_table(df_complete) |>
-  knitr::kable(col.names=c("Missing Variables", "N", "%"),
-               caption="Summary of missing data by case, how much missing data is there per person?")
-```
-
-```{r}
-#| label: fig-visdat-vis-missing
-#| purl: true
-#| eval: true
-#| echo: true
-#| output: true
-## This prevents the document from preview/rendering for some reason???
-## visdat::vis_miss(df_complete)
-```
-
-
-
-
+{{< include sections/_imputation.qmd >}}
 
 ### Modelling
+
+**TODO** - This table feels like duplication of @tbl-data-completeness, perhaps have just one? (`@ns-rse` 2024-07-11).
 
 The predictor variables selected to predict `final_pathology` are shown in @tbl-predictors
 
@@ -544,3 +536,24 @@ Comparing the sensitivity of the different models goes here.
 ## Conclusion
 
 The take-away message is....these things are hard!
+
+
+## Appendix
+
+### Data Dictionary
+
+```{r}
+#| label: tbl-variables
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."
+var_labels |>
+  as.data.frame() |>
+  kable(col.names = c("Description"),
+        caption="Description of variables in the Sheffield Thyroid dataset.")
+```
+
+
+[mice]: https://amices.org/mice/

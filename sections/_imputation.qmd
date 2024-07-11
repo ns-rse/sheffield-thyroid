@@ -1,0 +1,465 @@
+The [MICE][mice] package offers a number of different methods for imputing variables (see [documentation][mice_details])
+we have investigated Predictive Mean Matching (PMM), Classification and Regression Trees (CART) and Random Forests
+(RF). Four rounds of imputation using each method were made.
+
+A comparison of distributions/proportions before and after imputation are presented below to allow assessment of the
+utility of each method.
+
+
+```{r}
+#| label: mice-imputation
+#| eval: true
+#| echo: false
+#| output: false
+#| cache: true
+## Setup MICE mids for various methods
+##
+## It might be worth reading
+## Predictive Mean Matching
+imputations = 4
+cores = imputations
+mice_pmm <- df_complete |>
+    dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
+    mice::futuremice(m = imputations, method="pmm", n.core=cores) |>
+    mice::complete(action = "all", include = FALSE)
+## CART (Classification And Regression Trees)
+mice_cart <- df_complete |>
+    dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
+    mice::futuremice(m = imputations, method="cart", n.core=cores) |>
+    mice::complete(action = "all", include = FALSE)
+## Random Forest
+mice_rf <- df_complete |>
+    dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
+    mice::futuremice(m = imputations, method="rf", n.core=cores) |>
+    mice::complete(action = "all", include = FALSE)
+
+## Define two functions for plotting
+#' Plot histograms of a continuous variable in original and imputed data sets.
+#'
+#' @param original data.frame|tibble The original data frame.
+#' @param pmm mice MICE object from Predictive Mean Modelling.
+#' @param cart mice MICE object from Predictive Mean Modelling.
+#' @param imputation mice MICE object from Predictive Mean Modelling.
+#' @param to_plot str Variable to plot, should be a continuous variable for histograms.
+#' @param imputation int The immputation set to plot.
+plot_imputed_hist <- function(original, pmm, cart, rf,
+                              to_plot,
+                              imputation = 1,
+                              colours = c("#ad1538", "#15ad4f", "#1543ad", "#ad8415")) {
+    df <- data.frame(original = original[to_plot],
+                     pmm = pmm[[imputation]][to_plot],
+                     cart = cart[[imputation]][to_plot],
+                     rf = rf[[imputation]][to_plot])
+    colnames(df) <- c("original", "pmm", "cart", "rf")
+    hist_obs <- df |>
+        ggplot2::ggplot(aes(original)) +
+        ggplot2::geom_histogram(fill = colours[1], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("Original") +
+        ggplot2::theme(axis.title.x = element_blank())
+    hist_pmm <- df |>
+        ggplot2::ggplot(aes(pmm)) +
+        ggplot2::geom_histogram(fill = colours[2], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("PMM-imputed") +
+        ggplot2::theme(axis.title.x = element_blank())
+    hist_cart <- df |>
+        ggplot2::ggplot(aes(cart)) +
+        ggplot2::geom_histogram(fill = colours[3], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("CART-imputed") +
+        ggplot2::theme(axis.title.x = element_blank())
+    hist_rf <- df |>
+        ggplot2::ggplot(aes(rf)) +
+        ggplot2::geom_histogram(fill = colours[4], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("RF-imputed") +
+        ggplot2::theme(axis.title.x = element_blank())
+    cowplot::plot_grid(hist_obs, hist_pmm, hist_cart, hist_rf, nrow = 2, ncol = 2)
+}
+
+#' Plot bar charts of a categorical variable in original and imputed data sets.
+#'
+#' @param original data.frame|tibble The original data frame.
+#' @param pmm mice MICE object from Predictive Mean Modelling.
+#' @param cart mice MICE object from Predictive Mean Modelling.
+#' @param imputation mice MICE object from Predictive Mean Modelling.
+#' @param to_plot str Variable to plot, should be a continuous variable for histograms.
+#' @param imputation int The immputation set to plot.
+plot_imputed_cat <- function(original, pmm, cart, rf,
+                             to_plot,
+                             imputation = 1,
+                             colours = c("#ad1538", "#15ad4f", "#1543ad", "#ad8415")) {
+    df <- data.frame(original = original[to_plot],
+                     pmm = pmm[[imputation]][to_plot],
+                     cart = cart[[imputation]][to_plot],
+                     rf = rf[[imputation]][to_plot])
+    colnames(df) <- c("original", "pmm", "cart", "rf")
+    bar_obs <- df |>
+        dplyr::filter(!is.na(original)) |>
+        ggplot2::ggplot(aes(original)) +
+        ggplot2::geom_bar(fill = colours[1], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("Original") +
+        ggplot2::theme(axis.title.x = element_blank())
+    bar_pmm <- df |>
+        ggplot2::ggplot(aes(pmm)) +
+        ggplot2::geom_bar(fill = colours[2], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("PMM-imputed") +
+        ggplot2::theme(axis.title.x = element_blank())
+    bar_cart <- df |>
+        ggplot2::ggplot(aes(cart)) +
+        ggplot2::geom_bar(fill = colours[3], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("CART-imputed") +
+        ggplot2::theme(axis.title.x = element_blank())
+    bar_rf <- df |>
+        ggplot2::ggplot(aes(rf)) +
+        ggplot2::geom_bar(fill = colours[4], color = "#000000", position = "identity") +
+        ggplot2::ggtitle("RF-imputed") +
+        ggplot2::theme(axis.title.x = element_blank())
+    cowplot::plot_grid(bar_obs, bar_pmm, bar_cart, bar_rf, nrow = 2, ncol = 2)
+}
+
+```
+
+
+
+::: {.panel-tabset}
+
+## Albumin
+
+```{r}
+#| label: fig-mice-imputation-albumin
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_hist(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "albumin",
+                  imputation = 1)
+```
+
+## Monocyte
+
+```{r}
+#| label: fig-mice-imputation-monocyte
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_hist(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "monocyte",
+                  imputation = 1)
+
+```
+
+## Lymphocytes
+
+```{r}
+#| label: fig-mice-imputation-lymphocytes
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_hist(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "lymphocytes",
+                  imputation = 1)
+
+```
+
+## TSH Value
+
+```{r}
+#| label: fig-mice-imputation-tsh-value
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_hist(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "tsh_value",
+                  imputation = 1)
+
+```
+
+## Nodule Size
+
+```{r}
+#| label: fig-mice-imputation-size-nodule-mm
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_hist(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "size_nodule_mm",
+                  imputation = 1)
+
+```
+
+:::
+
+
+::: {.panel-tabset}
+
+## Incidental Nodule
+
+```{r}
+#| label: fig-mice-imputation-incidental-nodule
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "incidental_nodule",
+                  imputation = 1)
+
+```
+
+## Palpable Nodule
+
+```{r}
+#| label: fig-mice-imputation-palpable-nodule
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "palpable_nodule",
+                  imputation = 1)
+
+```
+
+## Rapid Enlargement
+
+```{r}
+#| label: fig-mice-imputation-rapid-enlargement
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "rapid_enlargement",
+                  imputation = 1)
+
+```
+
+## Compressive Symptoms
+
+```{r}
+#| label: fig-mice-imputation-compressive-symptoms
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "compressive_symptoms",
+                  imputation = 1)
+
+```
+
+## Hypertension
+
+```{r}
+#| label: fig-mice-imputation-hypertension
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "hypertension",
+                  imputation = 1)
+
+```
+
+## Vocal Cord Paresis
+
+```{r}
+#| label: fig-mice-imputation-vocal-cord-paresis
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "vocal_cord_paresis",
+                  imputation = 1)
+
+```
+
+## Graves Disease
+
+```{r}
+#| label: fig-mice-imputation-graves-disease
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "graves_disease",
+                  imputation = 1)
+
+```
+
+## Hashimotos Thyroiditis
+
+```{r}
+#| label: fig-mice-imputation-hashimotos-thyroiditis
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "hashimotos_thyroiditis",
+                  imputation = 1)
+
+```
+
+## Family History
+
+```{r}
+#| label: fig-mice-imputation-family-history-thyroid-cancer
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "family_history_thyroid_cancer",
+                  imputation = 1)
+
+```
+
+## Exposure Radiation
+
+```{r}
+#| label: fig-mice-imputation-exposure-radiation
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "exposure_radiation",
+                  imputation = 1)
+
+```
+
+## Solitary Nodule
+
+```{r}
+#| label: fig-mice-imputation-solitary-nodule
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "solitary_nodule",
+                  imputation = 1)
+
+```
+
+## BTA U-Classification
+
+```{r}
+#| label: fig-mice-imputation-bta-u-classification
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "bta_u_classification",
+                  imputation = 1)
+
+```
+
+## Cervical Lymphadenopathy
+
+```{r}
+#| label: fig-mice-imputation-rapid-cervical-lymphadenopathy
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+plot_imputed_cat(original = df_complete,
+                  pmm = mice_pmm,
+                  cart = mice_cart,
+                  rf = mice_rf,
+                  to_plot = "cervical_lymphadenopathy",
+                  imputation = 1)
+
+```
+
+
+**TODO** - In addition to the above graphs you may want to construct summary tables for each of the imputed datasets
+done by each method. These are stored in `mice_pmm`, `mice_cart` and `mice_rf`, each of which is a list and you can
+access each dataframe by indexing the list (indexing starts with `1` in R unlike most other programming languages). Thus
+to get at the 3 dataset that was imputed with `mice_cart` you would use `mice_cart[[3]]`. The extracted datasets can be
+combined with the `gtsummary::table_summary()` (or you could modify the
+[`action`](https://amices.org/mice/reference/complete.mids.html#details) option to `mice::complete()` which controls how
+the results of imputation are handled as this can be set to return `long` format data which can then be summarised more
+easily) .
+
+:::
+
+[mice]: https://amices.org/mice/
+[mice_detail]: https://amices.org/mice/reference/mice.html#details
