@@ -77,7 +77,7 @@ Tidymodels framework the model `fit` is wrapped up inside (hence the above artic
 
 
 ``` {r}
- #| label: lasso-save
+#| label: lasso-save
 #| purl: true
 #| eval: true
 #| echo: true
