@@ -316,7 +316,7 @@ Hospitals NHS Foundation Trust</institution>
       </ref>
     </ref-list>
   </back>
-  <sub-article article-type="notebook" id="nb-2-nb-article">
+  <sub-article article-type="notebook" id="nb-3-nb-article">
     <front-stub>
       <title-group>
         <article-title>A multicentre observational study of the epidemiology and
@@ -397,12 +397,23 @@ Hospitals NHS Foundation Trust</institution>
       </abstract>
     </front-stub>
     <body>
-      <sec id="nb-code-cell-1-nb-article" specific-use="notebook-code">
+      <sec specific-use="notebook-content">
         <code language="r script"># Load libraries
 library(ggplot2)
 library(knitr)
 library(rmarkdown)
 library(tidyverse)</code>
+        <boxed-text>
+          <preformat>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ lubridate 1.9.3     ✔ tibble    3.2.1
+✔ purrr     1.0.2     ✔ tidyr     1.3.1
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</preformat>
+        </boxed-text>
         <code language="r script">library(gtsummary)
 library(tableone)
 
@@ -420,17 +431,6 @@ r_scripts &lt;- paste(base_dir, "r", sep = "/")
 # Load data
 #source("r/shf_thy_nod.R")
 #df &lt;- readRDS(paste0(r_dir, "clean.rds", sep="/"))</code>
-        <sec id="nb-code-cell-1-output-0-nb-article" specific-use="notebook-output">
-          <preformat>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-✔ dplyr     1.1.4     ✔ readr     2.1.5
-✔ forcats   1.0.0     ✔ stringr   1.5.1
-✔ lubridate 1.9.3     ✔ tibble    3.2.1
-✔ purrr     1.0.2     ✔ tidyr     1.3.1
-── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-✖ dplyr::filter() masks stats::filter()
-✖ dplyr::lag()    masks stats::lag()
-ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</preformat>
-        </sec>
       </sec>
       <sec id="introduction-nb-article">
         <title>1 Introduction</title>

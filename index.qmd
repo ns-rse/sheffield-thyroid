@@ -1,5 +1,5 @@
 ---
-title: "An investigation of the predictors of Thyroid Cancer"
+title: "An investigation of the predictors of thyroid cancer in patients with thyroid nodules"
 author:
   - name: Ovie Edafe
     orcid: 0000-0002-6205-806X
@@ -17,10 +17,18 @@ author:
       - Researcher
     affiliations:
       - Research Software Engineer, Department of Computer Science, University of Sheffield
+  - name: Karen Sisley
+    orcid: 0000-0002-5565-2618
+    corresponding: false
+    roles:
+      - Researcher
+    affiliations:
+      - Senior Lecturer, Clinical Medicine, School of Medicine and Population Health, University of Sheffield
   - name: Sabapathy P Balasubramanian
     orcid: 0000-0001-5953-2843
     corresponding: false
-    roles: Researcher
+    roles:
+      - Researcher
     affiliations:
       - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
 abstract: |
@@ -39,79 +47,116 @@ bibliography: references.bib
 citation:
   container-title: "Sheffield study on thyroid nodules"
 number-sections: true
+notebook-preview-options:
+  preview: false
+execute:
+  cache: true
 ---
 
-```{r}
-#| label: setup
-#| purl: true
-#| eval: true
-#| echo: false
-#| warning: false
-
-## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
-library(dplyr)
-library(ggplot2)
-library(ggdark)
-library(gtsummary)
-library(Hmisc)
-library(knitr)
-library(readr)
-library(rmarkdown)
-
-## Libraries for Tidymodelling
-library(dials)
-library(kernlab)
-library(knitr)
-library(tidymodels)
-library(tidyverse)
-library(vip)
-
-
-## Set global options
-options(digits = 3)
-train <- 0.75
-test <- 0.25
-
-## Set directories based on current location
-base_dir <- getwd()
-data_dir <- paste(base_dir, "data", sep = "/")
-csv_dir <- paste(data_dir, "csv", sep = "/")
-r_dir <- paste(data_dir, "r", sep = "/")
-r_scripts <- paste(base_dir, "r", sep = "/")
-
-
-## Load data
-##
-## The following line runs the `r/shf_thy_nod.R` script which reads the data from CSV and cleans/tidies it.
-## If something has changed in that file or the underlying data (in `data/csv/sheffield_thyroid_module.R`) then this
-## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
-source("r/shf_thy_nod.R")
-## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
-## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
-#df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
-```
+{{< include sections/_setup.qmd >}}
 
 
 ## Introduction
 
-Some paragraphs on the background of the work can go here. **TODO** Expand on this.
+Thyroid nodules are common. The challenge in the management of thyroid nodules is differentiating between benign and
+malignant nodule thyroid nodules.The use fine needle aspiration and cytology (FNAC) still leaves around 20% of
+patients that cannot be classify as benign or malignant. This scenario traditionally leads to diagnostic
+hemithyroidectomy for definitive histology. Other clinical variables such as patients' demographics, clinical and
+biochemical factors have been shown to be
+associated with thyroid cancer in patients with thyroid nodules. This has been utilised in studies evaluating
+predictors of thyroid cancer with a view of creating a model to aid prediction.
+Standard practice on the management of thyroid nodules does not utilise these non ultrasound and non cytological
+factors. Combination of these variables considered to be significant with ultrasound and cytological characteristics may
+improve management of patients with thyroid nodules.
+Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluation of non
+thyroid related pathologies. Thus, leading to increase investigation of thyroid nodules and subsequent increased number
+of thyroid operations in non diagnostic cases.
+There are morbidities associated with thyroid surgery including scar, recurrent laryngeal nerve injury,
+hypothyroidism and hypoparathyroidism.
+We performed a systematic review to evaluate for predictors of thyroid cancer specifically in patients presenting
+with thyroid nodules.
+The systematic review a number of potential important variables that may be useful in the prediction of thyroid cancer
+in patients with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
+improving prediction of thyroid cancer using machine learning techniques.
 
 
 ## Methods
 
+This study was reported as per the Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) guidelines
+
+### Study design
+
+This was a retrospective cohort study.
+
+### Setting
+
+The study was conducted at the Sheffield Teaching hospitals NHS Foundation Trusts. This is a tertiary referral centre
+for the management of thyroid cancer
+
+### Participants
+
+We included all consecutive patients who presented with thyroid nodule(s) or that were found to have thyroid nodule(s)
+on ultrasound done for thyroid pathology or for other non thyroid related pathologies
+
+### Variables
+Variable evaluated was based on findings from a systematic review evaluating predictors of thyroid cancer in patients
+with thyroid nodules. Data on the following variables were collected: patient demographics (age, gender, ethnicity),
+nodule presentation (incidental nodule, palpable nodule, rapid enlargement, compressive symptoms, vocal paresis), past
+medical history (hypertension, Graves' disease, Hashimotos' thyroiditis, family history of thyroid cancer, exposure to
+neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics (British
+Thyroid Association ultrasound (BTA U), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
+Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, and histological diagnosis.
+
+### Data source
+
+Data was collected from patients' case notes and electronic patients' database using a standardised
+data collection proforma. This was initially piloted on 30 patients  and revised to improve data entry. In addition a
+number of variables that were not standard collected during workout of patients were not further checked; these include
+body mass index (BMI), serum thyroglobulin, serum triiodothyronine (T3), thyroxine (T4), thyroglobulin antibody (TgAb),
+thyroid peroxidase antibody (TP0Ab), and urinary iodine.
+
+### Study size
+We sought to have a large data set of at least 100 thyroid nodules with a cancer diagnosis using consecutive sampling
+technique.
+We aimed for a total of 1500 patients with thyroid nodules to achieve our target sample size. With the use
+of modern statistical techniques, we proposed such number will be appropriate to detect important variables if it
+exists.
+
+### Data analysis
+
 Data was cleaned and analysed using the R Statistical Software @r_citation and the Tidyverse (@tidyverse),  Tidymodels
 (@tidymodels) collection of packages.
 
+### Imputation
+
+The dataset is incomplete and there are missing observations across all variables to varying degrees. In order to
+maximise the sample available for analysis imputation was used to infer missing values. The Multivariat Imputation via
+Chained Equations ([MICE][mice] and implemented in the eponymous R package @vanBuuren2011Dec) was employed which assumes data is
+missing at random (a difficult assumption to formally test). The approach takes each variable with missing data and
+attempts to predict it using statistical modelling based on the observed values. In essence it is the same approach as
+the statistical methods being employed to try and predict Thyroid Cancer and there are a range of statistical techniques
+available which include
+
 ### Modelling
 
-Description of the different models and how they are assessed can go here.
+We used a selection of statistic modelling techniques to evaluate association between variables and thyroid cancer in
+patients with thyroid nodules. The patient population was split into training and testing cohorts in a ratio
+of `r train`:`r test` and each model is fitted using the training cohort.
+This split ratio is generally used in traditional machine learning techniques. The training set of the
+data was used to estimate the relation between variables and thyroid cancer. The larger the training data, the better
+it is for the model to learn the trends. The test set was used to determine the accuracy of the model in predicting
+thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
+randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
+data sets so any test data was not accidentally trained.
+Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
+The k-fold techniques splits the data in ?10 folds, and the data was trained on all but one of the the fold, and the
+one fold not trained is used to test the data. This was repeated multiple times using a different fold for test and
+the others for training until all the folds is utilised for training and testing. Following multiple training process
+with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort.
+We also used the leave one out (loo) cross-validation to train and test the data set.In this technique, all but one
+observation is use to train the data set and one observation is use to test the data; this is repeated until all the
+data test is used for testing and training. The model with the best predictive value was selected.
 
-A selection of modern statistical classification approaches have been selected and tested for this work. To fit the models
-data is split into training and testing cohorts in a ratio of `r train`:`r test` and each model is fitted using the
-training cohort. The predictive accuracy of the fitted model is then assessed in the test cohort. **TODO** Expand on this.
-
-Cross validation is used to estimate the accuracy of the models there are a number of options available, those
-considered for this work are k-fold and leave one out (loo) cross-validation. **TODO** Expand on this.
 
 #### LASSO / Elastic Net
 
@@ -129,15 +174,28 @@ variables @steyerberg2001
 
 #### Random Forest
 
-Blurb on what Random Forests are.
+To add reference
+The random forest plot is an extension of the decision tree methodology to reduce variance. Decision trees are very
+sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the
+model. The random forest plot selects random observation of the dataset to create multiple decision trees. Random
+variables are selected for each tree in the training of the data set. The aggregated output of the generated decision
+trees is then used to create an estimate.
+
 
 #### Gradient Boosting
 
-Blurb on what Gradient Boosting is.
+Gradient boosting is a machine learning algorithm that uses decision tree as a base model. The data is initially trained
+on this decision tree, but the initial prediction is weak, thus termed a weak based model. In gradient boosting the process
+is iterative; a sequence of decision trees is added to the initial tree. Each tree learns from the prior tree(s) to
+improve the model, increasing strength and minimising error.
 
 #### SVM
 
-Blurb on what Support Vector Machines are.
+Support Vector Machines is an approach that allows observation with a binary classifications to be separated using a
+hyperplane. It finds a hyperplane that best stratify the two classes i.e benign versus malignant nodules. SVM finds the
+hyperplane with the maximum margin of separation between the two classes. The support vectors are the data point that
+are positioned close to the margin of the hyperplane and these used to select the most appropraite hyperplane. The
+support vectors are the only data points that have an influence on the maximum margin in SVM.
 
 #### Comparision
 
@@ -145,31 +203,176 @@ Blurb on what Support Vector Machines are.
 
 ## Results
 
-### Data Description
-
-Details of data completeness and other descriptive aspects go here.
-
-
 ```{r}
-#| label: tbl-variables
-#| purl: true
+#| label: n_obs
 #| eval: true
 #| echo: false
 #| warning: false
-#| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."
-var_labels |>
-  as.data.frame() |>
-  kable(col.names = c("Description"),
-        caption="Description of variables in the Sheffield Thyroid dataset.")
+n_obs <- nrow(df)
 ```
+
+
+::: {.panel-tabset}
+
+## Demographics
+
+```{r}
+#| label: tbl-patient-demographics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Demographics of study population"
+patient_demo <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("age_at_scan", "gender", "ethnicity")) |>
+  gtsummary::tbl_summary() |>
+  gtsummary::modify_caption("Demographics of study population")
+patient_demo
+
+```
+
+## Clinical Characteristics
+
+```{r}
+#| label: tbl-clinical-characteristics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules"
+clinical_charac <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("age_at_scan",
+                  "gender",
+                  "incidental_nodule",
+                  "palpable_nodule",
+                  "rapid_enlargement",
+                  "compressive_symptoms",
+                  "hypertension",
+                  "vocal_cord_paresis",
+                  "graves_disease",
+                  "hashimotos_thyroiditis",
+                  "family_history_thyroid_cancer",
+                  "exposure_radiation",
+                  "final_pathology",
+                  )) |>
+  gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
+  gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
+clinical_charac
+
+```
+
+## Biomarkers
+
+```{r}
+#| label: tbl-biomarkers-variables
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Biochemical variables evaluated between benign and malignant thyroid nodules"
+biochem_vars <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("albumin",
+                  "tsh_value",
+                  "lymphocytes",
+                  "monocyte",
+                  "final_pathology")) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
+biochem_vars
+
+```
+## Ultrasound
+
+```{r}
+#| label: tbl-ultrasound-characteristics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Ultrasound characteristics of benign and malignant nodules"
+ultrasound_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("size_nodule_mm",
+                  "solitary_nodule",
+                  "bta_u_classification",
+                  "consistency_nodule",
+                  "cervical_lymphadenopathy",
+                  "final_pathology")) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
+ultrasound_char
+
+```
+
+## BTA U
+```{r}
+#| label: u-class-final-path
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "U class path"
+ultrasound_final_path <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("bta_u_classification", "final_pathology")) |>
+  gtsummary::tbl_summary(by = bta_u_classification) |>
+  gtsummary::modify_caption("BTA U classification by final pathology.")
+ultrasound_final_path
+
+```
+
+## Thyroid Classification
+
+```{r}
+#| label: thy-class-final-path
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Thyroid classification by Final Pathology"
+thy_class_final_path <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("thy_classification", "final_pathology")) |>
+  gtsummary::tbl_summary(by = thy_classification) |>
+  gtsummary::modify_caption("Thyroid classification by final pathology.")
+thy_class_final_path
+
+```
+
+## Cytology
+
+```{r}
+#| label: tbl-cytology-characteristics
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Cytological characteristics of benign and malignant nodules"
+cytology_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("thy_classification",
+                  "final_pathology")) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Cytological characteristics of benign and malignant nodules")
+cytology_char
+```
+
+:::
+
+@tbl-patient-demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were
+included in this study with a median (IQR) age of  `r df$age_at_scan |> stats::quantile(probs=c(0.5))` (
+`r df$age_at_scan |> stats::quantile(probs=c(0.25))`-`r df$age_at_scan |> stats::quantile(probs=c(0.75))`).
+@tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant
+thyroid nodules.
+
+### Data Description
+
 
 A summary of the variables that are available in this data set can be found in @tbl-variables.
 
 
 ```{r}
+## @ns-rse (2024-07-18) - I have set this code chunk to _not_ be evaluated as it is mostly  duplicated in the summary of
+##                        imputed data.
 #| label: tbl-data-completeness
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| warning: false
 #| tbl-caption: "Overall summary of all variables in the Sheffield dataset."
@@ -193,293 +396,95 @@ df_summary
 
 ```
 
-The completeness of the data is shown in @tbl-data-completeness. Where variables continuous (e.g. `age` or
-`size_nodule_mm`) basic summary statistics in the form of mean, standard deviation, median and inter-quartile range are
-given. For categorical variables that are logical `TRUE`/`FALSE` (e.g. `palpable_nodule`) the number of `TRUE`
-observations and the percentage (of those with observed data for that variable) are shown along with the number that are
-_Unknown_. For categorical variables such as `gender` and percentages in each category are
-reported. For all variables an indication of the number of missing observations is also given and it is worth noting
-that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
+The completeness of the original data is shown in tables @tbl-imputation-summary-pmm, @tbl-imputation-summary-cart,
+@tbl-imputation-summary-rf, along with summaries from four rounds of imputation for each of three imputation methods.
+Where variables continuous (e.g. `age` or `size_nodule_mm`) basic summary statistics in the form of mean, standard
+deviation, median and inter-quartile range are given. For categorical variables that are logical `TRUE`/`FALSE`
+(e.g. `palpable_nodule`) the number of `TRUE` observations and the percentage (of those with observed data for that
+variable) are shown along with the number that are _Unknown_. For categorical variables such as `gender` percentages
+in each category are reported. For all variables an indication of the number of missing observations is also given and
+it is worth noting that there are `r gtsummary::inline_text(df_summary, variable="final_pathology", level="Unknown")`
 instances where the `final_pathology` is not known which reduces the sample size to
 `r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
 
-**IMPORTANT** You will probably want to have a the following section included which excludes those with missing
-`final_pathology`, they can't contribute anything to the modelling.
 
+#### Missing Data
 
-**IMPORTANT** Once you have decided which variables you want to include in your analysis you should determine how many
-individuals have complete data for all of these, this _will_ reduce your sample size available. You could add that to
-this section.
+{{< include sections/_missing.qmd >}}
 
-The predictor variables selected for inclusion were.
+#### Imputation
 
-**TODO** Insert table of subset of predictor variables that are considered important.
-
-```{r}
-#| label: remove-missing-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-print(paste0("Before : ", nrow(df)))
-df <- df |>
-  dplyr::filter(!is.na(final_pathology))
-print(paste0("After  : ", nrow(df)))
-
-```
-
-```{r}
-#| label: fig-age-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Age by final pathology."
-df |>
-  ggplot(aes(age_at_scan, fill=final_pathology)) +
-  geom_histogram(alpha=0.6, position="identity") +
-  labs(x = "Age (years)", y = "N") +
-  ggtitle("Age") +
-  labs(fill="")
-## TODO - You may want to add vertical lines to the graph for the mean of each group
-##
-## Useful resources for plotting with ggplot2
-##
-## ggplot2 - https://ggplot2.tidyverse.org/index.html
-## The R Graph Gallery - https://r-graph-gallery.com/
-## StackOverflow for - https://stackoverflow.com/ (handy for searching for answers questions like how to add the mean)
-
-```
-
-```{r}
-#| label: fig-gender-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Gender by final pathology."
-df |>
-  ggplot(aes(gender, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final Pathology", y = "N") +
-  ggtitle("Gender") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-incidental-nodule-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Incidental nodule by final pathology."
-df |>
-  ggplot(aes(incidental_nodule, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final Pathology", y = "N") +
-  ggtitle("Incidental Nodule") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-palpable-nodule-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Palpable nodule by final pathology."
-df |>
-  ggplot(aes(palpable_nodule, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final Pathology", y = "N") +
-  ggtitle("Palpable Nodule") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-vocal-cord-paresis
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Vocal cord paresis by final pathology."
-df |>
-  ggplot(aes(vocal_cord_paresis, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  labs(x = "Final pathology", y = "N") +
-  ggtitle("Vocal Cord Paresis") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-hypertension-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Hypertension by final pathology."
-df |>
-  ggplot(aes(hypertension, fill=final_pathology)) +
-  geom_bar(alpha=0.6) +
-  ggtitle("Hypertension") +
-  labs(x = "Final Pathology", y = "N") +
-  labs(fill="")
-
-```
-
-```{r}
-#| label: fig-size-nodule-by-final-pathology
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| fig-caption: "Nodule size (mm) by final pathology."
-df |>
-  ggplot(aes(size_nodule_mm, fill=final_pathology)) +
-  geom_histogram(alpha=0.6, position="identity") +
-  labs(x = "Nodule Size (mm)", y = "N") +
-  ggtitle("Nodule Size") +
-  labs(fill="")
-## TODO - You may want to add vertical lines to the graph for the mean of each group
-##
-## Useful resources for plotting with ggplot2
-##
-## ggplot2 - https://ggplot2.tidyverse.org/index.html
-## The R Graph Gallery - https://r-graph-gallery.com/
-## StackOverflow for - https://stackoverflow.com/ (handy for searching for answers questions like how to add the mean)
-
-```
-
-
-#### Concordance
-
-A subset of clinical data and classification were repeated by independant clinicans (`fna_done`,
-`bta_u_classification` and `thy_classification`). This affords the opportunity to invetigate the correlation/concordance
-between the two assessments, formal statistical tests for difference can be made using Chi-squared, although they have little
-
-The cross tabulation of repeated `bta_u_classifcation` and `thy_classification` are shown in tables
-@tbl-concordance-bta-u-classification and @tbl-concordance-thy-classification respectively.
-
-```{r}
-#| label: tbl-concordance-bta-u-classification
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| tbl-caption: "Cross-tabulation of `bta_u_classification` and its repeat assessment."
-## Start by tabulating the variables of interest.
-concordance_bta_u_classification <- df |>
-  select(bta_u_classification, repeat_bta_u_classification) |>
-  table(useNA = "no")
-
-concordance_bta_u_classification |>
-  kable(caption="Cross-tabulation of `bta_u_classification` and its repeat assessment.")
-
-## Optionally perform a Chi-squared test (chisq.test() is the function to use).
-
-```
-
-```{r}
-#| label: tbl-concordance-thy-classification
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| tbl-caption: "Cross-tabulation of `thy_classification` and its repeat assessment."
-## Start by tabulating the variables of interest.
-concordance_thy_classification <- df |>
-  select(thy_classification, repeat_thy_classification) |>
-  table(useNA = "no")
-
-concordance_thy_classification  |>
-  kable(caption="Cross-tabulation of `thy_classification` and its repeat assessment.")
-
-## Optionally perform a Chi-squared test (chisq.test() is the function to use).
-```
-
-**TODO** Cross-tabulate other variables. I noticed that whilst there is `repeat_utlrasound` and `repeat_fna_done` there
-is no counter `ultrasound` or `fna_done` variables to compare these repeat data points to, are these variables available?
-
-<!-- Section that sets up the modelling -->
-```{r}
-#| label: test-train-split
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: false
-## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
-tidymodels_prefer()
-set.seed(5039378)
-
-## This is the point at which you should subset your data for those who have data available for the variables of
-## interest. The variables here should include the outcome `final_pathology` and the predictor variables that are set in
-## the code chunk `recipe`. May want to move this to another earlier in the processing so that the number of rows can be
-## counted and reported.
-df_complete <- df |>
-  dplyr::select(
-    age_at_scan,
-    final_pathology,
-    gender,
-    palpable_nodule,
-    rapid_enlargment,
-    size_nodule_mm,
-    thy_classification) |>
-dplyr::filter(if_any(everything(), is.na))
-
-## Use the df_complete rather than df as this subset have data for all the variables of interest.
-split <- rsample::initial_split(df_complete, prop = 0.75)
-train <- rsample::training(split)
-test <- rsample::testing(split)
-```
-
-```{r}
-#| label: cv-vfold
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: false
-cv_folds <- rsample::vfold_cv(train, v = 10, repeats = 10)
-```
-
-```{r}
-#| label: cv-loo
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: false
-cv_loo <- rsample::loo_cv(train)
-```
-```{r}
-#| label: recipe
-#| purl: true
-#| eval: true
-#| echo: true
-#| output: false
-## NB This is the key section where the variables that are to be used in the model are defined. A dependant variable
-## (the outcome of interest) is in this case the `final_pathology`, whether individuals have malignant or benign tumors,
-## this appears on the left-hand side of the equation (before the tilde `~`). On the right of the equation are the
-## predictor or dependant variables
-thyroid_recipe <- recipes::recipe(final_pathology ~ gender + size_nodule_mm + age_at_scan + palpable_nodule +
-  rapid_enlargment + thy_classification, data = train) |>
-  recipes::step_num2factor(final_pathology, levels = c("Benign", "Malignant")) |>
-  recipes::step_dummy(gender, palpable_nodule, rapid_enlargment, thy_classification) |>
-  recipes::step_normalize(all_numeric())
-```
-
-```{r}
-#| label: workflow
-#| eval: true
-#| echo: true
-#| output: false
-thyroid_workflow <- workflows::workflow() |>
-  workflows::add_recipe(thyroid_recipe)
-```
+{{< include sections/_imputation.qmd >}}
 
 ### Modelling
+
+**TODO** - And in light of having removed @tbl-data-completness in favour of the imputed datesets this too has been removed? (`@ns-rse` 2024-07-11).
+**TODO** - This table feels like duplication of @tbl-data-completeness, perhaps have just one? (`@ns-rse` 2024-07-11).
+
+<!-- The predictor variables selected to predict `final_pathology` are shown in @tbl-predictors -->
+
+```{r}
+## @ns-rse (2024-07-18) - I've disabled this table from being evaluated.
+#| label: tbl-predictors
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Predictors evaluated in modelling."
+
+df_predictors_evaluated <- df_complete |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Variables evaluated in the model")
+df_predictors_evaluated
+```
+
+<!-- Section that sets up the modelling -->
+{{< include sections/_recipe.qmd >}}
+
+The following section is output from a Tidymodel approach to logistic regression to try and work out why variables are
+not being included.
+
+```{r}
+#| label: logistic-train
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+
+## define binary logistic regression model
+logistic_model <- logistic_reg() |>
+  set_engine("glm")
+## add the binary logistic regression model to the thyroid workflow
+log_thyroid_workflow <- thyroid_workflow |>
+  add_model(logistic_model)
+## fit the the workflow to the training data
+log_thyroid_fit <- fit(log_thyroid_workflow, data = train)
+log_thyroid_fit
+## to inspect the fit object
+str(log_thyroid_fit)
+## use fitted model to make prediction
+logistic_model_predictions <- predict(log_thyroid_fit, test) |> bind_cols(test)
+## examine the processing steps
+log_thyroid_fit |> extract_recipe()
+## examine the model
+log_thyroid_fit |> extract_fit_parsnip()
+## to check if the workflow has been trained
+log_thyroid_fit$trained
+## I can only see age and gender, unsure why the other variable not present.? excluded due to lack of data ?because they are simply not important ? issue with workflow set up
+```
+
+
 
 A total of `r df_complete |> nrow()` patients had complete data for the selected predictor variables (see
 @tbl-predictors).
@@ -488,316 +493,32 @@ Results of the various modelling go here. Each section will show the results alo
 
 + LIME/Shaply analysis for explanability of models
 
+#### Logistic Regression
 
-#### LASSO / Elastic Net
+<!-- {{< include sections/_logistic.qmd >}} -->
 
-```{r}
-#| label: lasso
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-## Specify the LASSO model using parsnip, the key here is the use of the glmnet engine which is the R package for
-## fitting LASSO regression. Technically the package fits Elastic Net but with a mixture value of 1 it is equivalent to
-## a plain LASSO (mixture value of 0 is equivalent to Ridge Regression in an Elastic Net)
-tune_spec_lasso <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 1) |>
-  parsnip::set_engine("glmnet")
+#### LASSO
 
-## Tune the LASSO parameters via cross-validation
-lasso_grid <- tune::tune_grid(
-  object = workflows::add_model(thyroid_workflow, tune_spec_lasso),
-  resamples = cv_folds,
-  grid = dials::grid_regular(penalty(), levels = 50)
-)
-
-## K-fold best fit for LASSO
-lasso_kfold_roc_auc <- lasso_grid |>
-  tune::select_best(metric = "roc_auc")
-
-## Fit the final LASSO model
-final_lasso_kfold <- tune::finalize_workflow(
-  workflows::add_model(thyroid_workflow, tune_spec_lasso),
-  lasso_kfold_roc_auc
-)
-```
-
-```{r}
-#| label: lasso-kfold-eval-importance
-#| purl: true
-#| eval: false
-#| echo: true
-#| output: true
-final_lasso_kfold |>
-  fit(train) |>
-  hardhat::extract_fit_parsnip() |>
-  vip::vi(lambda = lasso_kfold_roc_auc$penalty) |>
-  dplyr::mutate(
-    Importance = abs(Importance),
-    Variable = fct_reorder(Variable, Importance)
-  ) |>
-  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  dark_theme_minimal()
-```
-
-``` {r}
-#| label: lasso-save
-#| purl: true
-#| eval: false
-#| echo: true
-#| output: false
-save(lasso_tune_spec, lasso_grid, final_lasso, lasso_highest_roc_auc,
-  file = "data/r/lasso.RData"
-)
-```
+{{< include sections/_lasso.qmd >}}
 
 #### Elastic Net
 
+{{< include sections/_elastic.qmd >}}
 
-```{r}
-#| label: elastic-net-specification
-#| purl: true
-#| eval: false
-#| echo: true
-#| output: false
-## Elastic Net model specification, as with LASSO it uses glmnet package but the mixture is 0.5 which is 50% LASSO (L1
-## regularisation) and 50% Ridge Regression (L2 regularisation)
-elastic_net_tune_spec <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 0.5) |>
-  parsnip::set_engine("glmnet")
-
-## Tune the model using `tune::tune_grid()` (https://tune.tidymodels.org/reference/tune_grid.html), calculates the
-## accuracy or the Root Mean Square Error
-elastic_net_grid <- tune::tune_grid(
-  object = workflows::add_model(thyroid_workflow, elastic_net_tune_spec),
-  resamples = cv_folds,
-  grid = dials::grid_regular(penalty(), levels = 50)
-)
-
-## Perform K-fold cross validation
-elastic_net_highest_roc_auc <- elastic_net_grid |>
-  tune::select_best(metric = "roc_auc")
-
-## Make the final best fit based on K-fold cross validation
-final_elastic_net <- tune::finalize_workflow(
-  workflows::add_model(thyroid_workflow, elastic_net_tune_spec),
-  elastic_net_highest_roc_auc
-)
-```
-
-```{r}
-#| label: elastic-net-kfold-eval-importance
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: true
-final_elastic_net |>
-  fit(train) |>
-  hardhat::extract_fit_parsnip() |>
-  vip::vi(lambda = elastic_net_highest_roc_auc$penalty) |>
-  dplyr::mutate(
-    Importance = abs(Importance),
-    Variable = fct_reorder(Variable, Importance)
-  ) |>
-  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  dark_theme_minimal()
-```
-
-``` {r}
-#| label: elastic-net-save
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-save(elastic_net_tune_spec, elastic_net_grid, final_elastic_net, elastic_net_highest_roc_auc,
-  file = "data/r/elastic_net.RData"
-)
-```
 
 
 #### Random Forest
-
-``` {r}
-#| label: random-forest-specify
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-## Specify the Random Forest model
-rf_tune <- parsnip::rand_forest(
-  mtry = tune(),
-  trees = 100,
-  min_n = tune()
-) |>
-  set_mode("classification") |>
-  set_engine("ranger", importance = "impurity")
-
-
-## Tune the parameters via Cross-validation
-rf_grid <- tune::tune_grid(
-  add_model(thyroid_workflow, rf_tune),
-  resamples = cv_folds, ## cv_loo,
-  grid = grid_regular(mtry(range = c(5, 10)), # smaller ranges will run quicker
-    min_n(range = c(2, 25)),
-    levels = 3
-  )
-)
-
-## Get the best fitting model with the highest ROC AUC
-rf_highest_roc_auc <- rf_grid |>
-  select_best("roc_auc")
-final_rf <- tune::finalize_workflow(
-  add_model(thyroid_workflow, rf_tune),
-  rf_highest_roc_auc
-)
-```
-
-``` {r}
-#| label: rf-kfold-eval-importance
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: true
-final_rf |>
-  fit(train) |>
-  hardhat::extract_fit_parsnip() |>
-  vip::vi(lambda = final_rf$penalty) |>
-  dplyr::mutate(
-    Importance = abs(Importance),
-    Variable = fct_reorder(Variable, Importance)
-  ) |>
-  ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  dark_theme_minimal()
-```
-
-``` {r}
-#| label: random-forest-save
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-save(random_forest_tune_spec, random_forest_grid, final_random_forest, random_forest_highest_roc_auc,
-  file = "data/r/random_forest.RData"
-)
-```
+{{< include sections/_rforest.qmd >}}
 
 #### Gradient Boosting
 
-``` {r}
-#| label: xgboost-model
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-## Specify the Gradient boosting model
-xgboost_model <- parsnip::boost_tree(
-  mode = "classification",
-  trees = 100,
-  min_n = tune(),
-  tree_depth = tune(),
-  learn_rate = tune(),
-  loss_reduction = tune()
-) |>
-  set_engine("xgboost", objective = "binary:logistic")
+{{< include sections/_gradientboost.qmd >}}
 
-## Specify the models tuning parameters using the `dials` package along (https://dials.tidymodels.org/) with the grid
-## space. This helps identify the hyperparameters with the lowest prediction error.
-xgboost_params <- dials::parameters(
-  min_n(),
-  tree_depth(),
-  learn_rate(),
-  loss_reduction()
-)
-xgboost_grid <- dials::grid_max_entropy(
-  xgboost_params,
-  size = 10
-)
-
-## Tune the model via cross-validation
-xgboost_tuned <- tune::tune_grid(workflows::add_model(thyroid_workflow, spec = xgboost_model),
-  resamples = cv_folds,
-  grid = xgboost_grid,
-  metrics = yardstick::metric_set(roc_auc, accuracy, ppv),
-  control = tune::control_grid(verbose = FALSE)
-)
-```
-
-
-
-``` {r}
-#| label: xgboost-final
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-## We get the best final fit from the Gradient Boosting model.
-xgboost_highest_roc_auc <- xgboost_tuned |>
-  tune::select_best("roc_auc")
-final_xgboost <- tune::finalize_workflow(
-  add_model(thyroid_workflow, xgboost_model),
-  xgboost_highest_roc_auc
-)
-```
-
-``` {r}
-#| label: xgboost-save
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-save(xgboost_tune_spec, xgboost_grid, final_xgboost, xgboost_highest_roc_auc,
-  file = "data/r/xgboost.RData"
-)
-```
 
 #### SVM
 
-``` {r}
-#| label: svm-specify
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-## Specify
-svm_tune_spec <- parsnip::svm_rbf(cost = tune()) |>
-  set_engine("kernlab") |>
-  set_mode("classification")
+<!-- {{< include sections/_svm.qmd >}} -->
 
-## The hyperparameters are then tuned, in effect running the model in multiple subsets of the cross-validation to
-## get a "best fit".
-svm_grid <- tune::tune_grid(
-  workflows::add_model(thyroid_workflow, svm_tune_spec),
-  resamples = cv_folds, ## cv_loo,
-  grid = dials::grid_regular(cost(), levels = 20)
-)
-
-## The best fit is selected and fit to the overall training data set.
-svm_highest_roc_auc <- svm_grid |>
-  tune::select_best("roc_auc")
-final_svm <- tune::finalize_workflow(
-  add_model(thyroid_workflow, svm_tune_spec),
-  svm_highest_roc_auc
-)
-
-
-## Finally an assessment is made on the accuracy -->
-tune::last_fit(final_svm, split,
-  metrics = yardstick::metric_set(roc_auc, accuracy, ppv)
-) |>
-  tune::collect_metrics()
-```
-
-```{r}
-#| label: svm-save
-#| purl: true
-#| eval: false
-#| echo: false
-#| output: false
-save(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
-  file = "data/r/svm.RData"
-)
-```
 
 #### Explainability
 
@@ -817,3 +538,24 @@ Comparing the sensitivity of the different models goes here.
 ## Conclusion
 
 The take-away message is....these things are hard!
+
+
+## Appendix
+
+### Data Dictionary
+
+```{r}
+#| label: tbl-variables
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+#| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."
+var_labels |>
+  as.data.frame() |>
+  kable(col.names = c("Description"),
+        caption="Description of variables in the Sheffield Thyroid dataset.")
+```
+
+
+[mice]: https://amices.org/mice/
