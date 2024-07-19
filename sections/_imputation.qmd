@@ -14,137 +14,163 @@ utility of each method.
 #| cache: true
 ## Setup MICE mids for various methods
 ##
-## It might be worth reading
-## Predictive Mean Matching
-imputations = 4
-cores = imputations
-mice_pmm <- df_complete |>
-    dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
-    mice::futuremice(m = imputations, method="pmm", n.core=cores) |>
-    mice::complete(action = "long", include = TRUE)
-mice_pmm <- dplyr::mutate(mice_pmm, .imp = factor(.imp, levels = c(0,1,2,3,4), labels = c("Original", "1", "2", "3", "4")))
 
-## CART (Classification And Regression Trees)
-mice_cart <- df_complete |>
-    dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
-    mice::futuremice(m = imputations, method="cart", n.core=cores) |>
-    mice::complete(action = "long", include = TRUE)
-mice_cart <- dplyr::mutate(mice_cart, .imp = factor(.imp, levels = c(0,1,2,3,4), labels = c("Original", "1", "2", "3", "4")))
-
-## Random Forest
-mice_rf <- df_complete |>
-    dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
-    mice::futuremice(m = imputations, method="rf", n.core=cores) |>
-    mice::complete(action = "long", include = TRUE)
-mice_rf <- dplyr::mutate(mice_rf, .imp = factor(.imp, levels = c(0,1,2,3,4), labels = c("Original", "1", "2", "3", "4")))
-
-
-## Define two functions for plotting
-#' Plot histograms of a continuous variable in original and imputed data sets.
+#' Impute missing data and plot the results using the mice package.
 #'
-#' @param original data.frame|tibble The original data frame.
-#' @param pmm mice MICE object from Predictive Mean Modelling.
-#' @param cart mice MICE object from CART.
-#' @param rf mice MICE object from Random Forest.
-#' @param to_plot str Variable to plot, should be a continuous variable for histograms.
-#' @param imputation int The immputation set to plot.
-#' @param format str The "action" option used in 'mice_complete()', either "all" or "long" are supported.
-#' @param colours list A list of length four of colours to use when plotting.
-plot_imputed_hist <- function(original, pmm, cart, rf,
-                              to_plot,
-                              imputation = 1,
-                              format = "long",
-                              colours = c("#ad1538", "#15ad4f", "#1543ad", "#ad8415")) {
-    if (format == "all") {
-        df <- data.frame(original = original[to_plot],
-                     pmm = pmm[[imputation]][to_plot],
-                     cart = cart[[imputation]][to_plot],
-                     rf = rf[[imputation]][to_plot])
+#' This is a wrapper around the functionality of the \href{https://amices.org/mice}{mice} and
+#' \href{https://amices.org/ggmice}{ggmice} packages for Multivariate Imputation by Chained Equations and visualisation
+#' of the resulting imputed datasets. Users should refer to the documentation for details of the options available.
+#'
+#' The wrapper uses \code{\link[mice]{futuremice}} to perform imputation in parallel using the same number of cores as
+#' the requested number of imputations. This speeds up the process but be wary if your computer has limited cores.
+#'
+#' @param df data.frame|tibble Data frame or tibble of original data.
+#' @param imputations int Number of imputations to perform.
+#' @param iterations int Number of iterations to perform for imputation.
+#' @param method str Method of imputation to use, see the Details section of \code{\link[mice]{mice}}.
+#' @param action str Action to take when running \code{\link[mice]{complete}}.
+#' @param include bool Logical of whether to include the original dataset in the output.
+#' @param seed int Seed for random number generation
+#'
+#'
+impute_data <- function(df = df_complete,
+                        outcome_var = "final_pathology",
+                        imputations = 4,
+                        iterations = 5,
+                        method = "pmm",
+                        action = "long",
+                        include = TRUE,
+                        continuous = c("albumin", "tsh_value", "lymphocytes", "monocyte", "size_nodule_mm"),
+                        categorical = c("ethnicity",
+                                        "incidental_nodule",
+                                        "palpable_nodule",
+                                        "rapid_enlargement",
+                                        "compressive_symptoms",
+                                        "hypertension",
+                                        "vocal_cord_paresis",
+                                        "graves_disease",
+                                        "hashimotos_thyroiditis",
+                                        "family_history_thyroid_cancer",
+                                        "exposure_radiation",
+                                        "bta_u_classification",
+                                        "solitary_nodule",
+                                        "cervical_lymphadenopathy",
+                                        "thy_classification"),
+                        seed = 123) {
+    results <- list()
+    ## Setup imputation
+    results$mids <- df |>
+        dplyr::select(-{{ outcome_var }}) |>
+        mice::futuremice(m = imputations,
+                         n.core = imputations,
+                         iterations = iterations,
+                         parallelseed  = seed)
+    ## Generate output dataset,
+    results$imputed <- results$mids |>
+        mice::complete(action = "long", include = include)
+    ## Convert the .imp variable which indicates the imputation set to factor with original dataset labelled as such
+    results$imputed <- results$imputed |>
+         dplyr::mutate(.imp = factor(.imp,
+                                     levels = seq(0, imputations, 1),
+                                     labels = c("Original", as.character(seq(1, imputations, 1)))))
+    ## We need to bind the outcome variable to each imputed dataset so they can be used in analyses
+    outcome = df[[outcome_var]]
+    n = imputations
+    while(n > 0) {
+        outcome = append(outcome, df[[outcome_var]])
+        n <- n - 1
     }
-    if (format == "long") {
-        df <- data.frame(original = original[to_plot],
-                     pmm = pmm |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
-                     cart = cart |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
-                     rf = rf |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot))
+    results$imputed <- cbind(results$imputed, outcome)
+    colnames(results$imputed) <- stringr::str_replace(colnames(results$imputed), "outcome", outcome_var)
+    ## Plot traces of the imputation over iteration
+    results$trace <- ggmice::plot_trace(results$mid)
+    ## Plot correlation between variables
+    results$corr <- ggmice::plot_corr(df,
+                                      label = TRUE,
+                                      square = TRUE,
+                                      rotate = TRUE,
+                                      diagonal = FALSE)
+    ## Plot histograms of continuous variables
+    results$histogram <- list()
+    for (var in continuous) {
+        results$histogram[[var]] <- ggmice::ggmice(results$mids,
+                                                   ggplot2::aes(x = .data[[var]],
+                                                                group = .imp)) +
+                                        ggplot2::geom_density()
     }
-    colnames(df) <- c("original", "pmm", "cart", "rf")
-    hist_obs <- df |>
-        ggplot2::ggplot(aes(original)) +
-        ggplot2::geom_histogram(fill = colours[1], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("Original") +
-        ggplot2::theme(axis.title.x = element_blank())
-    hist_pmm <- df |>
-        ggplot2::ggplot(aes(pmm)) +
-        ggplot2::geom_histogram(fill = colours[2], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("PMM-imputed") +
-        ggplot2::theme(axis.title.x = element_blank())
-    hist_cart <- df |>
-        ggplot2::ggplot(aes(cart)) +
-        ggplot2::geom_histogram(fill = colours[3], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("CART-imputed") +
-        ggplot2::theme(axis.title.x = element_blank())
-    hist_rf <- df |>
-        ggplot2::ggplot(aes(rf)) +
-        ggplot2::geom_histogram(fill = colours[4], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("RF-imputed") +
-        ggplot2::theme(axis.title.x = element_blank())
-    cowplot::plot_grid(hist_obs, hist_pmm, hist_cart, hist_rf, nrow = 2, ncol = 2)
+    ## Scatterplots and bar charts for categorical variables
+    results$scatter <- list()
+    results$bar_chart <- list()
+    for (var in categorical) {
+        results$scatter[[var]] <- ggmice::ggmice(results$mids,
+                                                 ggplot2::aes(x = .imp,
+                                                              y = .data[[var]])) +
+                                        ggplot2::geom_jitter()
+        results$bar_chart[[var]] <- ggmice::ggmice(results$mids,
+                                                   ggplot2::aes(x = .data[[var]],
+                                                                fill = .imp)) +
+                                        ggplot2::geom_bar(position = "dodge")
+    }
+    results
 }
 
-#' Plot bar charts of a categorical variable in original and imputed data sets.
-#'
-#' @param original data.frame|tibble The original data frame.
-#' @param pmm mice MICE object from Predictive Mean Modelling.
-#' @param cart mice MICE object from CART.
-#' @param rf mice MICE object from Random Forest.
-#' @param to_plot str Variable to plot, should be a continuous variable for histograms.
-#' @param imputation int The immputation set to plot.
-#' @param format str The "action" option used in 'mice_complete()', either "all" or "long" are supported.
-#' @param colours list A list of length four of colours to use when plotting.
-plot_imputed_cat <- function(original, pmm, cart, rf,
-                             to_plot,
-                             imputation = 1,
-                             format = "long",
-                             colours = c("#ad1538", "#15ad4f", "#1543ad", "#ad8415")) {
-    if (format == "all") {
-        df <- data.frame(original = original[to_plot],
-                     pmm = pmm[[imputation]][to_plot],
-                     cart = cart[[imputation]][to_plot],
-                     rf = rf[[imputation]][to_plot])
-    }
-    if (format == "long") {
-        df <- data.frame(original = original[to_plot],
-                     pmm = pmm |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
-                     cart = cart |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
-                     rf = rf |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot))
-    }
-    colnames(df) <- c("original", "pmm", "cart", "rf")
-    bar_obs <- df |>
-        dplyr::filter(!is.na(original)) |>
-        ggplot2::ggplot(aes(original)) +
-        ggplot2::geom_bar(fill = colours[1], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("Original") +
-        ggplot2::theme(axis.title.x = element_blank())
-    bar_pmm <- df |>
-        ggplot2::ggplot(aes(pmm)) +
-        ggplot2::geom_bar(fill = colours[2], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("PMM-imputed") +
-        ggplot2::theme(axis.title.x = element_blank())
-    bar_cart <- df |>
-        ggplot2::ggplot(aes(cart)) +
-        ggplot2::geom_bar(fill = colours[3], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("CART-imputed") +
-        ggplot2::theme(axis.title.x = element_blank())
-    bar_rf <- df |>
-        ggplot2::ggplot(aes(rf)) +
-        ggplot2::geom_bar(fill = colours[4], color = "#000000", position = "identity") +
-        ggplot2::ggtitle("RF-imputed") +
-        ggplot2::theme(axis.title.x = element_blank())
-    cowplot::plot_grid(bar_obs, bar_pmm, bar_cart, bar_rf, nrow = 2, ncol = 2)
-}
+## Impute using three different methods using the above impute_data() wrapper
+mice_pmm <- impute_data(method = "pmm",
+                        imputations = 5,
+                        iterations = 5,
+                        seed = 684613)
+mice_cart <- impute_data(method = "cart",
+                        imputations = 5,
+                        iterations = 5,
+                        seed = 1388466)
+mice_rf <- impute_data(method = "rf",
+                        imputations = 5,
+                        iterations = 5,
+                        seed = 3151358)
+
 
 ```
 
+The convergence of the imputation methods are shown in figues @fig-mice-convergence-pmm, @fig-mice-convergence-cart, and
+@fig-mice-convergence-rf.
+
+::: {.panel-tabset}
+
+```{r}
+#| label: fig-mice-convergence-pmm
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+mice_pmm$trace
+
+```
+
+```{r}
+#| label: fig-mice-convergence-cart
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+
+mice_cart$trace
+
+```
+
+```{r}
+#| label: fig-mice-convergence-rf
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+mice_rf$trace
+
+```
+
+:::
 
 
 ::: {.panel-tabset}
@@ -158,13 +184,11 @@ plot_imputed_cat <- function(original, pmm, cart, rf,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_hist(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "albumin",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$histogram$albumin,
+                   mice_cart$histogram$albumin,
+                   mice_rf$histogram$albumin,
+                   nrow = 1,
+                   ncol = 3)
 ```
 
 ## Monocyte
@@ -176,13 +200,11 @@ plot_imputed_hist(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_hist(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "monocyte",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$histogram$monocyte,
+                   mice_cart$histogram$monocyte,
+                   mice_rf$histogram$monocyte,
+                   nrow = 1,
+                   ncol = 3)
 
 ```
 
@@ -195,13 +217,11 @@ plot_imputed_hist(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_hist(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "lymphocytes",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$histogram$lymphocytes,
+                   mice_cart$histogram$lymphocytes,
+                   mice_rf$histogram$lymphocytes,
+                   nrow = 1,
+                   ncol = 3)
 
 ```
 
@@ -214,13 +234,11 @@ plot_imputed_hist(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_hist(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "tsh_value",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$histogram$tsh_value,
+                   mice_cart$histogram$tsh_value,
+                   mice_rf$histogram$tsh_value,
+                   nrow = 1,
+                   ncol = 3)
 
 ```
 
@@ -233,18 +251,19 @@ plot_imputed_hist(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_hist(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "size_nodule_mm",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$histogram$size_nodule_mm,
+                   mice_cart$histogram$size_nodule_mm,
+                   mice_rf$histogram$size_nodule_mm,
+                   nrow = 1,
+                   ncol = 3)
 
 ```
 
 :::
 
+**TODO** - Extract the legends from individual plots and add them to the end of each row, see the [cowplot shared
+legends article](https://wilkelab.org/cowplot/articles/shared_legends.html) for pointers on how to do this. Should
+ideally also get the `fill` colours to align with those used by `ggmice`.
 
 ::: {.panel-tabset}
 
@@ -257,13 +276,14 @@ plot_imputed_hist(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "incidental_nodule",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$incidental_nodule + theme(legend.position = "None"),
+                   mice_cart$scatter$incidental_nodule + theme(legend.position = "None"),
+                   mice_rf$scatter$incidental_nodule + theme(legend.position = "None"),
+                   mice_pmm$bar_chart$incidental_nodule + theme(legend.position = "None"),
+                   mice_cart$bar_chart$incidental_nodule + theme(legend.position = "None"),
+                   mice_rf$bar_chart$incidental_nodule + theme(legend.position = "None"),
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -276,13 +296,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "palpable_nodule",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$palpable_nodule,
+                   mice_cart$scatter$palpable_nodule,
+                   mice_rf$scatter$palpable_nodule,
+                   mice_pmm$bar_chart$palpable_nodule,
+                   mice_cart$bar_chart$palpable_nodule,
+                   mice_rf$bar_chart$palpable_nodule,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -295,13 +316,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "rapid_enlargement",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$rapid_enlargement,
+                   mice_cart$scatter$rapid_enlargement,
+                   mice_rf$scatter$rapid_enlargement,
+                   mice_pmm$bar_chart$rapid_enlargement,
+                   mice_cart$bar_chart$rapid_enlargement,
+                   mice_rf$bar_chart$rapid_enlargement,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -314,13 +336,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "compressive_symptoms",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$compressive_symptoms,
+                   mice_cart$scatter$compressive_symptoms,
+                   mice_rf$scatter$compressive_symptoms,
+                   mice_pmm$bar_chart$compressive_symptoms,
+                   mice_cart$bar_chart$compressive_symptoms,
+                   mice_rf$bar_chart$compressive_symptoms,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -333,13 +356,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "hypertension",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$hypertension,
+                   mice_cart$scatter$hypertension,
+                   mice_rf$scatter$hypertension,
+                   mice_pmm$bar_chart$hypertension,
+                   mice_cart$bar_chart$hypertension,
+                   mice_rf$bar_chart$hypertension,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -352,13 +376,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "vocal_cord_paresis",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$vocal_cord_paresis,
+                   mice_cart$scatter$vocal_cord_paresis,
+                   mice_rf$scatter$vocal_cord_paresis,
+                   mice_pmm$bar_chart$vocal_cord_paresis,
+                   mice_cart$bar_chart$vocal_cord_paresis,
+                   mice_rf$bar_chart$vocal_cord_paresis,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -371,13 +396,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "graves_disease",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$graves_disease,
+                   mice_cart$scatter$graves_disease,
+                   mice_rf$scatter$graves_disease,
+                   mice_pmm$bar_chart$graves_disease,
+                   mice_cart$bar_chart$graves_disease,
+                   mice_rf$bar_chart$graves_disease,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -390,13 +416,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "hashimotos_thyroiditis",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$hashimotos_thyroiditis,
+                   mice_cart$scatter$hashimotos_thyroiditis,
+                   mice_rf$scatter$hashimotos_thyroiditis,
+                   mice_pmm$bar_chart$hashimotos_thyroiditis,
+                   mice_cart$bar_chart$hashimotos_thyroiditis,
+                   mice_rf$bar_chart$hashimotos_thyroiditis,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -409,13 +436,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "family_history_thyroid_cancer",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$family_history,
+                   mice_cart$scatter$family_history,
+                   mice_rf$scatter$family_history,
+                   mice_pmm$bar_chart$family_history,
+                   mice_cart$bar_chart$family_history,
+                   mice_rf$bar_chart$family_history,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -428,13 +456,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "exposure_radiation",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$exposure_radiation,
+                   mice_cart$scatter$exposure_radiation,
+                   mice_rf$scatter$exposure_radiation,
+                   mice_pmm$bar_chart$exposure_radiation,
+                   mice_cart$bar_chart$exposure_radiation,
+                   mice_rf$bar_chart$exposure_radiation,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -447,13 +476,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "solitary_nodule",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$solitary_nodule,
+                   mice_cart$scatter$solitary_nodule,
+                   mice_rf$scatter$solitary_nodule,
+                   mice_pmm$bar_chart$solitary_nodule,
+                   mice_cart$bar_chart$solitary_nodule,
+                   mice_rf$bar_chart$solitary_nodule,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -466,13 +496,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "bta_u_classification",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$bta_u_classification,
+                   mice_cart$scatter$bta_u_classification,
+                   mice_rf$scatter$bta_u_classification,
+                   mice_pmm$bar_chart$bta_u_classification,
+                   mice_cart$bar_chart$bta_u_classification,
+                   mice_rf$bar_chart$bta_u_classification,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -485,13 +516,14 @@ plot_imputed_cat(original = df_complete,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-plot_imputed_cat(original = df_complete,
-                  pmm = mice_pmm,
-                  cart = mice_cart,
-                  rf = mice_rf,
-                  to_plot = "cervical_lymphadenopathy",
-                  format = "long",
-                  imputation = 1)
+cowplot::plot_grid(mice_pmm$scatter$cervical_lymphadenopathy,
+                   mice_cart$scatter$cervical_lymphadenopathy,
+                   mice_rf$scatter$cervical_lymphadenopathy,
+                   mice_pmm$bar_chart$cervical_lymphadenopathy,
+                   mice_cart$bar_chart$cervical_lymphadenopathy,
+                   mice_rf$bar_chart$cervical_lymphadenopathy,
+                   nrow = 2,
+                   ncol = 3)
 
 ```
 
@@ -511,7 +543,7 @@ plot_imputed_cat(original = df_complete,
 #| eval: true
 #| echo: false
 #| output: true
-mice_pmm |> gtsummary::tbl_summary(by=".imp")
+mice_pmm$imputed |> gtsummary::tbl_summary(by=".imp")
 ```
 
 ## CART
@@ -523,7 +555,7 @@ mice_pmm |> gtsummary::tbl_summary(by=".imp")
 #| eval: true
 #| echo: false
 #| output: true
-mice_cart |> gtsummary::tbl_summary(by=".imp")
+mice_cart$imputed |> gtsummary::tbl_summary(by=".imp")
 
 ```
 
@@ -536,7 +568,7 @@ mice_cart |> gtsummary::tbl_summary(by=".imp")
 #| eval: true
 #| echo: false
 #| output: true
-mice_rf |> gtsummary::tbl_summary(by=".imp")
+mice_rf$imputed |> gtsummary::tbl_summary(by = ".imp")
 ```
 
 :::
