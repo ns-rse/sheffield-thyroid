@@ -60,9 +60,9 @@ execute:
 
 Thyroid nodules are common. The challenge in the management of thyroid nodules is differentiating between benign and
 malignant nodule thyroid nodules.The use fine needle aspiration and cytology (FNAC) still leaves around 20% of
-patients that cannot be classify as benign or malignant. This scenario traditionally leads to diagnostic
-hemithyroidectomy for definitive histology. Other clinical variables such as patients' demographics, clinical and
-biochemical factors have been shown to be
+patients that cannot be clearly classified as either benign or malignant. This scenario traditionally leads to
+diagnostic hemithyroidectomy for definitive histology. Other clinical variables such as patients' demographics, clinical
+and biochemical factors have been shown to be
 associated with thyroid cancer in patients with thyroid nodules. This has been utilised in studies evaluating
 predictors of thyroid cancer with a view of creating a model to aid prediction.
 Standard practice on the management of thyroid nodules does not utilise these non ultrasound and non cytological
@@ -77,7 +77,7 @@ We performed a systematic review to evaluate for predictors of thyroid cancer sp
 with thyroid nodules.
 The systematic review a number of potential important variables that may be useful in the prediction of thyroid cancer
 in patients with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
-improving prediction of thyroid cancer using machine learning techniques.
+improving prediction of thyroid cancer using computer age statistical inference techniques@Efron2016Jul.
 
 
 ## Methods
@@ -488,10 +488,8 @@ log_thyroid_fit$trained
 
 A total of `r df_complete |> nrow()` patients had complete data for the selected predictor variables (see
 @tbl-predictors).
-
-Results of the various modelling go here. Each section will show the results along with...
-
-+ LIME/Shaply analysis for explanability of models
+Because of the volume of missing data which if a saturated model were used would include only ~350 people with complete
+data across all co-variates imputed datasets were analysed instead.
 
 #### Logistic Regression
 
@@ -508,7 +506,8 @@ Results of the various modelling go here. Each section will show the results alo
 
 
 #### Random Forest
-{{< include sections/_rforest.qmd >}}
+
+<!-- {{< include sections/_rforest.qmd >}} -->
 
 #### Gradient Boosting
 
