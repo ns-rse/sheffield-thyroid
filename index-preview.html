@@ -6500,7 +6500,7 @@ Table&nbsp;7: Summary of missing data by case, how much missing data is there pe
 </section>
 <section id="imputation-1" class="level4" data-number="3.1.2">
 <h4 data-number="3.1.2" class="anchored" data-anchor-id="imputation-1"><span class="header-section-number">3.1.2</span> Imputation</h4>
-<p>The <a href="https://amices.org/mice/">MICE</a> package offers a number of different methods for imputing variables (see [documentation][mice_details]) we have investigated Predictive Mean Matching (PMM), Classification and Regression Trees (CART) and Random Forests (RF). Four rounds of imputation using each method were made.</p>
+<p>The <a href="https://amices.org/mice/">MICE</a> package@mice offers a number of different methods for imputing variables (see [documentation][mice_details]) we have investigated Predictive Mean Matching (PMM), Classification and Regression Trees (CART) and Random Forests (RF). Four rounds of imputation using each method were made.</p>
 <p>A comparison of distributions/proportions before and after imputation are presented below to allow assessment of the utility of each method.</p>
 <div class="cell-container"><div class="cell-decorator"><pre>In [25]:</pre></div><div class="cell">
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Setup MICE mids for various methods</span></span>
@@ -13140,13 +13140,6 @@ be used.</code></pre>
 <span id="cb131-9"><a href="#cb131-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> Importance, <span class="at">y =</span> Variable, <span class="at">fill =</span> Importance)) <span class="sc">+</span></span>
 <span id="cb131-10"><a href="#cb131-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
 <span id="cb131-11"><a href="#cb131-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dark_theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div class="">
-<figure class="figure">
-<p class=""><a href="index_files/figure-html/rf-kfold-eval-importance-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-28"><img src="index_files/figure-html/rf-kfold-eval-importance-1.png" class="img-fluid figure-img" width="672"></a></p>
-</figure>
-</div>
-</div>
 </div></div>
 <div class="cell-container"><div class="cell-decorator"><pre>In [68]:</pre></div><div class="cell">
 <div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(rf_tune, rf_grid, final_rf, rf_highest_roc_auc,</span>
@@ -13931,7 +13924,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
 });
-</script>  </div> <!-- /content -->  <script>var lightboxQuarto = GLightbox({"loop":false,"selector":".lightbox","closeEffect":"zoom","descPosition":"bottom","openEffect":"zoom"});
+</script>  </div> <!-- /content -->  <script>var lightboxQuarto = GLightbox({"selector":".lightbox","openEffect":"zoom","loop":false,"descPosition":"bottom","closeEffect":"zoom"});
 (function() {
   let previousOnload = window.onload;
   window.onload = () => {

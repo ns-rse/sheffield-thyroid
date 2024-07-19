@@ -50,7 +50,7 @@ number-sections: true
 notebook-preview-options:
   preview: false
 execute:
-  cache: true
+  cache: false
 ---
 
 {{< include sections/_setup.qmd >}}

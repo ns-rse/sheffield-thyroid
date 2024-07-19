@@ -6122,7 +6122,7 @@ Table&nbsp;7: Summary of missing data by case, how much missing data is there pe
 </section>
 <section id="imputation-1" class="level4" data-number="3.1.2">
 <h4 data-number="3.1.2" class="anchored" data-anchor-id="imputation-1"><span class="header-section-number">3.1.2</span> Imputation</h4>
-<p>The <a href="https://amices.org/mice/">MICE</a> package offers a number of different methods for imputing variables (see [documentation][mice_details]) we have investigated Predictive Mean Matching (PMM), Classification and Regression Trees (CART) and Random Forests (RF). Four rounds of imputation using each method were made.</p>
+<p>The <a href="https://amices.org/mice/">MICE</a> package@mice offers a number of different methods for imputing variables (see [documentation][mice_details]) we have investigated Predictive Mean Matching (PMM), Classification and Regression Trees (CART) and Random Forests (RF). Four rounds of imputation using each method were made.</p>
 <p>A comparison of distributions/proportions before and after imputation are presented below to allow assessment of the utility of each method.</p>
 <p>The convergence of the imputation methods are shown in figues <strong>?@fig-mice-convergence-pmm</strong>, <strong>?@fig-mice-convergence-cart</strong>, and <strong>?@fig-mice-convergence-rf</strong>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
@@ -12152,15 +12152,6 @@ Figure&nbsp;27: Importance of variables fitted using Elastic Net
 </section>
 <section id="random-forest-1" class="level4" data-number="3.2.4">
 <h4 data-number="3.2.4" class="anchored" data-anchor-id="random-forest-1"><span class="header-section-number">3.2.4</span> Random Forest</h4>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><a href="index_files/figure-html/rf-kfold-eval-importance-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-28"><img src="index_files/figure-html/rf-kfold-eval-importance-1.png" class="img-fluid figure-img" width="672"></a></p>
-</figure>
-</div>
-</div>
-</div>
 </section>
 <section id="gradient-boosting-1" class="level4" data-number="3.2.5">
 <h4 data-number="3.2.5" class="anchored" data-anchor-id="gradient-boosting-1"><span class="header-section-number">3.2.5</span> Gradient Boosting</h4>
@@ -12885,7 +12876,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"selector":".lightbox","openEffect":"zoom","loop":false,"closeEffect":"zoom","descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","openEffect":"zoom","selector":".lightbox","loop":false,"descPosition":"bottom"});
 (function() {
   let previousOnload = window.onload;
   window.onload = () => {
