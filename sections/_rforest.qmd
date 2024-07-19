@@ -39,7 +39,7 @@ final_rf <- tune::finalize_workflow(
 ``` {r}
 #| label: rf-kfold-eval-importance
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 final_rf |>
