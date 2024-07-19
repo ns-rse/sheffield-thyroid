@@ -3,7 +3,7 @@
 #| purl: true
 #| eval: true
 #| echo: false
-#| output: false
+#| output: true
 ## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
 library(tidyverse)
 library(tidymodels)
@@ -11,9 +11,17 @@ tidymodels::tidymodels_prefer()
 set.seed(5039378)
 
 ## Use df_complete rather than df as this subset have data for all the variables of interest.
-split <- rsample::initial_split(df_complete, prop = 0.75)
+## split <- rsample::initial_split(df_complete, prop = 0.75)
+## @ns-rse (2024-07-18) - Use an imputed dataset instead
+print(mice_rf |> colnames())
+split <- mice_rf |>
+    dplyr::filter(.imp == 1) |>
+    dplyr::select(-.imp, -.id) |>
+    rsample::initial_split(prop = 0.75)
 train <- rsample::training(split)
 test <- rsample::testing(split)
+print("train cols")
+print(train |> colnames())
 ```
 
 ```{r}

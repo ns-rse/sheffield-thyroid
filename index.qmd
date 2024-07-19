@@ -495,7 +495,7 @@ Results of the various modelling go here. Each section will show the results alo
 
 #### Logistic Regression
 
-{{< include sections/_logistic.qmd >}}
+<!-- {{< include sections/_logistic.qmd >}} -->
 
 #### LASSO
 
@@ -517,7 +517,7 @@ Results of the various modelling go here. Each section will show the results alo
 
 #### SVM
 
-{{< include sections/_svm.qmd >}}
+<!-- {{< include sections/_svm.qmd >}} -->
 
 
 #### Explainability

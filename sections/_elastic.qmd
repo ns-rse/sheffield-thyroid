@@ -4,7 +4,7 @@
 #| label: elastic-tune
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: false
 #| cache: true
 ## Specify the Elastic Net model using parsnip, the key here is the use of the glmnet engine which is the R package for
@@ -26,7 +26,7 @@ lasso_grid <- tune::tune_grid(
 #| fig-cap: Autoplot of Elastic Net grid search
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: true
 ## Plot the tuning search results, see https://tune.tidymodels.org/reference/autoplot.tune_results.html
 ##
@@ -41,7 +41,7 @@ tune::autoplot(lasso_grid)
 #| label: elastic-best-fit
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: true
 ## K-fold best fit for Elastic Net
 lasso_kfold_roc_auc <- lasso_grid |>
@@ -52,8 +52,8 @@ lasso_kfold_roc_auc <- lasso_grid |>
 #| label: elastic-final
 #| purl: true
 #| eval: true
-#| echo: true
-#| output: true
+#| echo: false
+#| output: false
 
 ## Fit the final Elastic Net model
 final_elastic_kfold <- tune::finalize_workflow(
@@ -67,7 +67,7 @@ final_elastic_kfold <- tune::finalize_workflow(
 #| fig-cap: Importance of variables fitted using Elastic Net
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: true
 final_elastic_kfold |>
   fit(train) |>
@@ -95,7 +95,7 @@ Tidymodels framework the model `fit` is wrapped up inside (hence the above artic
 #| label: elastic-save
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: false
 save(tune_spec_elastic, lasso_grid, final_elastic_kfold, lasso_kfold_roc_auc,
   file = "data/r/lasso.RData"

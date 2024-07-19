@@ -65,3 +65,6 @@ data/
 index.xml
 index.subarticle.xml
 index.docx
+
+# R files created by knitr::purl by @ns-rse to make hacking easier
+sections/*.R

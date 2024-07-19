@@ -3,7 +3,7 @@
 ``` {r}
 #| label: xgboost-model
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: false
 ## Specify the Gradient boosting model
@@ -42,12 +42,12 @@ xgboost_tuned <- tune::tune_grid(workflows::add_model(thyroid_workflow, spec = x
 ``` {r}
 #| label: xgboost-final
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: true
 ## We get the best final fit from the Gradient Boosting model.
 xgboost_highest_roc_auc <- xgboost_tuned |>
-  tune::select_best("roc_auc")
+  tune::select_best()
 final_xgboost <- tune::finalize_workflow(
   add_model(thyroid_workflow, xgboost_model),
   xgboost_highest_roc_auc
@@ -67,7 +67,7 @@ importance_xgboost <- xgboost::xgb.importance(model = xgboost_model)
 print(importance_xgboost)
 ## the print shows age and gender as important
 ## to make a prediction on the train set
-xgboost_predictions <- predict(final_fit, test, type = "prob") |> 
+xgboost_predictions <- predict(final_fit, test, type = "prob") |>
   bind_cols(predict(final_fit, test)) |>
   bind_cols(test)
 colnames(xgboost_predictions)
@@ -80,10 +80,10 @@ colnames(xgboost_predictions)
 ``` {r}
 #| label: xgboost-save
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: false
-save(xgboost_tune_spec, xgboost_grid, final_xgboost, xgboost_highest_roc_auc,
+save(xgboost_tuned, xgboost_grid, final_xgboost, xgboost_highest_roc_auc,
   file = "data/r/xgboost.RData"
 )
 ```
