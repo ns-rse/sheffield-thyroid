@@ -50,10 +50,19 @@ var_labels <- c(
   vocal_cord_paresis = "Vocal cord paresis"
   )
 
+## @ns-rse 2024-07-18 : I noticed there is a single instance of graves_disease that is "no" rather than "No", we correct
+## that now
+raw_data<- raw_data|>
+    dplyr::mutate(graves_disease = case_when(graves_disease == "no" ~ "No",
+        .default = graves_disease
+    ))
+
+
 ## Make a copy of the raw data so that comparisons can be made between it and the cleaned dataset. This allows checking
 ## that no mistakes have been made
 df <- tibble(raw_data)
 Hmisc::label(df) <- as.list(var_labels[match(names(df), names(var_labels))])
+
 
 ## Convert character variables to factors, this now includes binary variables that are 'No'/'Yes' which will now be
 ## treated as factors /nominal variables and the required dummies generated when we use

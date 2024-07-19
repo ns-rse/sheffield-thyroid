@@ -363,17 +363,16 @@ thyroid nodules.
 
 ### Data Description
 
-Details of data completeness and other descriptive aspects go here.
-
-
 
 A summary of the variables that are available in this data set can be found in @tbl-variables.
 
 
 ```{r}
+## @ns-rse (2024-07-18) - I have set this code chunk to _not_ be evaluated as it is mostly  duplicated in the summary of
+##                        imputed data.
 #| label: tbl-data-completeness
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| warning: false
 #| tbl-caption: "Overall summary of all variables in the Sheffield dataset."
@@ -397,9 +396,10 @@ df_summary
 
 ```
 
-The completeness of the data is shown in @tbl-data-completeness . Where
-variables continuous (e.g. `age` or `size_nodule_mm`) basic summary statistics in the form of mean, standard deviation,
-median and inter-quartile range are given. For categorical variables that are logical `TRUE`/`FALSE`
+The completeness of the original data is shown in tables @tbl-imputation-summary-pmm, @tbl-imputation-summary-cart,
+@tbl-imputation-summary-rf, along with summaries from four rounds of imputation for each of three imputation methods.
+Where variables continuous (e.g. `age` or `size_nodule_mm`) basic summary statistics in the form of mean, standard
+deviation, median and inter-quartile range are given. For categorical variables that are logical `TRUE`/`FALSE`
 (e.g. `palpable_nodule`) the number of `TRUE` observations and the percentage (of those with observed data for that
 variable) are shown along with the number that are _Unknown_. For categorical variables such as `gender` percentages
 in each category are reported. For all variables an indication of the number of missing observations is also given and
@@ -418,14 +418,16 @@ instances where the `final_pathology` is not known which reduces the sample size
 
 ### Modelling
 
+**TODO** - And in light of having removed @tbl-data-completness in favour of the imputed datesets this too has been removed? (`@ns-rse` 2024-07-11).
 **TODO** - This table feels like duplication of @tbl-data-completeness, perhaps have just one? (`@ns-rse` 2024-07-11).
 
-The predictor variables selected to predict `final_pathology` are shown in @tbl-predictors
+<!-- The predictor variables selected to predict `final_pathology` are shown in @tbl-predictors -->
 
 ```{r}
+## @ns-rse (2024-07-18) - I've disabled this table from being evaluated.
 #| label: tbl-predictors
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| warning: false
 #| tbl-caption: "Predictors evaluated in modelling."

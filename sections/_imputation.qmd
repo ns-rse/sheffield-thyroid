@@ -21,35 +21,52 @@ cores = imputations
 mice_pmm <- df_complete |>
     dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
     mice::futuremice(m = imputations, method="pmm", n.core=cores) |>
-    mice::complete(action = "all", include = FALSE)
+    mice::complete(action = "long", include = TRUE)
+mice_pmm <- dplyr::mutate(mice_pmm, .imp = factor(.imp, levels = c(0,1,2,3,4), labels = c("Original", "1", "2", "3", "4")))
+
 ## CART (Classification And Regression Trees)
 mice_cart <- df_complete |>
     dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
     mice::futuremice(m = imputations, method="cart", n.core=cores) |>
-    mice::complete(action = "all", include = FALSE)
+    mice::complete(action = "long", include = TRUE)
+mice_cart <- dplyr::mutate(mice_cart, .imp = factor(.imp, levels = c(0,1,2,3,4), labels = c("Original", "1", "2", "3", "4")))
+
 ## Random Forest
 mice_rf <- df_complete |>
     dplyr::select(-final_pathology) |>    ## We deliberately exclude the outcome of interest
     mice::futuremice(m = imputations, method="rf", n.core=cores) |>
-    mice::complete(action = "all", include = FALSE)
+    mice::complete(action = "long", include = TRUE)
+mice_rf <- dplyr::mutate(mice_rf, .imp = factor(.imp, levels = c(0,1,2,3,4), labels = c("Original", "1", "2", "3", "4")))
+
 
 ## Define two functions for plotting
 #' Plot histograms of a continuous variable in original and imputed data sets.
 #'
 #' @param original data.frame|tibble The original data frame.
 #' @param pmm mice MICE object from Predictive Mean Modelling.
-#' @param cart mice MICE object from Predictive Mean Modelling.
-#' @param imputation mice MICE object from Predictive Mean Modelling.
+#' @param cart mice MICE object from CART.
+#' @param rf mice MICE object from Random Forest.
 #' @param to_plot str Variable to plot, should be a continuous variable for histograms.
 #' @param imputation int The immputation set to plot.
+#' @param format str The "action" option used in 'mice_complete()', either "all" or "long" are supported.
+#' @param colours list A list of length four of colours to use when plotting.
 plot_imputed_hist <- function(original, pmm, cart, rf,
                               to_plot,
                               imputation = 1,
+                              format = "long",
                               colours = c("#ad1538", "#15ad4f", "#1543ad", "#ad8415")) {
-    df <- data.frame(original = original[to_plot],
+    if (format == "all") {
+        df <- data.frame(original = original[to_plot],
                      pmm = pmm[[imputation]][to_plot],
                      cart = cart[[imputation]][to_plot],
                      rf = rf[[imputation]][to_plot])
+    }
+    if (format == "long") {
+        df <- data.frame(original = original[to_plot],
+                     pmm = pmm |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
+                     cart = cart |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
+                     rf = rf |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot))
+    }
     colnames(df) <- c("original", "pmm", "cart", "rf")
     hist_obs <- df |>
         ggplot2::ggplot(aes(original)) +
@@ -78,18 +95,29 @@ plot_imputed_hist <- function(original, pmm, cart, rf,
 #'
 #' @param original data.frame|tibble The original data frame.
 #' @param pmm mice MICE object from Predictive Mean Modelling.
-#' @param cart mice MICE object from Predictive Mean Modelling.
-#' @param imputation mice MICE object from Predictive Mean Modelling.
+#' @param cart mice MICE object from CART.
+#' @param rf mice MICE object from Random Forest.
 #' @param to_plot str Variable to plot, should be a continuous variable for histograms.
 #' @param imputation int The immputation set to plot.
+#' @param format str The "action" option used in 'mice_complete()', either "all" or "long" are supported.
+#' @param colours list A list of length four of colours to use when plotting.
 plot_imputed_cat <- function(original, pmm, cart, rf,
                              to_plot,
                              imputation = 1,
+                             format = "long",
                              colours = c("#ad1538", "#15ad4f", "#1543ad", "#ad8415")) {
-    df <- data.frame(original = original[to_plot],
+    if (format == "all") {
+        df <- data.frame(original = original[to_plot],
                      pmm = pmm[[imputation]][to_plot],
                      cart = cart[[imputation]][to_plot],
                      rf = rf[[imputation]][to_plot])
+    }
+    if (format == "long") {
+        df <- data.frame(original = original[to_plot],
+                     pmm = pmm |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
+                     cart = cart |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot),
+                     rf = rf |> dplyr::filter(.imp == imputation) |> dplyr::select(to_plot))
+    }
     colnames(df) <- c("original", "pmm", "cart", "rf")
     bar_obs <- df |>
         dplyr::filter(!is.na(original)) |>
@@ -135,6 +163,7 @@ plot_imputed_hist(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "albumin",
+                  format = "long",
                   imputation = 1)
 ```
 
@@ -152,6 +181,7 @@ plot_imputed_hist(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "monocyte",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -170,6 +200,7 @@ plot_imputed_hist(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "lymphocytes",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -188,6 +219,7 @@ plot_imputed_hist(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "tsh_value",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -206,6 +238,7 @@ plot_imputed_hist(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "size_nodule_mm",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -229,6 +262,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "incidental_nodule",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -247,6 +281,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "palpable_nodule",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -265,6 +300,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "rapid_enlargement",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -283,6 +319,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "compressive_symptoms",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -301,6 +338,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "hypertension",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -319,6 +357,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "vocal_cord_paresis",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -337,6 +376,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "graves_disease",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -355,6 +395,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "hashimotos_thyroiditis",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -373,6 +414,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "family_history_thyroid_cancer",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -391,6 +433,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "exposure_radiation",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -409,6 +452,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "solitary_nodule",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -427,6 +471,7 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "bta_u_classification",
+                  format = "long",
                   imputation = 1)
 
 ```
@@ -445,19 +490,54 @@ plot_imputed_cat(original = df_complete,
                   cart = mice_cart,
                   rf = mice_rf,
                   to_plot = "cervical_lymphadenopathy",
+                  format = "long",
                   imputation = 1)
 
 ```
 
 
-**TODO** - In addition to the above graphs you may want to construct summary tables for each of the imputed datasets
-done by each method. These are stored in `mice_pmm`, `mice_cart` and `mice_rf`, each of which is a list and you can
-access each dataframe by indexing the list (indexing starts with `1` in R unlike most other programming languages). Thus
-to get at the 3 dataset that was imputed with `mice_cart` you would use `mice_cart[[3]]`. The extracted datasets can be
-combined with the `gtsummary::table_summary()` (or you could modify the
-[`action`](https://amices.org/mice/reference/complete.mids.html#details) option to `mice::complete()` which controls how
-the results of imputation are handled as this can be set to return `long` format data which can then be summarised more
-easily) .
+
+:::
+
+
+::: {.panel-tabset}
+
+## PMM
+
+```{r}
+#| label: tbl-imputation-summary-pmm
+#| tbl-caption: Summary of data imputed via PMM.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+mice_pmm |> gtsummary::tbl_summary(by=".imp")
+```
+
+## CART
+
+```{r}
+#| label: tbl-imputation-summary-cart
+#| tbl-caption: Summary of data imputed via CART.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+mice_cart |> gtsummary::tbl_summary(by=".imp")
+
+```
+
+## RF
+
+```{r}
+#| label: tbl-imputation-summary-rf
+#| tbl-caption: Summary of data imputed via Random Forest.
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+mice_rf |> gtsummary::tbl_summary(by=".imp")
+```
 
 :::
 
