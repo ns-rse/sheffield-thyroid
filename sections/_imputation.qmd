@@ -62,6 +62,7 @@ impute_data <- function(df = df_complete,
     results$mids <- df |>
         dplyr::select(-{{ outcome_var }}) |>
         mice::futuremice(m = imputations,
+                         method = method,
                          n.core = imputations,
                          iterations = iterations,
                          parallelseed  = seed)
