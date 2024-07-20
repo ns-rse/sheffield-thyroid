@@ -1,0 +1,161 @@
+A summary of the variables that are available in this data set can be found in @tbl-variables.
+
+
+::: {.panel-tabset}
+
+## Demographics
+
+```{r}
+#| label: tbl-patient-demographics
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Demographics of study population"
+patient_demo <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("age_at_scan", "gender", "ethnicity")) |>
+  gtsummary::tbl_summary() |>
+  gtsummary::modify_caption("Demographics of study population")
+patient_demo
+
+```
+
+## Clinical Characteristics
+
+```{r}
+#| label: tbl-clinical-characteristics
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules"
+clinical_charac <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("age_at_scan",
+                  "gender",
+                  "incidental_nodule",
+                  "palpable_nodule",
+                  "rapid_enlargement",
+                  "compressive_symptoms",
+                  "hypertension",
+                  "vocal_cord_paresis",
+                  "graves_disease",
+                  "hashimotos_thyroiditis",
+                  "family_history_thyroid_cancer",
+                  "exposure_radiation",
+                  "final_pathology",
+                  )) |>
+  gtsummary::tbl_summary(by = final_pathology) |> add_p() |>
+  gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules")
+clinical_charac
+
+```
+
+## Biomarkers
+
+```{r}
+#| label: tbl-biomarkers-variables
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Biochemical variables evaluated between benign and malignant thyroid nodules"
+biochem_vars <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("albumin",
+                  "tsh_value",
+                  "lymphocytes",
+                  "monocyte",
+                  "final_pathology")) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules")
+biochem_vars
+
+```
+
+## Ultrasound
+
+```{r}
+#| label: tbl-ultrasound-characteristics
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Ultrasound characteristics of benign and malignant nodules"
+ultrasound_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("size_nodule_mm",
+                  "solitary_nodule",
+                  "bta_u_classification",
+                  "consistency_nodule",
+                  "cervical_lymphadenopathy",
+                  "final_pathology")) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules")
+ultrasound_char
+
+```
+
+## BTA U
+
+```{r}
+#| label: tbl-u-class-final-path
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "U class path"
+ultrasound_final_path <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("bta_u_classification", "final_pathology")) |>
+  gtsummary::tbl_summary(by = bta_u_classification) |>
+  gtsummary::modify_caption("BTA U classification by final pathology.")
+ultrasound_final_path
+
+```
+
+## Thyroid Classification
+
+```{r}
+#| label: tbl-thy-class-final-path
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Thyroid classification by Final Pathology"
+thy_class_final_path <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("thy_classification", "final_pathology")) |>
+  gtsummary::tbl_summary(by = thy_classification) |>
+  gtsummary::modify_caption("Thyroid classification by final pathology.")
+thy_class_final_path
+
+```
+
+## Cytology
+
+```{r}
+#| label: tbl-cytology-characteristics
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Cytological characteristics of benign and malignant nodules"
+cytology_char <- df |>
+  dplyr::ungroup() |>
+  dplyr::select(c("thy_classification",
+                  "final_pathology")) |>
+  gtsummary::tbl_summary(by = final_pathology) |>
+  gtsummary::modify_caption("Cytological characteristics of benign and malignant nodules")
+cytology_char
+
+```
+
+:::
+
+@tbl-patient-demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were
+included in this study with a median (IQR) age of  `r df$age_at_scan |> stats::quantile(probs=c(0.5))` (
+`r df$age_at_scan |> stats::quantile(probs=c(0.25))`-`r df$age_at_scan |> stats::quantile(probs=c(0.75))`).
+@tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant
+thyroid nodules.

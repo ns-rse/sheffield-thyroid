@@ -1,3 +1,41 @@
+```{r}
+#| label: tbl-data-completeness
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Overall summary of all variables in the Sheffield dataset."
+df_summary <- df |>
+  ## NB - We drop the study_id its not a variable, rather its an identifier
+  dplyr::select(!(study_id)) |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Baseline characteristics and referral source of included patients")
+df_summary
+
+```
+
+The completeness of the original data is shown in tables @tbl-imputation-summary-pmm, @tbl-imputation-summary-cart,
+@tbl-imputation-summary-rf, along with summaries from four rounds of imputation for each of three imputation methods.
+Where variables continuous (e.g. `age` or `size_nodule_mm`) basic summary statistics in the form of mean, standard
+deviation, median and inter-quartile range are given. For categorical variables that are logical `TRUE`/`FALSE`
+(e.g. `palpable_nodule`) the number of `TRUE` observations and the percentage (of those with observed data for that
+variable) are shown along with the number that are _Unknown_. For categorical variables such as `gender` percentages
+in each category are reported. For all variables an indication of the number of missing observations is also given and
+it is worth noting that there are `r df |> dplyr::filter(is.na(final_pathology)) |> nrow()`
+instances where the `final_pathology` is not known which reduces the sample size to
+`r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
+
 More detailed tabulations of missing data by variable are shown in @tbl-naniar-miss-var-summary which shows the number
 and percentage of missing data for each variable and by case in @tbl-naniar-miss-case-table which shows how much missing
 data each case has. A visualisation of this is shown in @fig-visdat-vis-missing .
@@ -5,7 +43,7 @@ data each case has. A visualisation of this is shown in @fig-visdat-vis-missing 
 **NB** - Currently there is a [bug in the stable release of
 Quarto](https://github.com/quarto-dev/quarto-cli/issues/10196) which prevents rendering of the missing data figures. It
 is fixed in development version [`v1.6.1`](https://github.com/quarto-dev/quarto-cli/releases/tag/v1.6.1) (currently
-available as pre-release, so if things don't render try upgrading).
+available as pre-release, so if things don't render upgrade).
 
 ::: {.panel-tabset}
 
