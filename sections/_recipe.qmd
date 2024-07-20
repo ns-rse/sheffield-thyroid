@@ -3,7 +3,7 @@
 #| purl: true
 #| eval: true
 #| echo: false
-#| output: true
+#| output: false
 ## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
 library(tidyverse)
 library(tidymodels)
@@ -68,8 +68,9 @@ thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
 
 ```{r}
 #| label: workflow
+#| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: false
 thyroid_workflow <- workflows::workflow() |>
   workflows::add_recipe(thyroid_recipe)

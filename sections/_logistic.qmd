@@ -1,14 +1,15 @@
 ```{r}
 #| eval: true
 #| echo: false
-#| output: true
+#| output: false
 train |> colnames()
 
 ```
+##### Clinical Characteristics
 
 ```{r}
 #| label: tbl-logistic-regression
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: true
 #| warning: false
@@ -35,9 +36,11 @@ gtsummary::tbl_regression(glm_clin,
 
 ```
 
+##### Biomarkers
+
 ```{r}
 #| label: tbl-logistic-regression-biochem
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: true
 #| warning: false
@@ -50,10 +53,11 @@ gtsummary::tbl_regression(glm_biochem,
     show_single_row = c(gender))
 ```
 
+##### Ultrasound 1
 
 ```{r}
 #| label: tbl-logistic-regression-ultrasound1
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: true
 #| warning: false
@@ -66,9 +70,11 @@ gtsummary::tbl_regression(glm_ultrasound,
     show_single_row = c(gender))
 ```
 
+##### Ultrasound 2
+
 ```{r}
 #| label: logistic-regression-ultrasound2
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: true
 #| warning: false

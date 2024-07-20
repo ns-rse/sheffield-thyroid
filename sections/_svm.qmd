@@ -41,7 +41,7 @@ tune::last_fit(final_svm, split,
 #| eval: true
 #| echo: false
 #| output: false
-save(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
+saveRDS(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
   file = "data/r/svm.RData"
 )
 ```

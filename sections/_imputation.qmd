@@ -116,17 +116,19 @@ impute_data <- function(df = df_complete,
 }
 
 ## Impute using three different methods using the above impute_data() wrapper
+imputations = 5
+iterations = 5
 mice_pmm <- impute_data(method = "pmm",
-                        imputations = 5,
-                        iterations = 5,
+                        imputations = imputations,
+                        iterations = iterations,
                         seed = 684613)
 mice_cart <- impute_data(method = "cart",
-                        imputations = 5,
-                        iterations = 5,
+                        imputations = imputations,
+                        iterations = iterations,
                         seed = 1388466)
 mice_rf <- impute_data(method = "rf",
-                        imputations = 5,
-                        iterations = 5,
+                        imputations = imputations,
+                        iterations = iterations,
                         seed = 3151358)
 
 
