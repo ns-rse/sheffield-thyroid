@@ -103,8 +103,8 @@ Variable evaluated was based on findings from a systematic review evaluating pre
 with thyroid nodules. Data on the following variables were collected: patient demographics (age, gender, ethnicity),
 nodule presentation (incidental nodule, palpable nodule, rapid enlargement, compressive symptoms, vocal paresis), past
 medical history (hypertension, Graves' disease, Hashimotos' thyroiditis, family history of thyroid cancer, exposure to
-neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics (British
-Thyroid Association ultrasound (BTA U), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
+neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics ([British
+Thyroid Association ultrasound (BTA U)][bta_classification]), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
 Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, and histological diagnosis.
 
 ### Data source
@@ -363,4 +363,5 @@ var_labels |>
 ```
 
 
+[bta_classification]: https://radiopaedia.org/articles/bta-ultrasound-u-classification-of-thyroid-nodules
 [mice]: https://amices.org/mice/
