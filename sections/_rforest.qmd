@@ -4,9 +4,9 @@
 ``` {r}
 #| label: random-forest-specify
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
-#| output: true
+#| output: false
 ## Specify the Random Forest model
 rf_tune <- parsnip::rand_forest(
   mtry = tune(),
@@ -39,7 +39,7 @@ final_rf <- tune::finalize_workflow(
 ``` {r}
 #| label: rf-kfold-eval-importance
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: true
 final_rf |>
@@ -58,10 +58,10 @@ final_rf |>
 ``` {r}
 #| label: random-forest-save
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: false
-save(random_forest_tune_spec, random_forest_grid, final_random_forest, random_forest_highest_roc_auc,
+save(rf_tune, rf_grid, final_rf, rf_highest_roc_auc,
   file = "data/r/random_forest.RData"
 )
 ```

@@ -11,7 +11,12 @@ tidymodels::tidymodels_prefer()
 set.seed(5039378)
 
 ## Use df_complete rather than df as this subset have data for all the variables of interest.
-split <- rsample::initial_split(df_complete, prop = 0.75)
+## split <- rsample::initial_split(df_complete, prop = 0.75)
+## @ns-rse (2024-07-18) - Use an imputed dataset instead
+split <- mice_rf$imputed |>
+    dplyr::filter(.imp == 1) |>
+    dplyr::select(-.imp, -.id) |>
+    rsample::initial_split(prop = 0.75)
 train <- rsample::training(split)
 test <- rsample::testing(split)
 ```
@@ -63,8 +68,9 @@ thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
 
 ```{r}
 #| label: workflow
+#| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: false
 thyroid_workflow <- workflows::workflow() |>
   workflows::add_recipe(thyroid_recipe)

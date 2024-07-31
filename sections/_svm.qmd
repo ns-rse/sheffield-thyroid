@@ -3,7 +3,7 @@
 ``` {r}
 #| label: svm-specify
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: false
 ## Specify
@@ -21,7 +21,7 @@ svm_grid <- tune::tune_grid(
 
 ## The best fit is selected and fit to the overall training data set.
 svm_highest_roc_auc <- svm_grid |>
-  tune::select_best("roc_auc")
+  tune::select_best()
 final_svm <- tune::finalize_workflow(
   add_model(thyroid_workflow, svm_tune_spec),
   svm_highest_roc_auc
@@ -38,10 +38,10 @@ tune::last_fit(final_svm, split,
 ```{r}
 #| label: svm-save
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: false
-save(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
+saveRDS(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
   file = "data/r/svm.RData"
 )
 ```
@@ -49,7 +49,7 @@ save(svm_tune_spec, svm_grid, final_svm, svm_highest_roc_auc,
 ```{r}
 #| label: svm-metrics
 #| purl: true
-#| eval: false
+#| eval: true
 #| echo: false
 #| output: false
 tune::last_fit(final_svm, split,

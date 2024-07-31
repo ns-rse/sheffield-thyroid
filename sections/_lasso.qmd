@@ -26,7 +26,7 @@ lasso_grid <- tune::tune_grid(
 #| fig-cap: Autoplot of LASSO grid search
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: true
 ## Plot the tuning search results, see https://tune.tidymodels.org/reference/autoplot.tune_results.html
 ##
@@ -36,13 +36,21 @@ tune::autoplot(lasso_grid)
 ```
 
 ```{r}
-## K-fold best fit for LASSO
+#| label: lasso-select-best
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
 lasso_kfold_roc_auc <- lasso_grid |>
   tune::select_best(metric = "roc_auc")
 ```
 
 ```{r}
-## Fit the final LASSO model
+#| label: lasso-finalize
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
 final_lasso_kfold <- tune::finalize_workflow(
   workflows::add_model(thyroid_workflow, tune_spec_lasso),
   lasso_kfold_roc_auc)
@@ -53,7 +61,7 @@ final_lasso_kfold <- tune::finalize_workflow(
 #| fig-cap: Importance of variables fitted using LASSO
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: true
 final_lasso_kfold |>
   fit(train) |>
@@ -80,7 +88,7 @@ Tidymodels framework the model `fit` is wrapped up inside (hence the above artic
 #| label: lasso-save
 #| purl: true
 #| eval: true
-#| echo: true
+#| echo: false
 #| output: false
 save(tune_spec_lasso, lasso_grid, final_lasso_kfold, lasso_kfold_roc_auc,
   file = "data/r/lasso.RData"

@@ -1,8 +1,17 @@
+```{r}
+#| eval: true
+#| echo: false
+#| output: false
+train |> colnames()
+
+```
+##### Clinical Characteristics
 
 ```{r}
 #| label: tbl-logistic-regression
 #| eval: true
 #| echo: false
+#| output: true
 #| warning: false
 #| tbl-caption: "Logistic regression of Clinical characteristics between benign and malignant thyrioid nodules."
 glm_clin <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + palpable_nodule +
@@ -27,10 +36,13 @@ gtsummary::tbl_regression(glm_clin,
 
 ```
 
+##### Biomarkers
+
 ```{r}
 #| label: tbl-logistic-regression-biochem
 #| eval: true
 #| echo: false
+#| output: true
 #| warning: false
 #| tbl-caption: "Logistic regression of Biochemical characteristics between benign and malignant thyrioid nodules."
 glm_biochem <- glm(final_pathology ~ age_at_scan + gender + tsh_value + albumin + lymphocytes + monocyte,
@@ -41,11 +53,13 @@ gtsummary::tbl_regression(glm_biochem,
     show_single_row = c(gender))
 ```
 
+##### Ultrasound 1
 
 ```{r}
 #| label: tbl-logistic-regression-ultrasound1
 #| eval: true
 #| echo: false
+#| output: true
 #| warning: false
 #| tbl-caption: "Logistic regression of Ultrasound characteristics between benign and malignant thyrioid nodules."
 glm_ultrasound <- glm(final_pathology ~ age_at_scan + gender + bta_u_classification + thy_classification,
@@ -56,10 +70,13 @@ gtsummary::tbl_regression(glm_ultrasound,
     show_single_row = c(gender))
 ```
 
+##### Ultrasound 2
+
 ```{r}
 #| label: logistic-regression-ultrasound2
 #| eval: true
 #| echo: false
+#| output: true
 #| warning: false
 #| tbl-caption: "Expanded logistic regression of Ultrasound characteristics between benign and malignant thyroid noduules."
 glm_ultrasound <- glm(final_pathology ~ age_at_scan + gender + incidental_nodule + tsh_value +
@@ -68,8 +85,11 @@ size_nodule_mm + solitary_nodule + cervical_lymphadenopathy + bta_u_classificati
     family = binomial(link = "logit"))
 gtsummary::tbl_regression(glm_ultrasound,
     exponentiate = TRUE,
-    show_single_row = c(gender,
-                        incidental_nodule,
-                        solitary_nodule,
-                        cervical_lymphadenopathy))
+    show_single_row = c(
+        gender,
+        incidental_nodule,
+        solitary_nodule,
+        cervical_lymphadenopathy
+    )
+)
 ```
