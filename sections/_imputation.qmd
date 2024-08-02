@@ -1,4 +1,4 @@
-The [MICE][mice] package@mice offers a number of different methods for imputing variables (see
+The [MICE][mice] package @mice offers a number of different methods for imputing variables (see
 [documentation][mice_details]) we have investigated Predictive Mean Matching (PMM), Classification and Regression Trees
 (CART) and Random Forests (RF). Four rounds of imputation using each method were made.
 
