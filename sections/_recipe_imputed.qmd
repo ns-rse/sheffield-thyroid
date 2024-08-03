@@ -1,0 +1,98 @@
+```{r}
+#| label: test-train-split-imputed
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+## Prefer tidymodel commands (although in most places we use the convention <pkg>::<function>())
+library(tidyverse)
+library(tidymodels)
+tidymodels::tidymodels_prefer()
+set.seed(5039378)
+
+## !!!!!!README!!!!!!
+##
+## I'm new to using purrr but from what I can work out/understand so far and the way we want to use it we start with a
+## dataset that is piped into purrr::map() the first thing we do is then define how we will refer to this dataset using
+## the notation `\(<some_name>)` we then provide a function we wish to apply to each split of the data and use
+## `<some_name>` as an argument to that function.
+
+## Use an imputed data set (cart) and purrr::map() to apply the split to each imputed dataset. We first remove the
+## "Original" that is included in the data and the .id variable
+## purrr_split is a list of data frames.
+cart_imputed <- mice_cart$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp)) |>
+    dplyr::select(-.id)
+purrr_split <- cart_imputed |>
+    split(cart_imputed$.imp) |>
+    purrr::map(\(df) rsample::initial_split(df, prop = 0.75))
+
+## This does the same but includes "Original", which we know won't work well due to missing data.
+## purrr_split <- mice_cart$imputed |>
+##     split(mice_cart$imputed$.imp) |>
+##     purrr::map(\(df) rsample::initial_split(df, prop = 0.75))
+
+## Then derive a training and test dataset for each imputed dataset.
+## purrr_train and purrr_test are again lists of data frames.
+purrr_train <- purrr_split |>
+    purrr::map(\(split) rsample::training(split))
+purrr_test <- purrr_split |>
+    purrr::map(\(split) rsample::test(split))
+
+```
+
+```{r}
+#| label: cv-vfold-imputed
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+## Again use purr to map
+purrr_cv_folds <- purrr_train |>
+    purrr::map(\(df) rsample::vfold_cv(df, v = 10, repeats = 10))
+```
+
+```{r}
+#| label: cv-loo-imputed
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+purrr_cv_loo <- purrr_train |>
+    purrr::map(\(df) rsample::loo_cv(df, v = 10, repeats = 10))
+```
+
+```{r}
+#| label: recipe-imputed
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+purrr_thyroid_recipe_imputed <- purrr_train |>
+    purrr::map(\(df) recipes::recipe(final_pathology ~ ., data = df)) |>
+    ## @ns-rse 2024-08-01 :
+    ## We don't need to filter missing because we are using imputed datasets
+    ## https://recipes.tidymodels.org/reference/step_filter_missing.html
+    ## recipes::step_filter_missing(recipes::all_predictors(), threshold = 0) |>
+    purrr::map(\(df) recipes::step_normalize(df, recipes::all_numeric_predictors())) |>
+    purrr::map(\(df) recipes::step_dummy(df, recipes::all_nominal_predictors()))
+
+## !!!!!!INFO!!!!!!
+##
+## You can look at purrr_thyroid_recipe_imputed and see it is a list of two identical recipes (just enter
+## 'purrr_thyroid_recipe_imputed' without quotes at the R console and hit Return)
+```
+
+```{r}
+#| label: workflow-imputed
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+## !!!!!!WARNING!!!!!! This section isn't yet working
+purrr_thyroid_workflow_imputed <- purrr_thyroid_recipe_imputed |>
+    ## purrr::map(\(recipe) workflows::workflow()) |>
+    purrr::map(\(recipe) workflows::add_recipe(recipe), workflows::workflow())
+saveRDS(thyroid_workflow, file = paste(r_dir, "thyroid_workflow.rds", sep = "/"))
+```
