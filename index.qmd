@@ -305,6 +305,14 @@ support vectors are the only data points that have an influence on the maximum m
 n_obs <- nrow(df)
 ```
 
+```{r}
+## changing NA in thy_class to "no biopsy"
+
+df <- df |>
+  mutate(thy_classification = ifelse(is.na(thy_classification), "No biopsy", thy_classification))
+view(df$thy_classification)
+```
+
 ### Data Description
 
 
