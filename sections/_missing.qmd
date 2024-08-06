@@ -1,3 +1,26 @@
+
+```{r}
+### visualising missing data in the cohort
+
+library(naniar)
+
+## visualise missing data for each variable on df
+vis_miss(df, cluster = TRUE)
+
+## absolute number of missing data
+n_miss(df)
+
+## proportion of missing data in df
+prop_miss(df)
+
+## visualising concurrence of missingess combination
+gg_miss_upset(df)
+
+## visualise missingness by variable
+gg_miss_var(df)
+```
+
+
 ```{r}
 #| label: tbl-data-completeness
 #| purl: true
