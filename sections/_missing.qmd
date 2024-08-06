@@ -1,5 +1,45 @@
 
 ```{r}
+## dealing with missing
+
+
+# For the df data set, there are values considered to be missing that are not true missing value.
+# A true missing value is defined as measurement/value in observation that was present (or measured) as part of the participant's work-up but the authors could not obtain them.
+
+#Using this definition, some values that were recoreded as missing, are actually not true missing, they were never available or measured. For each variable there is option to recode these non missing as "not recored" or "not available"
+
+#1.	Gender: if NA, then this is true missing
+#2.	Age: if NA, then this is true missing
+#3.	Ethnicity: if NA, then this is “Not recorded”
+#4.	Incidental nodule: if NA, then this is “Not recorded”
+#5.	Palpable nodule: if NA, then this is “Not recorded”
+#6.	Rapid enlargement: if NA, then this is “Not recorded”
+#7.	Compressive symptoms: if NA, then is “Not recorded”
+#8.	Hypertension: if NA, then this is “Not recorded”
+#9.	Vocal paresis: if NA, then this is “Not recorded”
+#10.	Graves’ disease: if NA, then this is “Not recorded”
+#11.	Hashimoto’s thyroiditis: if NA, then this is “Not recorded”
+#12.	Family history of thyroid cancer: if NA, then this is “Not recorded”
+#13.	Exposure to radiation: if NA, then this is “Not recorded”
+#14.	Albumin, TSH, Lymphocytes, Monocytes: if NA then this is “Not measured”
+#15.	BTA U classification: if NA, then this is “Not recorded”
+#16.	Nodule size: if NA, then this is “Not recorded”
+#17.	Consistency nodule: if NA, then this is “Not recorded”
+#18.	Cervical lymphadenopathy: if NA, then this is “Not recorded”
+#19.	Repeat US: if NA, then this is “Not done”
+#20.	Repeat BTA classification: if NA, then this is “Not applicable”
+#21.	FNA done: if NA, then “Not donegg”
+#22.	Thy classification: if NA, then “No biopsy”
+#23.	Repeat FNA done: if NA, then “No biopsy”
+#24.	Repeat thy classification: if NA, then “Not applicable”
+#25.	Thyroid surgery: if NA, then “Not recorded”
+#26.	Histological diagnosis: if NA, then “Not applicable”
+#27.	Final pathology: if NA, then “Not recorded”
+
+# problem with the above is we still have the issue with lack of data as these data should have been measure or recorded in the patients' recorded. So, it will still make sense to imput these as if they were "true missing"
+
+# I do wonder if we recode these as "not recorded" whether our prior SVM, RF and GB will yield results albeit limited by small sample sizes
+
 ### visualising missing data in the cohort
 
 library(naniar)
@@ -18,6 +58,10 @@ gg_miss_upset(df)
 
 ## visualise missingness by variable
 gg_miss_var(df)
+
+## searching for missing
+df |> miss_scan_count(search = list("NA"))
+
 ```
 
 
