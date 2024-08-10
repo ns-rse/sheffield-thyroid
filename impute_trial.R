@@ -10,4 +10,4 @@ view(df_imp)
 boxplot(df$tsh_value)
 boxplot(df_imp$tsh_value)
 t.test(df$tsh_value, df_imp$tsh_value)
-        
+       
