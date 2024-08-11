@@ -165,6 +165,7 @@ imputed_data_4 <- complete(imputed_data, action = 4)
 imputed_data_5 <- complete(imputed_data, action = 5)
 
 ## now I will try to visualise the imputations in comparison with the original data
+## using tsh  value
 
 df_combined <- data.frame(
   original = df$tsh_value,
@@ -174,6 +175,10 @@ df_combined <- data.frame(
   imputed_4 = imputed_data_4$tsh_value,
   imputed_5 = imputed_data_5$tsh_value
 )
+
+## visualising data frame for imputed data TSH value versus original data &
+## using t test to evaluate if there is a significant difference between imputated and 
+## original data set
 
 df_combined <- data.frame(
   value = c(df$tsh_value, imputed_data_1$tsh_value),
@@ -186,6 +191,65 @@ ggplot(df_combined, aes(x = dataset, y = value, fill = dataset)) +
        y = "TSH Value") +
   theme_minimal()
 
-t.test(df$tsh_value, imputed_data_1$tsh_value)
+
 mean(df$tsh_value, na.rm = TRUE)
 mean(imputed_data_1$tsh_value)
+t.test(df$tsh_value, imputed_data_1$tsh_value)
+
+df_combined <- data.frame(
+  value = c(df$tsh_value, imputed_data_2$tsh_value),
+  dataset = rep(c("Original", "Imputed"), each = nrow(df))
+)
+ggplot(df_combined, aes(x = dataset, y = value, fill = dataset)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of TSH Values: Original vs Imputed Data",
+       x = "Dataset",
+       y = "TSH Value") +
+  theme_minimal()
+mean(df$tsh_value, na.rm = TRUE)
+mean(imputed_data_2$tsh_value)
+t.test(df$tsh_value, imputed_data_1$tsh_value)
+
+df_combined <- data.frame(
+  value = c(df$tsh_value, imputed_data_3$tsh_value),
+  dataset = rep(c("Original", "Imputed"), each = nrow(df))
+)
+ggplot(df_combined, aes(x = dataset, y = value, fill = dataset)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of TSH Values: Original vs Imputed Data",
+       x = "Dataset",
+       y = "TSH Value") +
+  theme_minimal()
+mean(df$tsh_value, na.rm = TRUE)
+mean(imputed_data_3$tsh_value)
+t.test(df$tsh_value, imputed_data_3$tsh_value)
+
+df_combined <- data.frame(
+  value = c(df$tsh_value, imputed_data_4$tsh_value),
+  dataset = rep(c("Original", "Imputed"), each = nrow(df))
+)
+ggplot(df_combined, aes(x = dataset, y = value, fill = dataset)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of TSH Values: Original vs Imputed Data",
+       x = "Dataset",
+       y = "TSH Value") +
+  theme_minimal()
+mean(df$tsh_value, na.rm = TRUE)
+mean(imputed_data_4$tsh_value)
+t.test(df$tsh_value, imputed_data_4$tsh_value)
+
+df_combined <- data.frame(
+  value = c(df$tsh_value, imputed_data_5$tsh_value),
+  dataset = rep(c("Original", "Imputed"), each = nrow(df))
+)
+ggplot(df_combined, aes(x = dataset, y = value, fill = dataset)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of TSH Values: Original vs Imputed Data",
+       x = "Dataset",
+       y = "TSH Value") +
+  theme_minimal()
+mean(df$tsh_value, na.rm = TRUE)
+mean(imputed_data_5$tsh_value)
+t.test(df$tsh_value, imputed_data_5$tsh_value)
+
+
