@@ -111,6 +111,19 @@ impute_data <- function(df = df_complete,
                                                    ggplot2::aes(x = .data[[var]],
                                                                 fill = .imp)) +
                                         ggplot2::geom_bar(position = "dodge")
+        ## Above bar chart is often hard to read, instead make a custom bar chart of the propotion in each category by
+        ## each imputation
+        results$bar_chart_prop[[var]] <- results$imputed |>
+                   dplyr::group_by(.imp, .data[[var]]) |>
+                   dplyr::summarize(count = n()) |>
+                   dplyr::group_by(.imp) |>
+                   dplyr::mutate(prop = count / sum(count)) |>
+                   ggplot2::ggplot(aes(x = .data[[var]],
+                                       y = prop,
+                                       fill = .imp)) +
+                   ggplot2::geom_bar(stat = "identity", position = "dodge") +
+                   ggplot2::theme(legend.position = "none")
+
     }
     results
 }
@@ -134,47 +147,9 @@ mice_rf <- impute_data(method = "rf",
 
 ```
 
-The convergence of the imputation methods are shown in figues @fig-mice-convergence-pmm, @fig-mice-convergence-cart, and
-@fig-mice-convergence-rf.
-
-::: {.panel-tabset}
-
-```{r}
-#| label: fig-mice-convergence-pmm
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| out-width: "80%"
-mice_pmm$trace
-
-```
-
-```{r}
-#| label: fig-mice-convergence-cart
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| out-width: "80%"
-
-mice_cart$trace
-
-```
-
-```{r}
-#| label: fig-mice-convergence-rf
-#| purl: true
-#| eval: true
-#| echo: false
-#| output: true
-#| out-width: "80%"
-mice_rf$trace
-
-```
-
-:::
-
+The distribution of observed (blue) and imputed values for continous variables are shown in the Tab set immediately
+below and across all variables the imputed distrubtions follow closely that of the observed indicating that the
+imputation methods have worked well for all three methods tested.
 
 ::: {.panel-tabset}
 
@@ -190,6 +165,7 @@ mice_rf$trace
 cowplot::plot_grid(mice_pmm$histogram$albumin,
                    mice_cart$histogram$albumin,
                    mice_rf$histogram$albumin,
+                   labels = c("PMM", "Cart", "Random Forest"),
                    nrow = 1,
                    ncol = 3)
 ```
@@ -206,6 +182,7 @@ cowplot::plot_grid(mice_pmm$histogram$albumin,
 cowplot::plot_grid(mice_pmm$histogram$monocyte,
                    mice_cart$histogram$monocyte,
                    mice_rf$histogram$monocyte,
+                   labels = c("PMM", "Cart", "Random Forest"),
                    nrow = 1,
                    ncol = 3)
 
@@ -223,6 +200,7 @@ cowplot::plot_grid(mice_pmm$histogram$monocyte,
 cowplot::plot_grid(mice_pmm$histogram$lymphocytes,
                    mice_cart$histogram$lymphocytes,
                    mice_rf$histogram$lymphocytes,
+                   labels = c("PMM", "Cart", "Random Forest"),
                    nrow = 1,
                    ncol = 3)
 
@@ -240,6 +218,7 @@ cowplot::plot_grid(mice_pmm$histogram$lymphocytes,
 cowplot::plot_grid(mice_pmm$histogram$tsh_value,
                    mice_cart$histogram$tsh_value,
                    mice_rf$histogram$tsh_value,
+                   labels = c("PMM", "Cart", "Random Forest"),
                    nrow = 1,
                    ncol = 3)
 
@@ -257,12 +236,18 @@ cowplot::plot_grid(mice_pmm$histogram$tsh_value,
 cowplot::plot_grid(mice_pmm$histogram$size_nodule_mm,
                    mice_cart$histogram$size_nodule_mm,
                    mice_rf$histogram$size_nodule_mm,
+                   labels = c("PMM", "Cart", "Random Forest"),
                    nrow = 1,
                    ncol = 3)
 
 ```
 
 :::
+
+Similarly for the discrete variables the distribution of proportions in the original and each imputed dataset are shown
+below. The observed (in pink/peach) always have slightly lower proportions of the observed values because of the
+presence of missing (evidences by only one group being present in the `NA` column) but as with the continuous variables
+across all imputation methods the proportions are roughly as expected again indicating that imputation has worked well.
 
 **TODO** - Extract the legends from individual plots and add them to the end of each row, see the [cowplot shared
 legends article](https://wilkelab.org/cowplot/articles/shared_legends.html) for pointers on how to do this. Should
@@ -279,13 +264,17 @@ ideally also get the `fill` colours to align with those used by `ggmice`.
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$incidental_nodule + theme(legend.position = "None"),
-                   mice_cart$scatter$incidental_nodule + theme(legend.position = "None"),
-                   mice_rf$scatter$incidental_nodule + theme(legend.position = "None"),
-                   mice_pmm$bar_chart$incidental_nodule + theme(legend.position = "None"),
-                   mice_cart$bar_chart$incidental_nodule + theme(legend.position = "None"),
-                   mice_rf$bar_chart$incidental_nodule + theme(legend.position = "None"),
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$incidental_nodule + theme(legend.position = "None"),
+                   ## mice_cart$scatter$incidental_nodule + theme(legend.position = "None"),
+                   ## mice_rf$scatter$incidental_nodule + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$incidental_nodule + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$incidental_nodule + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$incidental_nodule + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$incidental_nodule + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$incidental_nodule + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$incidental_nodule + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -299,13 +288,17 @@ cowplot::plot_grid(mice_pmm$scatter$incidental_nodule + theme(legend.position = 
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$palpable_nodule,
-                   mice_cart$scatter$palpable_nodule,
-                   mice_rf$scatter$palpable_nodule,
-                   mice_pmm$bar_chart$palpable_nodule,
-                   mice_cart$bar_chart$palpable_nodule,
-                   mice_rf$bar_chart$palpable_nodule,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$palpable_nodule + theme(legend.position = "None"),
+                   ## mice_cart$scatter$palpable_nodule + theme(legend.position = "None"),
+                   ## mice_rf$scatter$palpable_nodule + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$palpable_nodule + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$palpable_nodule + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$palpable_nodule + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$palpable_nodule + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$palpable_nodule + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$palpable_nodule + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -319,13 +312,17 @@ cowplot::plot_grid(mice_pmm$scatter$palpable_nodule,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$rapid_enlargement,
-                   mice_cart$scatter$rapid_enlargement,
-                   mice_rf$scatter$rapid_enlargement,
-                   mice_pmm$bar_chart$rapid_enlargement,
-                   mice_cart$bar_chart$rapid_enlargement,
-                   mice_rf$bar_chart$rapid_enlargement,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$rapid_enlargement + theme(legend.position = "None"),
+                   ## mice_cart$scatter$rapid_enlargement + theme(legend.position = "None"),
+                   ## mice_rf$scatter$rapid_enlargement + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$rapid_enlargement + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$rapid_enlargement + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$rapid_enlargement + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$rapid_enlargement + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$rapid_enlargement + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$rapid_enlargement + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -339,13 +336,17 @@ cowplot::plot_grid(mice_pmm$scatter$rapid_enlargement,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$compressive_symptoms,
-                   mice_cart$scatter$compressive_symptoms,
-                   mice_rf$scatter$compressive_symptoms,
-                   mice_pmm$bar_chart$compressive_symptoms,
-                   mice_cart$bar_chart$compressive_symptoms,
-                   mice_rf$bar_chart$compressive_symptoms,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$compressive_symptoms + theme(legend.position = "None"),
+                   ## mice_cart$scatter$compressive_symptoms + theme(legend.position = "None"),
+                   ## mice_rf$scatter$compressive_symptoms + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$compressive_symptoms + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$compressive_symptoms + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$compressive_symptoms + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$compressive_symptoms + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$compressive_symptoms + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$compressive_symptoms + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -359,13 +360,17 @@ cowplot::plot_grid(mice_pmm$scatter$compressive_symptoms,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$hypertension,
-                   mice_cart$scatter$hypertension,
-                   mice_rf$scatter$hypertension,
-                   mice_pmm$bar_chart$hypertension,
-                   mice_cart$bar_chart$hypertension,
-                   mice_rf$bar_chart$hypertension,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$hypertension + theme(legend.position = "None"),
+                   ## mice_cart$scatter$hypertension + theme(legend.position = "None"),
+                   ## mice_rf$scatter$hypertension + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$hypertension + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$hypertension + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$hypertension + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$hypertension + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$hypertension + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$hypertension + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -379,13 +384,17 @@ cowplot::plot_grid(mice_pmm$scatter$hypertension,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$vocal_cord_paresis,
-                   mice_cart$scatter$vocal_cord_paresis,
-                   mice_rf$scatter$vocal_cord_paresis,
-                   mice_pmm$bar_chart$vocal_cord_paresis,
-                   mice_cart$bar_chart$vocal_cord_paresis,
-                   mice_rf$bar_chart$vocal_cord_paresis,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$vocal_cord_paresis + theme(legend.position = "None"),
+                   ## mice_cart$scatter$vocal_cord_paresis + theme(legend.position = "None"),
+                   ## mice_rf$scatter$vocal_cord_paresis + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$vocal_cord_paresis + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$vocal_cord_paresis + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$vocal_cord_paresis + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$vocal_cord_paresis + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$vocal_cord_paresis + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$vocal_cord_paresis + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -399,13 +408,17 @@ cowplot::plot_grid(mice_pmm$scatter$vocal_cord_paresis,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$graves_disease,
-                   mice_cart$scatter$graves_disease,
-                   mice_rf$scatter$graves_disease,
-                   mice_pmm$bar_chart$graves_disease,
-                   mice_cart$bar_chart$graves_disease,
-                   mice_rf$bar_chart$graves_disease,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$graves_disease + theme(legend.position = "None"),
+                   ## mice_cart$scatter$graves_disease + theme(legend.position = "None"),
+                   ## mice_rf$scatter$graves_disease + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$graves_disease + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$graves_disease + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$graves_disease + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$graves_disease + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$graves_disease + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$graves_disease + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -419,13 +432,17 @@ cowplot::plot_grid(mice_pmm$scatter$graves_disease,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$hashimotos_thyroiditis,
-                   mice_cart$scatter$hashimotos_thyroiditis,
-                   mice_rf$scatter$hashimotos_thyroiditis,
-                   mice_pmm$bar_chart$hashimotos_thyroiditis,
-                   mice_cart$bar_chart$hashimotos_thyroiditis,
-                   mice_rf$bar_chart$hashimotos_thyroiditis,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   ## mice_cart$scatter$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   ## mice_rf$scatter$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$hashimotos_thyroiditis + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -439,13 +456,17 @@ cowplot::plot_grid(mice_pmm$scatter$hashimotos_thyroiditis,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$family_history,
-                   mice_cart$scatter$family_history,
-                   mice_rf$scatter$family_history,
-                   mice_pmm$bar_chart$family_history,
-                   mice_cart$bar_chart$family_history,
-                   mice_rf$bar_chart$family_history,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$family_history + theme(legend.position = "None"),
+                   ## mice_cart$scatter$family_history + theme(legend.position = "None"),
+                   ## mice_rf$scatter$family_history + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$family_history + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$family_history + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$family_history + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$family_history + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$family_history + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$family_history + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -459,13 +480,17 @@ cowplot::plot_grid(mice_pmm$scatter$family_history,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$exposure_radiation,
-                   mice_cart$scatter$exposure_radiation,
-                   mice_rf$scatter$exposure_radiation,
-                   mice_pmm$bar_chart$exposure_radiation,
-                   mice_cart$bar_chart$exposure_radiation,
-                   mice_rf$bar_chart$exposure_radiation,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$exposure_radiation + theme(legend.position = "None"),
+                   ## mice_cart$scatter$exposure_radiation + theme(legend.position = "None"),
+                   ## mice_rf$scatter$exposure_radiation + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$exposure_radiation + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$exposure_radiation + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$exposure_radiation + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$exposure_radiation + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$exposure_radiation + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$exposure_radiation + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -479,13 +504,17 @@ cowplot::plot_grid(mice_pmm$scatter$exposure_radiation,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$solitary_nodule,
-                   mice_cart$scatter$solitary_nodule,
-                   mice_rf$scatter$solitary_nodule,
-                   mice_pmm$bar_chart$solitary_nodule,
-                   mice_cart$bar_chart$solitary_nodule,
-                   mice_rf$bar_chart$solitary_nodule,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$solitary_nodule + theme(legend.position = "None"),
+                   ## mice_cart$scatter$solitary_nodule + theme(legend.position = "None"),
+                   ## mice_rf$scatter$solitary_nodule + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$solitary_nodule + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$solitary_nodule + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$solitary_nodule + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$solitary_nodule + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$solitary_nodule + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$solitary_nodule + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -499,13 +528,17 @@ cowplot::plot_grid(mice_pmm$scatter$solitary_nodule,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$bta_u_classification,
-                   mice_cart$scatter$bta_u_classification,
-                   mice_rf$scatter$bta_u_classification,
-                   mice_pmm$bar_chart$bta_u_classification,
-                   mice_cart$bar_chart$bta_u_classification,
-                   mice_rf$bar_chart$bta_u_classification,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$bta_u_classification + theme(legend.position = "None"),
+                   ## mice_cart$scatter$bta_u_classification + theme(legend.position = "None"),
+                   ## mice_rf$scatter$bta_u_classification + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$bta_u_classification + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$bta_u_classification + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$bta_u_classification + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$bta_u_classification + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$bta_u_classification + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$bta_u_classification + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
@@ -519,13 +552,17 @@ cowplot::plot_grid(mice_pmm$scatter$bta_u_classification,
 #| echo: false
 #| output: true
 #| out-width: "80%"
-cowplot::plot_grid(mice_pmm$scatter$cervical_lymphadenopathy,
-                   mice_cart$scatter$cervical_lymphadenopathy,
-                   mice_rf$scatter$cervical_lymphadenopathy,
-                   mice_pmm$bar_chart$cervical_lymphadenopathy,
-                   mice_cart$bar_chart$cervical_lymphadenopathy,
-                   mice_rf$bar_chart$cervical_lymphadenopathy,
-                   nrow = 2,
+cowplot::plot_grid(## mice_pmm$scatter$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   ## mice_cart$scatter$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   ## mice_rf$scatter$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   ## mice_pmm$bar_chart$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   ## mice_cart$bar_chart$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   ## mice_rf$bar_chart$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   mice_pmm$bar_chart_prop$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   mice_cart$bar_chart_prop$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   mice_rf$bar_chart_prop$cervical_lymphadenopathy + theme(legend.position = "None"),
+                   labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 1,
                    ncol = 3)
 
 ```
