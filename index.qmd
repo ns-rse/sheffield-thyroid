@@ -104,47 +104,8 @@ r_scripts <- paste(base_dir, "r", sep = "/")
 ## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
 df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
 
-
-## @ns-rse 2024-06-18:
-## We want this table to match the model, therefore rather than repeat ourselves we move the subsetting to give us
-## df_complete to here and assign to df_complete. This is then passed into gtsummary::tbl_summary() and is available for
-## the next code chunk.
-##
-## This is the point at which you should subset your data for those who have data available for the variables of
-## interest. The variables here should include the outcome `final_pathology` and the predictor variables that are set in
-## the code chunk `recipe`. May want to move this to another earlier in the processing so that the number of rows can be
-## counted and reported.
-df_complete <- df |>
-  dplyr::select(
-    age_at_scan,
-    gender,
-    ethnicity,
-    incidental_nodule,
-    palpable_nodule,
-    rapid_enlargement,
-    compressive_symptoms,
-    hypertension,
-    vocal_cord_paresis,
-    graves_disease,
-    hashimotos_thyroiditis,
-    family_history_thyroid_cancer,
-    exposure_radiation,
-    albumin,
-    tsh_value,
-    lymphocytes,
-    monocyte,
-    bta_u_classification,
-    solitary_nodule,
-    size_nodule_mm,
-    cervical_lymphadenopathy,
-    thy_classification,
-    final_pathology) |>
-## @ns-rse 2024-06-14 :
-## I would consider removing this dplyr::filter() and instead using the recipes::step_filter_missing() as is now in
-## place below
-## dplyr::filter(if_any(everything(), is.na))
-## Instead I think it might be useful to remove individuals who do not have a value for final_pathology here
-  dplyr::filter(!is.na(final_pathology))
+## Load df_complete which has observations with missing final_pathology removed and has subset the variables.
+df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep))
 
 ```
 
