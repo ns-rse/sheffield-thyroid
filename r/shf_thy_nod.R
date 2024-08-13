@@ -52,10 +52,29 @@ var_labels <- c(
 
 ## @ns-rse 2024-07-18 : I noticed there is a single instance of graves_disease that is "no" rather than "No", we correct
 ## that now
-raw_data<- raw_data|>
+raw_data <- raw_data|>
     dplyr::mutate(graves_disease = case_when(graves_disease == "no" ~ "No",
         .default = graves_disease
-    ))
+        ))
+
+## @ns-rse 2024-08-13 : Convert is.na(thy_classification) to `No biopsy` and tidy up other variables too.
+##                      Based on lines 107-119 of index.qmd from commit :
+##                      https://github.com/ns-rse/sheffield-thyroid/commit/9d586f8e701a015e27c693a8c5788dbd74e1ac2d
+raw_data <- raw_data|>
+    dplyr::mutate(thy_classification = dplyr::case_when(is.na(thy_classification) ~ "No biopsy",
+                                                        .default = thy_classification),
+                  exposure_radiation = dplyr::case_when(is.na(exposure_radiation) ~ "No",
+                                                        .default = exposure_radiation),
+                  repeat_fna_done = dplyr::case_when(is.na(repeat_fna_done) ~ "No",
+                                                     .default = repeat_fna_done),
+                  repeat_ultrasound = dplyr::case_when(is.na(repeat_ultrasound) ~ "No",
+                                                       .default = repeat_ultrasound),
+                  repeat_bta_u_classification = dplyr::case_when(is.na(repeat_bta_u_classification) ~ "No ultrasound",
+                                                                 .default = repeat_bta_u_classification),
+                  repeat_thy_classification = dplyr::case_when(is.na(repeat_thy_classification) ~ "No biopsy",
+                                                               .default = repeat_thy_classification),
+                  thyroid_histology_diagnosis = dplyr::case_when(is.na(thyroid_histology_diagnosis) ~ "No surgery",
+                                                                 .default = thyroid_histology_diagnosis))
 
 
 ## Make a copy of the raw data so that comparisons can be made between it and the cleaned dataset. This allows checking
@@ -77,6 +96,52 @@ df <- unique(df)
 
 ## Save a copy of the clean data (df) for loading and using in analysis
 saveRDS(df, file = paste(r_dir, "clean.rds", sep = "/"))
+
+## @ns-rse 2024-08-13 : Moving the select and filter to produce `df_complete` to here and saving as an object for
+## loading.
+## @ns-rse 2024-06-18:
+## We want this table to match the model, therefore rather than repeat ourselves we move the subsetting to give us
+## df_complete to here and assign to df_complete. This is then passed into gtsummary::tbl_summary() and is available for
+## the next code chunk.
+##
+## This is the point at which you should subset your data for those who have data available for the variables of
+## interest. The variables here should include the outcome `final_pathology` and the predictor variables that are set in
+## the code chunk `recipe`. May want to move this to another earlier in the processing so that the number of rows can be
+## counted and reported.
+df_complete <- df |>
+  dplyr::select(
+    age_at_scan,
+    gender,
+    ethnicity,
+    incidental_nodule,
+    palpable_nodule,
+    rapid_enlargement,
+    compressive_symptoms,
+    hypertension,
+    vocal_cord_paresis,
+    graves_disease,
+    hashimotos_thyroiditis,
+    family_history_thyroid_cancer,
+    exposure_radiation,
+    albumin,
+    tsh_value,
+    lymphocytes,
+    monocyte,
+    bta_u_classification,
+    solitary_nodule,
+    size_nodule_mm,
+    cervical_lymphadenopathy,
+    thy_classification,
+    final_pathology) |>
+## @ns-rse 2024-06-14 :
+## I would consider removing this dplyr::filter() and instead using the recipes::step_filter_missing() as is now in
+## place below
+## dplyr::filter(if_any(everything(), is.na))
+## Instead I think it might be useful to remove individuals who do not have a value for final_pathology here
+  dplyr::filter(!is.na(final_pathology))
+
+## Save a copy of the clean data (df) for loading and using in analysis
+saveRDS(df_complete, file = paste(r_dir, "df_complete.rds", sep = "/"))
 
 
 ## OBSOLETE CODE
