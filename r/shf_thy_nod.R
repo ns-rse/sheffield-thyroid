@@ -57,9 +57,21 @@ raw_data<- raw_data|>
         .default = graves_disease
     ))
 
-
+## changing some NAs to more appropraite classification, these do not need imputation
+df$exposure_radiation[is.na(df$exposure_radiation)] <- "No"
+df$thy_classification <- as.character(df$thy_classification)
+df$thy_classification[is.na(df$thy_classification)] <- "No biopsy"
+df$repeat_fna_done[is.na(df$repeat_fna_done)] <- "No"
+df$repeat_ultrasound[is.na(df$repeat_ultrasound)] <- "No"
+df$repeat_bta_u_classification <- as.character(df$repeat_bta_u_classification)
+df$repeat_bta_u_classification[is.na(df$repeat_bta_u_classification)] <- "No ultrasound"
+df$repeat_thy_classification <- as.character(df$repeat_thy_classification)
+df$repeat_thy_classification[is.na(df$repeat_thy_classification)] <- "No biopsy"
+df$thyroid_histology_diagnosis <- as.character(df$thyroid_histology_diagnosis)
+df$thyroid_histology_diagnosis[is.na(df$thyroid_histology_diagnosis)] <- "No surgery"
 ## Make a copy of the raw data so that comparisons can be made between it and the cleaned dataset. This allows checking
 ## that no mistakes have been made
+
 df <- tibble(raw_data)
 Hmisc::label(df) <- as.list(var_labels[match(names(df), names(var_labels))])
 
