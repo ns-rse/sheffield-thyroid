@@ -103,9 +103,9 @@ r_scripts <- paste(base_dir, "r", sep = "/")
 ## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
 ## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
 df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
-
+g
 ## Load df_complete which has observations with missing final_pathology removed and has subset the variables.
-df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep))
+df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep="/"))
 
 ```
 
