@@ -14,10 +14,10 @@ tune_spec_elastic <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 
   parsnip::set_engine("glmnet")
 
 ## Tune the Elastic Net parameters via cross-validation
-lasso_grid <- tune::tune_grid(
+elastic_grid <- tune::tune_grid(
   object = workflows::add_model(thyroid_workflow, tune_spec_elastic),
   resamples = cv_folds,
-  grid = dials::grid_regular(penalty(), levels = 50)
+  grid = dials::grid_regular(dials::penalty(), levels = 50)
 )
 ```
 
@@ -32,7 +32,7 @@ lasso_grid <- tune::tune_grid(
 ##
 ## This shows how the evaluation metrics change over time with each iteration of the Lasso (we know we are running a
 ## Elastic Net because when we setup tune_spec_elastic the mixture = 1 when we define parsnip::logistic_reg()
-tune::autoplot(lasso_grid)
+tune::autoplot(elastic_grid)
 ```
 
 
@@ -44,7 +44,7 @@ tune::autoplot(lasso_grid)
 #| echo: false
 #| output: true
 ## K-fold best fit for Elastic Net
-lasso_kfold_roc_auc <- lasso_grid |>
+elastic_kfold_roc_auc <- elastic_grid |>
   tune::select_best(metric = "roc_auc")
 ```
 
@@ -58,7 +58,7 @@ lasso_kfold_roc_auc <- lasso_grid |>
 ## Fit the final Elastic Net model
 final_elastic_kfold <- tune::finalize_workflow(
   workflows::add_model(thyroid_workflow, tune_spec_elastic),
-  lasso_kfold_roc_auc
+  elastic_kfold_roc_auc
 )
 ```
 
@@ -72,7 +72,7 @@ final_elastic_kfold <- tune::finalize_workflow(
 final_elastic_kfold |>
   fit(train) |>
   hardhat::extract_fit_parsnip() |>
-  vip::vi(lambda = lasso_kfold_roc_auc$penalty) |>
+  vip::vi(lambda = elastic_kfold_roc_auc$penalty) |>
   dplyr::mutate(
     Importance = abs(Importance),
     Variable = fct_reorder(Variable, Importance)
@@ -97,7 +97,7 @@ Tidymodels framework the model `fit` is wrapped up inside (hence the above artic
 #| eval: true
 #| echo: false
 #| output: false
-save(tune_spec_elastic, lasso_grid, final_elastic_kfold, lasso_kfold_roc_auc,
-  file = "data/r/lasso.RData"
+save(tune_spec_elastic, _grid, final_elastic_kfold, elastic_kfold_roc_auc,
+  file = "data/r/elastic.RData"
 )
 ```
