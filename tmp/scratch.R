@@ -24,7 +24,7 @@ df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep = "/"))
 mice_pmm <- readRDS(file = paste(r_dir, "mice_pmm.rds", sep = "/"))
 mice_cart <- readRDS(file = paste(r_dir, "mice_cart.rds", sep = "/"))
 mice_rf <- readRDS(file = paste(r_dir, "mice_rf.rds", sep = "/"))
-
+thyroid_workflow <- readRDS(file = paste(r_dir, "thyroid_workflow.rds", sep = "/"))
 ####################################################
 ## 2024-09-20 - Purrr alternative, write a function
 ##              that does the modelling and map that
@@ -43,6 +43,7 @@ mice_rf <- readRDS(file = paste(r_dir, "mice_rf.rds", sep = "/"))
 #' @continuous vector Vector of continuous predictor variables.
 #' @categorical vector Vector of categorical/nominal predictor variables.
 #' @model_type str The type of model to fit, options are 'elastic', 'lasso' 'xgboost', 'svm'
+#' @mixture foat Mixture to use in Elastic Net ('elastic') models. '0' gives Ridge Regression, '1' LASSO. Default '0.5'.
 #' ... Hyperparameters to pass to the selected model_type
 #'
 #' @seealso [mice]
@@ -56,147 +57,184 @@ model_fitting <- function(df,
                           missing_threshold = 0.0,
                           outcome = "final_pathology",
                           continuous = c("albumin", "tsh_value", "lymphocytes", "monocyte", "size_nodule_mm"),
-                          categorical = c("ethnicity",
-                                          "incidental_nodule",
-                                          "palpable_nodule",
-                                          "rapid_enlargement",
-                                          "compressive_symptoms",
-                                          "hypertension",
-                                          "vocal_cord_paresis",
-                                          "graves_disease",
-                                          "hashimotos_thyroiditis",
-                                          "family_history_thyroid_cancer",
-                                          "exposure_radiation",
-                                          "bta_u_classification",
-                                          "solitary_nodule",
-                                          "cervical_lymphadenopathy",
-                                          "thy_classification"),
+                          categorical = c(
+                              "ethnicity",
+                              "incidental_nodule",
+                              "palpable_nodule",
+                              "rapid_enlargement",
+                              "compressive_symptoms",
+                              "hypertension",
+                              "vocal_cord_paresis",
+                              "graves_disease",
+                              "hashimotos_thyroiditis",
+                              "family_history_thyroid_cancer",
+                              "exposure_radiation",
+                              "bta_u_classification",
+                              "solitary_nodule",
+                              "cervical_lymphadenopathy",
+                              "thy_classification"
+                          ),
                           model_type = "lasso",
-                          ...
-) {
-  ## If this is an imputed dataset we need to remove -.imp and -.id variables
-  if(imputed) {
+                          mixture = 0.5,
+                          ...) {
+    ## If this is an imputed dataset we need to remove -.imp and -.id variables
+    if (imputed) {
+        df <- df |>
+            dplyr::select(-.imp, -.id)
+    }
+    ## Select the variables of interest
     df <- df |>
-      dplyr::select(-.imp, -.id)
-  }
-  ## Select the variables of interest
-  df <- df |>
-    dplyr::select({{ outcome }}, {{ continuous }}, {{ categorical }})
-  ## Split the data into training and test data
-  split <- df |>
-    rsample::initial_split(prop = prop)
-  train <- rsample::training(split)
-  test <- rsample::testing(split)
-  ## Create k-fold validation on training data
-  cv_folds <- rsample::vfold_cv(train, v = v, repeats = repeats)
-  ## Setup a recipe, the steps involved removing individuals with missing data
-  ## ns-rse 2024-09-20 : Ideally we shouldn't have final_pathology hard coded here but the "embrace" method of
-  ## indirection (see vignette("programmin")) doesn't seem to work with recipes. Online example of creating own recipe
-  ## step function (https://www.tidymodels.org/learn/develop/recipes/index.html#create-the-function) uses the older
-  ## enquos() method
-  thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
-    recipes::step_filter_missing(recipes::all_predictors(), threshold = 0) |>
-    recipes::step_normalize(recipes::all_numeric_predictors()) |>
-    recipes::step_dummy(recipes::all_nominal_predictors())
-  ## Add recipe to a workrlow
-  thyroid_workflow <- workflows::workflow() |>
-    workflows::add_recipe(thyroid_recipe)
-  ## Conditionally fit the model based on the requested method, this involves setting up a parsnip model specification
-  ## and then tune it via tune::tune_grid()
-  ## @ns-rse 2024-09-20 : Refactor and abstract out common components have parsnip::() and grid_regular() set in each
-  ## conditional section and a final tune::tune_grid() that takes whatever these values are set to.
-  if(model_type == "lasso") {
-    print("Fitting LASSO")
-    tune_spec <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 1) |>
-      parsnip::set_engine("glmnet")
-    dials_grid <- dials::grid_regular(dials::penalty(), levels = 50)
-    grid <- tune::tune_grid(
-                    object = workflows::add_model(thyroid_workflow, tune_spec),
-                    resamples = cv_folds,
-                    grid = dials_grid
-                  )
-  } else if(model_type == "elastic") {
-    print("Fitting Elastic Net")
-    parsnip_tune <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 0.5) |>
-      parsnip::set_engine("glmnet")
-    dials_grid <- dials::grid_regular(dials::penalty(), levels = 50)
-    grid <- tune::tune_grid(
-                    object = workflows::add_model(thyroid_workflow, parsnip_tune),
-                    resamples = cv_folds,
-                    grid = dials_grid
-                  )
-  } else if(model_type == "forest") {
-    print("Fitting Random Forest")
-    ## @ns-rse 2024-09-20 : For flexibility we could set things up to specify different engines here
-    parsnip_tune <- parsnip::rand_forest(
-                          mtry = hardhat::tune(),
-                          trees = 100,
-                          min_n = hardhat::tune()
-                        ) |>
-      parsnip::set_mode("classification") |>
-      parsnip::set_engine("ranger", importance = "impurity")
-    dials_grid <- dials::grid_regular(
-                           dials::mtry(range = c(5, 10)), # smaller ranges will run quicker
-                           dials::min_n(range = c(2, 25)),
-                           levels = 3
+        dplyr::select({{ outcome }}, {{ continuous }}, {{ categorical }})
+    ## Split the data into training and test data
+    split <- df |>
+        rsample::initial_split(prop = prop)
+    train <- rsample::training(split)
+    test <- rsample::testing(split)
+    paste0("Type of train : ", typeof(train)) |>
+        print()
+    ## Create k-fold validation on training data
+    cv_folds <- rsample::vfold_cv(train, v = v, repeats = repeats)
+    ## Setup a recipe, the steps involved removing individuals with missing data
+    ## ns-rse 2024-09-20 : Ideally we shouldn't have final_pathology hard coded here but the "embrace" method of
+    ## indirection (see vignette("programmin")) doesn't seem to work with recipes. Online example of creating own recipe
+    ## step function (https://www.tidymodels.org/learn/develop/recipes/index.html#create-the-function) uses the older
+    ## enquos() method
+    thyroid_recipe <- recipes::recipe(final_pathology ~ ., data = train) |>
+        recipes::step_filter_missing(recipes::all_predictors(), threshold = missing_threshold) |>
+        recipes::step_normalize(recipes::all_numeric_predictors()) |>
+        recipes::step_dummy(recipes::all_nominal_predictors())
+    ## Add recipe to a workrlow
+    thyroid_workflow <- workflows::workflow() |>
+        workflows::add_recipe(thyroid_recipe)
+    ## Conditionally fit the model based on the requested method, this involves setting up a parsnip model specification
+    ## and then tune it via tune::tune_grid()
+    ## @ns-rse 2024-09-20 : Refactor and abstract out common components have parsnip::() and grid_regular() set in each
+    ## conditional section and a final tune::tune_grid() that takes whatever these values are set to.
+    if (model_type == "elastic") {
+        print(paste0("Fitting Elastic Net (mixture : ", mixture, ")", sep=""))
+        parsnip_tune <- parsnip::logistic_reg(
+            penalty = hardhat::tune(),
+            mixture = mixture
+        ) |>
+            parsnip::set_mode("classification") |>
+            parsnip::set_engine("glmnet")
+        dials_grid <- dials::grid_regular(dials::penalty(), levels = 50)
+        ## grid <- tune::tune_grid(
+        ##     object = workflows::add_model(thyroid_workflow, parsnip_tune),
+        ##     resamples = cv_folds,
+        ##     grid = dials_grid
+        ## )
+    } else if (model_type == "forest") {
+        print("Fitting Random Forest")
+        ## @ns-rse 2024-09-20 : For flexibility we could set things up to specify different engines here
+        parsnip_tune <- parsnip::rand_forest(
+            mtry = hardhat::tune(),
+            trees = 100,
+            min_n = hardhat::tune()
+        ) |>
+            parsnip::set_mode("classification") |>
+            parsnip::set_engine("ranger", importance = "impurity")
+        dials_grid <- dials::grid_regular(
+            dials::mtry(range = c(5, 10)), # smaller ranges will run quicker
+            dials::min_n(range = c(2, 25)),
+            levels = 3
+        )
+        ## grid <- tune::tune_grid(
+        ##     object = workflows::add_model(thyroid_workflow, parsnip_tune),
+        ##     resamples = cv_folds,
+        ##     grid = dials_grid
+        ## )
+    } else if (model_type == "xgboost") {
+        print("Fitting Gradient Boosting")
+        parsnip_tune <- parsnip::boost_tree(
+            mode = "classification",
+            trees = 100,
+            min_n = hardhat::tune(),
+            tree_depth = hardhat::tune(),
+            learn_rate = hardhat::tune(),
+            loss_reduction = hardhat::tune()
+        ) |>
+            parsnip::set_mode("classification") |>
+            parsnip::set_engine("xgboost", objective = "binary:logistic")
+        ## Specify the models tuning parameters using the `dials` package along (https://dials.tidymodels.org/) with the grid
+        ## space. This helps identify the hyperparameters with the lowest prediction error.
+        dials_params <- dials::parameters(
+            dials::min_n(),
+            dials::tree_depth(),
+            dials::learn_rate(),
+            dials::loss_reduction()
+        )
+        dials_grid <- dials::grid_max_entropy(
+            dials_params,
+            size = 10
+        )
+        ## yardstick_metrics <- yardstick::metric_set(yardstick::roc_auc, yardstick::accuracy, yardstick::ppv)
+        ## grid <- tune::tune_grid(
+        ##     workflows::add_model(thyroid_workflow, spec = parsnip_tune),
+        ##     resamples = cv_folds,
+        ##     grid = dials_grid,
+        ##     metrics = yardstick_metrics,
+        ##     control = tune::control_grid(verbose = FALSE)
+        ## )
+    } else if (model_type == "svm") {
+        print("Fitting Support Vector Machine")
+        parsnip_tune <- parsnip::svm_rbf(cost = tune()) |>
+          parsnip::set_mode("classification") |>
+          parsnip::set_engine("kernlab")
+        dials_grid <- dials::grid_regular(dials::cost(), levels = 20)
+        ## svm_grid <- tune::tune_grid(
+        ##                     workflows::add_model(thyroid_workflow, parsnip_tune),
+        ##                     resamples = cv_folds, ## cv_loo,
+        ##                     grid = dials_grid
+        ##                   )
+    }
+    ## Set common metrics and control
+    yardstick_metrics <- yardstick::metric_set(yardstick::roc_auc,
+                                               yardstick::accuracy,
+                                               yardstick::ppv)
+    control <- tune::control_grid(verbose = FALSE)
+    ## Tune the model
+    tuned_model <- tune::tune_grid(
+                             workflows::add_model(thyroid_workflow, parsnip_tune),
+                             resamples = cv_folds, ## cv_loo,
+                             grid = dials_grid,
+                             metrics = yardstick_metrics,
+                             contrl = control
                          )
-    grid <- tune::tune_grid(
-                    object = workflows::add_model(thyroid_workflow, parsnip_tune),
-                    resamples = cv_folds,
-                    grid = dials_grid
-                  )
-  } else if(model_type == "xgboost") {
-    print("Fitting Gradient Boosting")
-    parsnip_tune <- parsnip::boost_tree(
-                                mode = "classification",
-                                trees = 100,
-                                min_n = hardhat::tune(),
-                                tree_depth = hardhat::tune(),
-                                learn_rate = hardhat::tune(),
-                                loss_reduction = hardhat::tune()
-                              ) |>
-      set_engine("xgboost", objective = "binary:logistic")
-    ## Specify the models tuning parameters using the `dials` package along (https://dials.tidymodels.org/) with the grid
-    ## space. This helps identify the hyperparameters with the lowest prediction error.
-    dials_params <- dials::parameters(
-                               dials::min_n(),
-                               dials::tree_depth(),
-                               dials::learn_rate(),
-                               dials::loss_reduction()
-                             )
-    dials_grid <- dials::grid_max_entropy(
-                     dials_params,
-                     size = 10
-                     )
-    yardstick_metrics <- yardstick::metric_set(yardstick::roc_auc, yardstick::accuracy, yardstick::ppv)
-    grid <- tune::tune_grid(
-                    workflows::add_model(thyroid_workflow, spec = parsnip_tune),
-                    resamples = cv_folds,
-                    grid = dials_grid,
-                    metrics = yardstick_metrics,
-                    control = tune::control_grid(verbose = FALSE)
-                  )
-  } else if(model_type == "svm") {
-    print("Fitting Support Vector Machine")
-    parsnip_tune <- parsnip::svm_rbf(cost = tune()) |>
-      set_engine("kernlab") |>
-      set_mode("classification")
-    dials_grid <- dials::grid_regular(dials::cost(), levels = 20)
-    svm_grid <- tune::tune_grid(
-                        workflows::add_model(thyroid_workflow, parsnip_tune),
-                        resamples = cv_folds, ## cv_loo,
-                        grid = dials_grid
-                      )
-  }
+    ## Select the best model based on ROC Area Under the Curve and finalise the workflow by adding the tunde model and
+    ## best metric fit
+    best_metric_fit <- tuned_model |>
+        tune::select_best()
+    final_model <- tune::finalize_workflow(workflows::add_model(thyroid_workflow, spec = parsnip_tune), best_metric_fit)
+    ## Extract importance
+    paste0("Type of train : ", typeof(train)) |>
+        print()
+    ## importance <- parsnip::fit(train) |>
+    ##     hardhat::extract_fit_parsnip() |>
+    ##     vip::vi(lambda = final_model$penalty) |>
+    ##     dplyr::mutate("Importance (Absolute)" = abs(Importance),
+    ##                   Variable = forcats::fct_reorder(Variable, "Importance (Absolute)"))
 }
-mice_cart$imputed |>
+
+tuned_model <- mice_cart$imputed |>
   dplyr::filter(.imp == 1) |>
-  ## model_fitting(model_type = "lasso")
-  ## model_fitting(model_type = "elastic")
+  ## model_fitting(model_type = "elastic", mixture = 1)   ## LASSO
+  model_fitting(model_type = "elastic", mixture = 0.5) ## Elastic Net
   ## model_fitting(model_type = "forest")
   ## model_fitting(model_type = "xgboost")
-  model_fitting(model_type = "svm")
+  ## model_fitting(model_type = "svm")
 
+cart_imputed <- mice_cart$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))##  |>
+    ## dplyr::select(-.id)
+
+imputed_model <- cart_imputed |>
+    split(cart_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+                                   model_type = "elastic",
+                                   mixture = 0.5,
+                                   imputed = TRUE))
 
 ####################################################
 ## 2024-09-19 - Purrr with MICE
