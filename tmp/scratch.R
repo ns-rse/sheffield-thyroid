@@ -1,4 +1,5 @@
 library(dplyr)
+library(fastshap)
 library(ggplot2)
 library(ggdark)
 library(gtsummary)
@@ -18,6 +19,9 @@ library(tidymodels)
 library(tidyverse)
 library(vip)
 
+base_dir <- getwd()
+data_dir <- paste(base_dir, "data", sep="/")
+r_dir <- paste(data_dir, "r", sep="/")
 ## Load and retain only those with final_pathology
 df <- readRDS(paste(r_dir, "clean.rds", sep = "/"))
 df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep = "/"))
@@ -43,10 +47,16 @@ thyroid_workflow <- readRDS(file = paste(r_dir, "thyroid_workflow.rds", sep = "/
 #' @continuous vector Vector of continuous predictor variables.
 #' @categorical vector Vector of categorical/nominal predictor variables.
 #' @model_type str The type of model to fit, options are 'elastic', 'lasso' 'xgboost', 'svm'
-#' @mixture foat Mixture to use in Elastic Net ('elastic') models. '0' gives Ridge Regression, '1' LASSO. Default '0.5'.
+#' @mixture float Mixture to use in Elastic Net ('elastic') models. '0' gives Ridge Regression, '1' LASSO. Default
+#' '0.5'.
+#' @vi_method str The Variable Importance method used to extract importance. Default is 'shap' other options are
+#' 'model', 'firm' and 'permute'. See '?vip::vi' for more information.
+#' @vi_sort bool Whether to sort the Variable Importance output. See '?vip::vi' for more information. Default FALSE
+#' @vi_scale bool Whether to scale the Variable Importance output. See '?vip::vi' for more information. Default FALSE
+#' @vi_rank bool Whether to rank the Variable Importance output. See '?vip::vi' for more information. Default TRUE
 #' ... Hyperparameters to pass to the selected model_type
 #'
-#' @seealso [mice]
+#' @seealso [mice, vip]
 #' @export
 #' @examples
 model_fitting <- function(df,
@@ -76,6 +86,10 @@ model_fitting <- function(df,
                           ),
                           model_type = "lasso",
                           mixture = 0.5,
+                          vi_method = "model",  ## Ideally want to use 'snap' to make comparisons
+                          vi_sort = FALSE,
+                          vi_scale = FALSE,
+                          vi_rank = TRUE,
                           ...) {
     ## If this is an imputed dataset we need to remove -.imp and -.id variables
     if (imputed) {
@@ -90,8 +104,6 @@ model_fitting <- function(df,
         rsample::initial_split(prop = prop)
     train <- rsample::training(split)
     test <- rsample::testing(split)
-    paste0("Type of train : ", typeof(train)) |>
-        print()
     ## Create k-fold validation on training data
     cv_folds <- rsample::vfold_cv(train, v = v, repeats = repeats)
     ## Setup a recipe, the steps involved removing individuals with missing data
@@ -111,7 +123,7 @@ model_fitting <- function(df,
     ## @ns-rse 2024-09-20 : Refactor and abstract out common components have parsnip::() and grid_regular() set in each
     ## conditional section and a final tune::tune_grid() that takes whatever these values are set to.
     if (model_type == "elastic") {
-        print(paste0("Fitting Elastic Net (mixture : ", mixture, ")", sep=""))
+        message(paste0("Fitting Elastic Net (mixture : ", mixture, ")", sep=""))
         parsnip_tune <- parsnip::logistic_reg(
             penalty = hardhat::tune(),
             mixture = mixture
@@ -125,7 +137,7 @@ model_fitting <- function(df,
         ##     grid = dials_grid
         ## )
     } else if (model_type == "forest") {
-        print("Fitting Random Forest")
+        message("Fitting Random Forest")
         ## @ns-rse 2024-09-20 : For flexibility we could set things up to specify different engines here
         parsnip_tune <- parsnip::rand_forest(
             mtry = hardhat::tune(),
@@ -145,7 +157,7 @@ model_fitting <- function(df,
         ##     grid = dials_grid
         ## )
     } else if (model_type == "xgboost") {
-        print("Fitting Gradient Boosting")
+        message("Fitting Gradient Boosting")
         parsnip_tune <- parsnip::boost_tree(
             mode = "classification",
             trees = 100,
@@ -168,26 +180,16 @@ model_fitting <- function(df,
             dials_params,
             size = 10
         )
-        ## yardstick_metrics <- yardstick::metric_set(yardstick::roc_auc, yardstick::accuracy, yardstick::ppv)
-        ## grid <- tune::tune_grid(
-        ##     workflows::add_model(thyroid_workflow, spec = parsnip_tune),
-        ##     resamples = cv_folds,
-        ##     grid = dials_grid,
-        ##     metrics = yardstick_metrics,
-        ##     control = tune::control_grid(verbose = FALSE)
-        ## )
-    } else if (model_type == "svm") {
-        print("Fitting Support Vector Machine")
-        parsnip_tune <- parsnip::svm_rbf(cost = tune()) |>
-          parsnip::set_mode("classification") |>
-          parsnip::set_engine("kernlab")
-        dials_grid <- dials::grid_regular(dials::cost(), levels = 20)
-        ## svm_grid <- tune::tune_grid(
-        ##                     workflows::add_model(thyroid_workflow, parsnip_tune),
-        ##                     resamples = cv_folds, ## cv_loo,
-        ##                     grid = dials_grid
-        ##                   )
     }
+    ## Not bothering with SVM modelling, there are errors in the calculations during modelling and no methods available
+    ## to extract Variable Importance
+    ## else if (model_type == "svm") {
+    ##     message("Fitting Support Vector Machine")
+    ##     parsnip_tune <- parsnip::svm_rbf(cost = tune()) |>
+    ##       parsnip::set_mode("classification") |>
+    ##       parsnip::set_engine("kernlab")
+    ##     dials_grid <- dials::grid_regular(dials::cost(), levels = 20)
+    ## }
     ## Set common metrics and control
     yardstick_metrics <- yardstick::metric_set(yardstick::roc_auc,
                                                yardstick::accuracy,
@@ -199,42 +201,112 @@ model_fitting <- function(df,
                              resamples = cv_folds, ## cv_loo,
                              grid = dials_grid,
                              metrics = yardstick_metrics,
-                             contrl = control
+                             control = control
                          )
     ## Select the best model based on ROC Area Under the Curve and finalise the workflow by adding the tunde model and
     ## best metric fit
     best_metric_fit <- tuned_model |>
         tune::select_best()
     final_model <- tune::finalize_workflow(workflows::add_model(thyroid_workflow, spec = parsnip_tune), best_metric_fit)
+    fit <- final_model |>
+        fit(train)
     ## Extract importance
-    paste0("Type of train : ", typeof(train)) |>
-        print()
-    ## importance <- parsnip::fit(train) |>
-    ##     hardhat::extract_fit_parsnip() |>
-    ##     vip::vi(lambda = final_model$penalty) |>
-    ##     dplyr::mutate("Importance (Absolute)" = abs(Importance),
-    ##                   Variable = forcats::fct_reorder(Variable, "Importance (Absolute)"))
+    importance <- fit |>
+        hardhat::extract_fit_parsnip() |>
+        vip::vi(method = vi_method,
+                sort = vi_sort,
+                scale = vi_scale,
+                rank = vi_rank)
+    ## Add Sign if not present
+    if (!("Sign" %in% colnames(importance))) {
+        importance <- importance |>
+            dplyr::mutate(Sign = "POS")
+    }
+    ## Plot importance
+    importance_plot <- importance |>
+        ggplot2::ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
+        ggplot2::geom_col() +
+        ggdark::dark_theme_minimal()
+    ## Make predictions on test subset
+    test[".pred_class"] <- fit |>
+        predict(test)
+    test[".pred_prob"] <- fit |>
+        predict(test, type="prob")
+    ## ToDo - Remove hard coding of final_pathology from yardstick calls (enquotes?)
+    test_summary_metrics <- test |>
+        yardstick::conf_mat(final_pathology, .pred_class) |>
+        summary()
+    auc <- test |>
+        yardstick::roc_auc(final_pathology, .pred_prob)
+    test_summary_metrics <- rbind(test_summary_metrics, auc)
+    test_roc_curve <- test |>
+        ## ToDo - Remove hard coding of final_pathology
+        yardstick::roc_curve(final_pathology, .pred_prob)
+    test_roc_curve_plot <- test_roc_curve |>
+        ggplot2::ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+        ggplot2::geom_path() +
+        ggplot2::geom_abline(lty = 3) +
+        ggplot2::coord_equal() +
+        ggdark::dark_theme_minimal()
+    ## Combine results into a single list for returning
+    results <- list()
+    results$train <- train
+    results$test <- test
+    results$folds <- cv_folds
+    results$recipe <- recipe
+    results$workflow <- workflow
+    results$parsnip <- parsnip_tune
+    results$grid <- dials_grid
+    results$yardstick <- yardstick_metrics
+    results$control <- control
+    results$best <- best_metric_fit
+    results$final_model <- final_model
+    results$importance <- importance
+    results$importance_plot <- importance_plot
+    results$fit <- fit
+    results$test_summary_metrics <- test_summary_metrics
+    results$test_roc_curve <- test_roc_curve
+    results$test_roc_curve_plot <- test_roc_curve_plot
+    results
 }
-
-tuned_model <- mice_cart$imputed |>
+elastic_model <- mice_cart$imputed |>
   dplyr::filter(.imp == 1) |>
   ## model_fitting(model_type = "elastic", mixture = 1)   ## LASSO
   model_fitting(model_type = "elastic", mixture = 0.5) ## Elastic Net
-  ## model_fitting(model_type = "forest")
-  ## model_fitting(model_type = "xgboost")
-  ## model_fitting(model_type = "svm")
 
+rforest_model <- mice_cart$imputed |>
+  dplyr::filter(.imp == 1) |>
+  model_fitting(model_type = "forest")
+
+lasso_model <- mice_cart$imputed |>
+  dplyr::filter(.imp == 1) |>
+  model_fitting(model_type = "elastic", mixture = 1)   ## LASSO
+
+xgb_model <- mice_cart$imputed |>
+  dplyr::filter(.imp == 1) |>
+  model_fitting(model_type = "xgboost")
+
+
+## Map across imputed data sets first remove Original and remove the value from .imp levels
 cart_imputed <- mice_cart$imputed |>
     dplyr::filter(.imp != "Original") |>
-    dplyr::mutate(.imp = droplevels(.imp))##  |>
-    ## dplyr::select(-.id)
-
+    dplyr::mutate(.imp = droplevels(.imp))
 imputed_model <- cart_imputed |>
     split(cart_imputed$.imp) |>
     purrr::map(\(df) model_fitting(df,
                                    model_type = "elastic",
                                    mixture = 0.5,
                                    imputed = TRUE))
+
+## ToDo...
+##
+##
+## XGBoost : Need to get feature names from importance if we want to use Shap values/method (useful for making
+## comparisons of importance).
+## Combine estimates by averaging using the AIC as weight, need to extract likelihood for each model may be able to
+## leverage mitools (https://cran.r-project.org/web/packages/mitools/index.html) although we could potentially use
+## mice::pool() to get the estimates directly and then mitools to get p-values see
+## https://francish.net/post/multiple-imputation-in-r-with-regression-output/
 
 ####################################################
 ## 2024-09-19 - Purrr with MICE
