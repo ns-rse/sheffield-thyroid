@@ -583,10 +583,11 @@ cowplot::plot_grid(## mice_pmm$scatter$cervical_lymphadenopathy + theme(legend.p
 #| label: tbl-imputation-summary-pmm
 #| tbl-caption: Summary of data imputed via PMM.
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 mice_pmm$imputed |> gtsummary::tbl_summary(by=".imp")
+
 ```
 
 ## CART
@@ -595,7 +596,7 @@ mice_pmm$imputed |> gtsummary::tbl_summary(by=".imp")
 #| label: tbl-imputation-summary-cart
 #| tbl-caption: Summary of data imputed via CART.
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 mice_cart$imputed |> gtsummary::tbl_summary(by=".imp")
@@ -608,7 +609,7 @@ mice_cart$imputed |> gtsummary::tbl_summary(by=".imp")
 #| label: tbl-imputation-summary-rf
 #| tbl-caption: Summary of data imputed via Random Forest.
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 mice_rf$imputed |> gtsummary::tbl_summary(by = ".imp")

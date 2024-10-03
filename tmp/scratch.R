@@ -227,6 +227,33 @@ model_fitting <- function(df,
         ggplot2::ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
         ggplot2::geom_col() +
         ggdark::dark_theme_minimal()
+    ########################################################
+    ## Summarise model on train data set                  ##
+    ########################################################
+    ## Make predictions on train subset
+    train[".pred_class"] <- fit |>
+        predict(train)
+    train[".pred_prob"] <- fit |>
+        predict(train, type="prob")
+    ## ToDo - Remove hard coding of final_pathology from yardstick calls (enquotes?)
+    train_summary_metrics <- train |>
+        yardstick::conf_mat(final_pathology, .pred_class) |>
+        summary()
+    auc <- train |>
+        yardstick::roc_auc(final_pathology, .pred_prob)
+    train_summary_metrics <- rbind(train_summary_metrics, auc)
+    train_roc_curve <- train |>
+        ## ToDo - Remove hard coding of final_pathology
+        yardstick::roc_curve(final_pathology, .pred_prob)
+    train_roc_curve_plot <- train_roc_curve |>
+        ggplot2::ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+        ggplot2::geom_path() +
+        ggplot2::geom_abline(lty = 3) +
+        ggplot2::coord_equal() +
+        ggdark::dark_theme_minimal()
+    ########################################################
+    ## Summarise model on train data set                  ##
+    ########################################################
     ## Make predictions on test subset
     test[".pred_class"] <- fit |>
         predict(test)
@@ -263,7 +290,13 @@ model_fitting <- function(df,
     results$final_model <- final_model
     results$importance <- importance
     results$importance_plot <- importance_plot
+    if (model_type == "elastic") {
+        results$broom_estimate <- fit |> broom::tidy()
+    }
     results$fit <- fit
+    results$train_summary_metrics <- train_summary_metrics
+    results$train_roc_curve <- train_roc_curve
+    results$train_roc_curve_plot <- train_roc_curve_plot
     results$test_summary_metrics <- test_summary_metrics
     results$test_roc_curve <- test_roc_curve
     results$test_roc_curve_plot <- test_roc_curve_plot
@@ -287,16 +320,87 @@ xgb_model <- mice_cart$imputed |>
   model_fitting(model_type = "xgboost")
 
 
-## Map across imputed data sets first remove Original and remove the value from .imp levels
+## Map across imputed data sets.
+## 1. Extract the data from the mice object
+## 2. Remove Original data set.
+## 3. Remove the "Original" value from .imp levels
+## 4. Save to cart_imputed
 cart_imputed <- mice_cart$imputed |>
     dplyr::filter(.imp != "Original") |>
     dplyr::mutate(.imp = droplevels(.imp))
-imputed_model <- cart_imputed |>
+
+## 1. Split the cart_imputed data by the .imp variable (which indicates which imputation the data is from)
+## 2. The first argument to purrr::map(), is an imputed data set and referenced by '\(df)' this means we can use 'df' in
+##    the function we are mapping to, in this case model_fitting() so it will receive an imputed dataset.
+## 3. The rest of the arguments to model_fitting() follow.
+imputed_cart_model_elastic <- cart_imputed |>
     split(cart_imputed$.imp) |>
     purrr::map(\(df) model_fitting(df,
-                                   model_type = "elastic",
-                                   mixture = 0.5,
-                                   imputed = TRUE))
+        model_type = "elastic",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+
+
+## Combine and tabulate (very hacky, don't have time to write elegant code)...
+## - importance
+## - summary statistics
+## - ROC
+#' Extract and combine summary statistics from analysis of multiple imputed data sets
+#'
+#' @imputed_models list A list of imputed models from having mapped model_fitting() with purrr() on an imputed data set.
+#' @model_type str The type of model that has been fitted across the imputed datasets
+#'
+tidy_imputed_models <- function(imputed_models, model_type) {
+    results <- list()
+    ## Extract importance
+    importance <- imputed_models |>
+        purrr::map(`[[`, "importance") |>
+        dplyr::bind_rows(.id = "imputation") |>
+        ## tidyr::spread(key = imputation, value = Importance)
+        tidyr::pivot_wider(names_from = imputation, values_from = Importance)
+    if (model_type %in% c("elastic", "xgboost")){
+        importance <- importance |>
+            dplyr::arrange(Variable, Sign)
+    }
+    else {
+        importance <- importance |>
+            dplyr::arrange(Variable)
+    }
+    ## Extract Summary Statistics for test and train
+    test_metrics <- imputed_cart_model |>
+        purrr::map(`[[`, "test_summary_metrics") |>
+        dplyr::bind_rows(.id = "imputation") |>
+        ## dplyr::select(-.estimate) |>
+        ## tidyr::spread(key = imputation, value = .estimator)
+        tidyr::pivot_wider(names_from = imputation, values_from = .estimate)
+    train_metrics <- imputed_cart_model |>
+        purrr::map(`[[`, "train_summary_metrics") |>
+        dplyr::bind_rows(.id = "imputation") |>
+        ## dplyr::select(-.estimate) |>
+        tidyr::spread(key = imputation, value = .estimate)
+    ## Extract ROC curves (NB these are not converted to wide format to simplify plotting)
+    test_roc_metrics <- imputed_cart_model |>
+        purrr::map(`[[`, "test_roc_curve") |>
+        dplyr::bind_rows(.id = "imputation")
+    train_roc_metrics <- imputed_cart_model |>
+        purrr::map(`[[`, "train_roc_curve") |>
+        dplyr::bind_rows(.id = "imputation")
+    ## TODO - Plot test and train ROC curves coloured by imputation
+
+    ## Add all summaries to results
+    results$importance <- importance
+    results$test_metrics <- test_metrics
+    results$train_metrics <- train_metrics
+    results$test_roc_metrics <- test_roc_metrics
+    results$train_roc_metrics <- train_roc_metrics
+    results
+}
+test <- tidy_imputed_models(imputed_cart_model_elastic)
+test$test_roc_metrics |>
+    ## dplyr::filter(imputation == 1) |>
+    dplyr::arrange(imputation, .threshold, -specificity) |>
+    ggplot2::ggplot(aes(1 - specificity, sensitivity, color = imputation)) + geom_line()
 
 ## ToDo...
 ##
