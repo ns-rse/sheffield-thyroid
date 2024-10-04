@@ -370,13 +370,19 @@ data across all co-variates imputed datasets were analysed instead.
 
 <!-- {{< include sections/_elastic.qmd >}} -->
 
+{{< include sections/_elastic_imputed.qmd >}}
+
 #### Random Forest
 
 <!-- {{< include sections/_rforest.qmd >}} -->
 
+{{< include sections/_forest_imputed.qmd >}}
+
 #### Gradient Boosting
 
-<!-- {{< include sections/_gradientboost.qmd >}} -->
+<!-- {{< include sections/_xgboost.qmd >}} -->
+
+{{< include sections/_xgboost_imputed.qmd >}}
 
 
 <!-- #### SVM -->
