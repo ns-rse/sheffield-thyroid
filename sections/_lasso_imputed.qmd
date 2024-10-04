@@ -1,0 +1,144 @@
+``` {.r}
+#| label: fig-imputed-pmm-lasso
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+load(file = paste(r_dir, "imputed_cart_model_lasso.rds", sep = "/"))
+load(file = paste(r_dir, "imputed_pmm_model_lasso.rds", sep = "/"))
+load(file = paste(r_dir, "imputed_forest_model_lasso.rds", sep = "/"))
+
+```
+
+
+::: {.panel-tabset}
+
+## PMM
+
+``` {.r}
+#| label: fig-imputed-pmm-lasso
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+cowplot::plot_grid(imputed_pmm_model_lasso[[1]]$importance_plot,
+                   imputed_pmm_model_lasso[[1]]$train_roc_curve_plot,
+                   imputed_pmm_model_lasso[[1]]$test_roc_curve_plot,
+                   imputed_pmm_model_lasso[[2]]$importance_plot,
+                   imputed_pmm_model_lasso[[2]]$train_roc_curve_plot,
+                   imputed_pmm_model_lasso[[2]]$test_roc_curve_plot,
+                   imputed_pmm_model_lasso[[3]]$importance_plot,
+                   imputed_pmm_model_lasso[[3]]$train_roc_curve_plot,
+                   imputed_pmm_model_lasso[[3]]$test_roc_curve_plot,
+                   imputed_pmm_model_lasso[[4]]$importance_plot,
+                   imputed_pmm_model_lasso[[4]]$train_roc_curve_plot,
+                   imputed_pmm_model_lasso[[4]]$test_roc_curve_plot,
+                   imputed_pmm_model_lasso[[5]]$importance_plot,
+                   imputed_pmm_model_lasso[[5]]$train_roc_curve_plot,
+                   imputed_pmm_model_lasso[[5]]$test_roc_curve_plot,
+                   # labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 5,
+                   ncol = 3)
+
+```
+
+``` {.r}
+#| label: tab-imputed-pmm-lasso-importance
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Importance of features from LASSO model of five PMM imputed datasets."
+tidy_pmm_lasso$importance |>
+    knitr::kable(caption = "Importance of features from LASSO model of five PMM imputed datasets.")
+
+```
+
+``` {.r}
+#| label: tab-imputed-pmm-lasso-train-metrics
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Classification metrics from LASSO model of five PMM imputed datasets (Training Data)."
+tidy_pmm_lasso$train_metrics |>
+    knitr::kable(caption = "Classification metrics from LASSO model of five PMM imputed datasets (Training Data).",
+                 digits = 4)
+
+```
+
+``` {.r}
+#| label: tab-imputed-pmm-lasso-test-metrics
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Classification metrics from LASSO model of five PMM imputed datasets (Testing Data)."
+tidy_pmm_lasso$test_metrics |>
+    knitr::kable(caption = "Classification metrics from LASSO model of five PMM imputed datasets (Testing Data).",
+                 digits = 4)
+
+```
+
+## CART
+
+``` {.r}
+#| label: fig-imputed-cart-lasso
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+cowplot::plot_grid(imputed_cart_model_lasso[[1]]$importance_plot,
+                   imputed_cart_model_lasso[[1]]$train_roc_curve_plot,
+                   imputed_cart_model_lasso[[1]]$test_roc_curve_plot,
+                   imputed_cart_model_lasso[[2]]$importance_plot,
+                   imputed_cart_model_lasso[[2]]$train_roc_curve_plot,
+                   imputed_cart_model_lasso[[2]]$test_roc_curve_plot,
+                   imputed_cart_model_lasso[[3]]$importance_plot,
+                   imputed_cart_model_lasso[[3]]$train_roc_curve_plot,
+                   imputed_cart_model_lasso[[3]]$test_roc_curve_plot,
+                   imputed_cart_model_lasso[[4]]$importance_plot,
+                   imputed_cart_model_lasso[[4]]$train_roc_curve_plot,
+                   imputed_cart_model_lasso[[4]]$test_roc_curve_plot,
+                   imputed_cart_model_lasso[[5]]$importance_plot,
+                   imputed_cart_model_lasso[[5]]$train_roc_curve_plot,
+                   imputed_cart_model_lasso[[5]]$test_roc_curve_plot,
+                   # labels = c("PMM", "Cart", "Random Forest"),
+                   nrow = 5,
+                   ncol = 3)
+
+```
+
+## Random Forest
+
+``` {.r}
+#| label: fig-imputed-rf-lasso
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| out-width: "80%"
+cowplot::plot_grid(imputed_rf_model_lasso[[1]]$importance_plot,
+                   imputed_rf_model_lasso[[1]]$train_roc_curve_plot,
+                   imputed_rf_model_lasso[[1]]$test_roc_curve_plot,
+                   imputed_rf_model_lasso[[2]]$importance_plot,
+                   imputed_rf_model_lasso[[2]]$train_roc_curve_plot,
+                   imputed_rf_model_lasso[[2]]$test_roc_curve_plot,
+                   imputed_rf_model_lasso[[3]]$importance_plot,
+                   imputed_rf_model_lasso[[3]]$train_roc_curve_plot,
+                   imputed_rf_model_lasso[[3]]$test_roc_curve_plot,
+                   imputed_rf_model_lasso[[4]]$importance_plot,
+                   imputed_rf_model_lasso[[4]]$train_roc_curve_plot,
+                   imputed_rf_model_lasso[[4]]$test_roc_curve_plot,
+                   imputed_rf_model_lasso[[5]]$importance_plot,
+                   imputed_rf_model_lasso[[5]]$train_roc_curve_plot,
+                   imputed_rf_model_lasso[[5]]$test_roc_curve_plot,
+                   # labels = c("PMM", "Rf", "Random Forest"),
+                   nrow = 5,
+                   ncol = 3)
+
+```
+
+:::
