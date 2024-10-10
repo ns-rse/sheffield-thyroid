@@ -362,32 +362,27 @@ data across all co-variates imputed datasets were analysed instead.
 
 #### LASSO
 
-<!-- {{< include sections/_lasso.qmd >}} -->
+<!-- OLD {{< include sections/_lasso.qmd >}} -->
 
-{{< include sections/_lasso_imputed.qmd >}}
+<!-- {{< include sections/_lasso_imputed.qmd >}} -->
 
 #### Elastic Net
 
-<!-- {{< include sections/_elastic.qmd >}} -->
+<!-- OLD {{< include sections/_elastic.qmd >}} -->
 
-{{< include sections/_elastic_imputed.qmd >}}
+<!-- {{< include sections/_elastic_imputed.qmd >}} -->
 
 #### Random Forest
 
-<!-- {{< include sections/_rforest.qmd >}} -->
+<!-- OLD {{< include sections/_rforest.qmd >}} -->
 
-{{< include sections/_forest_imputed.qmd >}}
+<!-- {{< include sections/_forest_imputed.qmd >}} -->
 
 #### Gradient Boosting
 
-<!-- {{< include sections/_xgboost.qmd >}} -->
+<!-- OLD {{< include sections/_xgboost.qmd >}} -->
 
-{{< include sections/_xgboost_imputed.qmd >}}
-
-
-<!-- #### SVM -->
-
-<!-- {{< include sections/_svm.qmd >}} -->
+<!-- {{< include sections/_xgboost_imputed.qmd >}} -->
 
 
 #### Explainability
