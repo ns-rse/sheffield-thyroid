@@ -11,7 +11,7 @@
 #' @outcome Outcome variable
 #' @continuous vector Vector of continuous predictor variables.
 #' @categorical vector Vector of categorical/nominal predictor variables.
-#' @model_type str The type of model to fit, options are 'elastic', 'lasso' 'xgboost', 'svm'
+#' @model_type str The type of model to fit, options are 'elastic', 'lasso' 'xgboost', 'forest'
 #' @mixture float Mixture to use in Elastic Net ('elastic') models. '0' gives Ridge Regression, '1' LASSO. Default
 #' '0.5'.
 #' @vi_method str The Variable Importance method used to extract importance. Default is 'shap' other options are
@@ -85,8 +85,6 @@ model_fitting <- function(df,
         workflows::add_recipe(thyroid_recipe)
     ## Conditionally fit the model based on the requested method, this involves setting up a parsnip model specification
     ## and then tune it via tune::tune_grid()
-    ## @ns-rse 2024-09-20 : Refactor and abstract out common components have parsnip::() and grid_regular() set in each
-    ## conditional section and a final tune::tune_grid() that takes whatever these values are set to.
     if (model_type == "elastic") {
         message(paste0("Fitting Elastic Net (mixture : ", mixture, ")", sep=""))
         parsnip_tune <- parsnip::logistic_reg(
@@ -96,11 +94,6 @@ model_fitting <- function(df,
             parsnip::set_mode("classification") |>
             parsnip::set_engine("glmnet")
         dials_grid <- dials::grid_regular(dials::penalty(), levels = 50)
-        ## grid <- tune::tune_grid(
-        ##     object = workflows::add_model(thyroid_workflow, parsnip_tune),
-        ##     resamples = cv_folds,
-        ##     grid = dials_grid
-        ## )
     } else if (model_type == "forest") {
         message("Fitting Random Forest")
         ## @ns-rse 2024-09-20 : For flexibility we could set things up to specify different engines here
@@ -116,11 +109,6 @@ model_fitting <- function(df,
             dials::min_n(range = c(2, 25)),
             levels = 3
         )
-        ## grid <- tune::tune_grid(
-        ##     object = workflows::add_model(thyroid_workflow, parsnip_tune),
-        ##     resamples = cv_folds,
-        ##     grid = dials_grid
-        ## )
     } else if (model_type == "xgboost") {
         message("Fitting Gradient Boosting")
         parsnip_tune <- parsnip::boost_tree(
@@ -146,19 +134,11 @@ model_fitting <- function(df,
             size = 10
         )
     }
-    ## Not bothering with SVM modelling, there are errors in the calculations during modelling and no methods available
-    ## to extract Variable Importance
-    ## else if (model_type == "svm") {
-    ##     message("Fitting Support Vector Machine")
-    ##     parsnip_tune <- parsnip::svm_rbf(cost = tune()) |>
-    ##       parsnip::set_mode("classification") |>
-    ##       parsnip::set_engine("kernlab")
-    ##     dials_grid <- dials::grid_regular(dials::cost(), levels = 20)
-    ## }
     ## Set common metrics and control
     yardstick_metrics <- yardstick::metric_set(yardstick::roc_auc,
                                                yardstick::accuracy,
-                                               yardstick::ppv)
+                                               yardstick::ppv,
+                                               yardstick::npv)
     control <- tune::control_grid(verbose = FALSE)
     ## Tune the model
     tuned_model <- tune::tune_grid(
@@ -195,21 +175,26 @@ model_fitting <- function(df,
     ########################################################
     ## Summarise model on train data set                  ##
     ########################################################
-    ## Make predictions on train subset
+    ## Make classification predictions on train subset
     train[".pred_class"] <- fit |>
         predict(train)
+    ## Make probability predictions on train subset
     train[".pred_prob"] <- fit |>
         predict(train, type="prob")
-    ## ToDo - Remove hard coding of final_pathology from yardstick calls (enquotes?)
+    ## Generate summary statistics from confusion matrix on train subset
     train_summary_metrics <- train |>
         yardstick::conf_mat(final_pathology, .pred_class) |>
         summary()
+    ## Extract Area Under the Curve from ROC on train subset
     auc <- train |>
         yardstick::roc_auc(final_pathology, .pred_prob)
+    ## Bind summary_metrics and auc into a single data frame
     train_summary_metrics <- rbind(train_summary_metrics, auc)
+    ## Extract ROC curve on train subset
     train_roc_curve <- train |>
         ## ToDo - Remove hard coding of final_pathology
         yardstick::roc_curve(final_pathology, .pred_prob)
+    ## Plot ROC curve on train subset
     train_roc_curve_plot <- train_roc_curve |>
         ggplot2::ggplot(aes(x = 1 - specificity, y = sensitivity)) +
         ggplot2::geom_path() +
@@ -217,23 +202,28 @@ model_fitting <- function(df,
         ggplot2::coord_equal() +
         ggdark::dark_theme_minimal()
     ########################################################
-    ## Summarise model on train data set                  ##
+    ## Summarise model on test data set                   ##
     ########################################################
-    ## Make predictions on test subset
+    ## Make classification predictions on test subset
     test[".pred_class"] <- fit |>
         predict(test)
+    ## Make probability predictions on test subset
     test[".pred_prob"] <- fit |>
         predict(test, type="prob")
-    ## ToDo - Remove hard coding of final_pathology from yardstick calls (enquotes?)
+    ## Generate summary statistics from confusion matrix on test subset
     test_summary_metrics <- test |>
         yardstick::conf_mat(final_pathology, .pred_class) |>
         summary()
+    ## Extract Area Under the Curve from ROC on test subset
     auc <- test |>
         yardstick::roc_auc(final_pathology, .pred_prob)
+    ## Bind summary_metrics and auc into a single data frame
     test_summary_metrics <- rbind(test_summary_metrics, auc)
+    ## Extract ROC curve on test subset
     test_roc_curve <- test |>
         ## ToDo - Remove hard coding of final_pathology
         yardstick::roc_curve(final_pathology, .pred_prob)
+    ## Plot ROC curve on test subset
     test_roc_curve_plot <- test_roc_curve |>
         ggplot2::ggplot(aes(x = 1 - specificity, y = sensitivity)) +
         ggplot2::geom_path() +
@@ -309,7 +299,7 @@ tidy_imputed_models <- function(imputed_models, model_type) {
     train_roc_metrics <- imputed_models |>
         purrr::map(`[[`, "train_roc_curve") |>
         dplyr::bind_rows(.id = "imputation")
-    ## TODO - Plot test and train ROC curves coloured by imputation
+    ## TODO - Plot test and train ROC curves on the same graph coloured by imputation
     ## Add all summaries to results
     results$importance <- importance
     results$test_metrics <- test_metrics

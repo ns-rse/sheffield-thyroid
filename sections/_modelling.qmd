@@ -15,6 +15,8 @@ source("r/functions.R")
 #| echo: false
 #| output: false
 #| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for LASSO is 1.0 (for Elastic Net it is 0.5)
 cart_imputed <- mice_cart$imputed |>
     dplyr::filter(.imp != "Original") |>
     dplyr::mutate(.imp = droplevels(.imp))
@@ -40,6 +42,8 @@ save(imputed_cart_model_lasso,
 #| echo: false
 #| output: false
 #| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for LASSO is 1.0 (for Elastic Net it is 0.5)
 rf_imputed <- mice_rf$imputed |>
     dplyr::filter(.imp != "Original") |>
     dplyr::mutate(.imp = droplevels(.imp))
@@ -65,6 +69,8 @@ save(imputed_rf_model_lasso,
 #| echo: false
 #| output: false
 #| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for LASSO is 1.0 (for Elastic Net it is 0.5)
 pmm_imputed <- mice_pmm$imputed |>
     dplyr::filter(.imp != "Original") |>
     dplyr::mutate(.imp = droplevels(.imp))
@@ -90,6 +96,8 @@ save(imputed_pmm_model_lasso,
 #| echo: false
 #| output: false
 #| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for Elastic Net is 0.5 (for LASSO it is 1.0)
 cart_imputed <- mice_cart$imputed |>
     dplyr::filter(.imp != "Original") |>
     dplyr::mutate(.imp = droplevels(.imp))
@@ -115,6 +123,8 @@ save(imputed_cart_model_elastic,
 #| echo: false
 #| output: false
 #| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for Elastic Net is 0.5 (for LASSO it is 1.0)
 rf_imputed <- mice_rf$imputed |>
     dplyr::filter(.imp != "Original") |>
     dplyr::mutate(.imp = droplevels(.imp))
@@ -140,6 +150,8 @@ save(imputed_rf_model_elastic,
 #| echo: false
 #| output: false
 #| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for Elastic Net is 0.5 (for LASSO it is 1.0)
 pmm_imputed <- mice_pmm$imputed |>
     dplyr::filter(.imp != "Original") |>
     dplyr::mutate(.imp = droplevels(.imp))
