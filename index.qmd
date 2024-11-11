@@ -1,0 +1,427 @@
+---
+title: "An investigation of the predictors of thyroid cancer in patients with thyroid nodules"
+author:
+  - name: Ovie Edafe
+    orcid: 0000-0002-6205-806X
+    corresponding: true
+    email: ovieedafe@hotmail.co.uk
+    roles:
+      - Researcher
+    affiliations:
+      - Department of Oncology & Metabolism, University of Sheffield
+  - name: Neil Shephard
+    orcid: 000-0001-8301-6857
+    corresponding: false
+    email:
+    roles:
+      - Researcher
+    affiliations:
+      - Research Software Engineer, Department of Computer Science, University of Sheffield
+  - name: Karen Sisley
+    orcid: 0000-0002-5565-2618
+    corresponding: false
+    roles:
+      - Researcher
+    affiliations:
+      - Senior Lecturer, Clinical Medicine, School of Medicine and Population Health, University of Sheffield
+  - name: Sabapathy P Balasubramanian
+    orcid: 0000-0001-5953-2843
+    corresponding: false
+    roles:
+      - Researcher
+    affiliations:
+      - Directorate of General Surgery, Sheffield Teaching Hospitals NHS Foundation Trust
+abstract: |
+  An abstract summarising the work undertaken and the overall conclusions can be placed here. Sub-headings are currently
+  removed because they conflict with those in the body of the text and mess up the links in the Table of Contents.
+keywords:
+  - Thyroid nodules
+  - Thyroid cancer
+plain-language-summary: |
+    Plain language summary
+key-points:
+  - Key point 1
+  - Key point 2
+date: 2024-04-26
+bibliography: references.bib
+citation:
+  container-title: "Sheffield study on thyroid nodules"
+number-sections: true
+notebook-preview-options:
+  preview: false
+execute:
+  cache: true
+---
+
+```{r}
+#| label: setup
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+
+## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
+library(Hmisc)
+library(dplyr)
+library(ggdark)
+library(ggplot2)
+library(gtsummary)
+library(knitr)
+library(mice)
+library(naniar)
+library(readr)
+library(rmarkdown)
+library(visdat)
+## Libraries for Tidymodelling
+library(dials)
+library(furrr)
+library(kernlab)
+library(knitr)
+library(purrr)
+library(tidymodels)
+library(tidyverse)
+library(vip)
+
+
+## Set global options
+options(digits = 3)
+train <- 0.75
+test <- 0.25
+
+## Set directories based on current location
+base_dir <- getwd()
+data_dir <- paste(base_dir, "data", sep = "/")
+csv_dir <- paste(data_dir, "csv", sep = "/")
+r_dir <- paste(data_dir, "r", sep = "/")
+r_scripts <- paste(base_dir, "r", sep = "/")
+
+## Load data
+##
+## The following line runs the `r/clean.R` script which reads the data from CSV and cleans/tidies it.
+## If something has changed in that file or the underlying data (in `data/csv/sheffield_thyroid_module.R`) then this
+## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
+## source("r/clean.R")
+## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
+## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
+df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
+
+## Load df_complete which has observations with missing final_pathology removed and has subset the variables.
+df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep="/"))
+
+```
+
+
+## Introduction
+
+Thyroid nodules are common. The challenge in the management of thyroid nodules is differentiating between benign and
+malignant nodule thyroid nodules.The use fine needle aspiration and cytology (FNAC) still leaves around 20% of
+patients that cannot be clearly classified as either benign or malignant. This scenario traditionally leads to
+diagnostic hemithyroidectomy for definitive histology. Other clinical variables such as patients' demographics, clinical
+and biochemical factors have been shown to be
+associated with thyroid cancer in patients with thyroid nodules. This has been utilised in studies evaluating
+predictors of thyroid cancer with a view of creating a model to aid prediction.
+Standard practice on the management of thyroid nodules does not utilise these non ultrasound and non cytological
+factors. Combination of these variables considered to be significant with ultrasound and cytological characteristics may
+improve management of patients with thyroid nodules.
+Thyroid nodules are increasingly being incidentally detected with increased use of imaging in the evaluation of non
+thyroid related pathologies. Thus, leading to increase investigation of thyroid nodules and subsequent increased number
+of thyroid operations in non diagnostic cases.
+There are morbidities associated with thyroid surgery including scar, recurrent laryngeal nerve injury,
+hypothyroidism and hypoparathyroidism.
+We performed a systematic review to evaluate for predictors of thyroid cancer specifically in patients presenting
+with thyroid nodules.
+The systematic review a number of potential important variables that may be useful in the prediction of thyroid cancer
+in patients with thyroid nodules. The aim of this study was to evaluate the predictors of thyroid cancer with a view of
+improving prediction of thyroid cancer using computer age statistical inference techniques (@Efron2016Jul).
+
+
+## Methods
+
+This study was reported as per the Strengthening the Reporting of Observational Studies in Epidemiology (STROBE) guidelines
+
+### Study design
+
+This was a retrospective cohort study.
+
+### Setting
+
+The study was conducted at the Sheffield Teaching hospitals NHS Foundation Trusts. This is a tertiary referral centre
+for the management of thyroid cancer
+
+### Participants
+
+We included all consecutive patients who presented with thyroid nodule(s) or that were found to have thyroid nodule(s)
+on ultrasound done for thyroid pathology or for other non thyroid related pathologies
+
+### Variables
+Variable evaluated was based on findings from a systematic review evaluating predictors of thyroid cancer in patients
+with thyroid nodules. Data on the following variables were collected: patient demographics (age, gender, ethnicity),
+nodule presentation (incidental nodule, palpable nodule, rapid enlargement, compressive symptoms, vocal paresis), past
+medical history (hypertension, Graves' disease, Hashimotos' thyroiditis, family history of thyroid cancer, exposure to
+neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics ([British
+Thyroid Association ultrasound (BTA U)][bta_classification]), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
+Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, and histological diagnosis.
+
+### Data source
+
+Data was collected from patients' case notes and electronic patients' database using a standardised
+data collection proforma. This was initially piloted on 30 patients  and revised to improve data entry. In addition a
+number of variables that were not standard collected during workout of patients were not further checked; these include
+body mass index (BMI), serum thyroglobulin, serum triiodothyronine (T3), thyroxine (T4), thyroglobulin antibody (TgAb),
+thyroid peroxidase antibody (TP0Ab), and urinary iodine.
+
+### Study size
+We sought to have a large data set of at least 100 thyroid nodules with a cancer diagnosis using consecutive sampling
+technique.
+We aimed for a total of 1500 patients with thyroid nodules to achieve our target sample size. With the use
+of modern statistical techniques, we proposed such number will be appropriate to detect important variables if it
+exists.
+
+### Data analysis
+
+Data was cleaned and analysed using the R Statistical Software @r_citation and the Tidyverse (@tidyverse),  Tidymodels
+(@tidymodels) collection of packages.
+
+### Imputation
+
+The dataset is incomplete and there are missing observations across all variables to varying degrees. In order to
+maximise the sample available for analysis imputation was used to infer missing values. The Multivariat Imputation via
+Chained Equations ([MICE][mice] and implemented in the eponymous R package @vanBuuren2011Dec) was employed which assumes data is
+missing at random (a difficult assumption to formally test). The approach takes each variable with missing data and
+attempts to predict it using statistical modelling based on the observed values. In essence it is the same approach as
+the statistical methods being employed to try and predict Thyroid Cancer and there are a range of statistical techniques
+available which include
+
+### Modelling
+
+We used a selection of statistic modelling techniques to evaluate association between variables and thyroid cancer in
+patients with thyroid nodules. The patient population was split into training and testing cohorts in a ratio
+of `r train`:`r test` and each model is fitted using the training cohort.
+This split ratio is generally used in traditional machine learning techniques. The training set of the
+data was used to estimate the relation between variables and thyroid cancer. The larger the training data, the better
+it is for the model to learn the trends. The test set was used to determine the accuracy of the model in predicting
+thyroid cancer; the bigger the test data the more confidence we have in the model prognostic values. We used simple
+randomisation technique for the split to prevent bias in the data split. We ensured that there was no duplicate in the
+data sets so any test data was not accidentally trained.
+Furthermore, cross validation was used to estimate the accuracy of the various machine learning models.
+The k-fold techniques splits the data in ?10 folds, and the data was trained on all but one of the the fold, and the
+one fold not trained is used to test the data. This was repeated multiple times using a different fold for test and
+the others for training until all the folds is utilised for training and testing. Following multiple training process
+with k-fold, we selected the model that has the best predictive value for thyroid cancer in the test cohort.
+We also used the leave one out (loo) cross-validation to train and test the data set.In this technique, all but one
+observation is use to train the data set and one observation is use to test the data; this is repeated until all the
+data test is used for testing and training. The model with the best predictive value was selected.
+
+
+#### LASSO / Elastic Net
+
+LASSO (Least Absolute Shrinkage and Selection Operatror) and Elastic Net @zou2005 are regression methods that perform variable
+selection. The original LASSO method proposed by @tibshirani1996 allows the coefficients for independent/predictor
+variables to "shrink" down towards zero, effectively eliminating them from influencing the model, this is often referred
+to as L<sub>1</sub> regularisation. The Elastic Net @zou2005 improves on the LASSO by balancing L<sub>1</sub>
+regularisation with ridge-regression or L<sub>2</sub> regularisation which helps avoid over-fitting.
+
+Both methods avoid many of the shortcomings/pitfalls of stepwise variable selection @thompson1995 @smith2018 and have
+been shown to be more accurate in clinical decision making in small datasets with well code, externally selected
+variables @steyerberg2001
+
+
+
+#### Random Forest
+
+To add reference
+The random forest plot is an extension of the decision tree methodology to reduce variance. Decision trees are very
+sensitive to the training data set and can lead to high variance; thus potential issues with generalisation of the
+model. The random forest plot selects random observation of the dataset to create multiple decision trees. Random
+variables are selected for each tree in the training of the data set. The aggregated output of the generated decision
+trees is then used to create an estimate.
+
+
+#### Gradient Boosting
+
+Gradient boosting is a machine learning algorithm that uses decision tree as a base model. The data is initially trained
+on this decision tree, but the initial prediction is weak, thus termed a weak based model. In gradient boosting the process
+is iterative; a sequence of decision trees is added to the initial tree. Each tree learns from the prior tree(s) to
+improve the model, increasing strength and minimising error.
+
+#### SVM
+
+Support Vector Machines is an approach that allows observation with a binary classifications to be separated using a
+hyperplane. It finds a hyperplane that best stratify the two classes i.e benign versus malignant nodules. SVM finds the
+hyperplane with the maximum margin of separation between the two classes. The support vectors are the data point that
+are positioned close to the margin of the hyperplane and these used to select the most appropraite hyperplane. The
+support vectors are the only data points that have an influence on the maximum margin in SVM.
+
+#### Comparision
+
+
+
+## Results
+
+```{r}
+#| label: n_obs
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+n_obs <- nrow(df)
+```
+
+### Data Description
+
+
+{{< include sections/_data_description.qmd >}}
+
+#### Missing Data
+
+{{< include sections/_missing.qmd >}}
+
+#### Imputation
+
+{{< include sections/_imputation.qmd >}}
+
+### Modelling
+
+**TODO** - And in light of having removed @tbl-data-completness in favour of the imputed datesets this too has been removed? (`@ns-rse` 2024-07-11).
+**TODO** - This table feels like duplication of @tbl-data-completeness, perhaps have just one? (`@ns-rse` 2024-07-11).
+
+The predictor variables selected to predict `final_pathology` are shown in @tbl-predictors
+
+```{r}
+#| label: tbl-predictors
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Predictors evaluated in modelling."
+df_predictors_evaluated <- df_complete |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Variables evaluated in the model")
+df_predictors_evaluated
+```
+
+Section that sets up the modelling
+
+{{< include sections/_recipe.qmd >}}
+
+The following section is output from a Tidymodel approach to logistic regression to try and work out why variables are
+not being included.
+
+```{r}
+#| label: logistic-train
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: true
+
+## define binary logistic regression model
+logistic_model <- logistic_reg() |>
+  set_engine("glm")
+## add the binary logistic regression model to the thyroid workflow
+log_thyroid_workflow <- thyroid_workflow |>
+  add_model(logistic_model)
+## fit the the workflow to the training data
+log_thyroid_fit <- fit(log_thyroid_workflow, data = train)
+log_thyroid_fit
+## to inspect the fit object
+str(log_thyroid_fit)
+## use fitted model to make prediction
+logistic_model_predictions <- predict(log_thyroid_fit, test) |> bind_cols(test)
+## examine the processing steps
+log_thyroid_fit |> extract_recipe()
+## examine the model
+log_thyroid_fit |> extract_fit_parsnip()
+## to check if the workflow has been trained
+log_thyroid_fit$trained
+## I can only see age and gender, unsure why the other variable not present.? excluded due to lack of data ?because they are simply not important ? issue with workflow set up
+```
+
+
+
+A total of `r df_complete |> nrow()` patients had complete data for the selected predictor variables (see
+@tbl-predictors).
+Because of the volume of missing data which if a saturated model were used would include only ~350 people with complete
+data across all co-variates imputed datasets were analysed instead.
+
+{{< include sections/_modelling.qmd >}}
+
+#### Logistic Regression
+
+<!-- {{< include sections/_logistic.qmd >}} -->
+
+#### LASSO
+
+<!-- OLD {{< include sections/_lasso.qmd >}} -->
+
+<!-- {{< include sections/_lasso_imputed.qmd >}} -->
+
+#### Elastic Net
+
+<!-- OLD {{< include sections/_elastic.qmd >}} -->
+
+<!-- {{< include sections/_elastic_imputed.qmd >}} -->
+
+#### Random Forest
+
+<!-- OLD {{< include sections/_rforest.qmd >}} -->
+
+<!-- {{< include sections/_forest_imputed.qmd >}} -->
+
+#### Gradient Boosting
+
+<!-- OLD {{< include sections/_xgboost.qmd >}} -->
+
+<!-- {{< include sections/_xgboost_imputed.qmd >}} -->
+
+
+#### Explainability
+
+Which factors are important to classification can be assessed not just by the "importance" but by methods know as
+[LIME](https://search.r-project.org/CRAN/refmans/lime/html/lime-package.html) (Local Interpretable Model-Agnostic
+Explanations)  @ribeiro2016 and [Shapley
+values](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html)
+@lundberg2017
+
+#### Comparision
+
+Comparing the sensitivity of the different models goes here.
+
++ Table of sensitivity/specificity/other metrics.
++ ROC curves
+
+## Conclusion
+
+The take-away message is....these things are hard!
+
+
+## Appendix
+
+### Data Dictionary
+
+```{r}
+#| label: tbl-variables
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."
+var_labels |>
+  as.data.frame() |>
+  kable(col.names = c("Description"),
+        caption="Description of variables in the Sheffield Thyroid dataset.")
+```
+
+
+[bta_classification]: https://radiopaedia.org/articles/bta-ultrasound-u-classification-of-thyroid-nodules
+[mice]: https://amices.org/mice/
