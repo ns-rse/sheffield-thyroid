@@ -15,7 +15,7 @@ load(file = paste(r_dir, "imputed_rf_model_xgboost.rds", sep = "/"))
 
 ## PMM
 
-``` {.r}
+``` {r}
 #| label: fig-imputed-pmm-xgboost
 #| purl: true
 #| eval: true
@@ -43,7 +43,7 @@ cowplot::plot_grid(imputed_pmm_model_xgboost[[1]]$importance_plot,
 
 ```
 
-``` {.r}
+``` {r}
 #| label: tab-imputed-pmm-xgboost-importance
 #| purl: true
 #| eval: true
@@ -55,7 +55,7 @@ tidy_pmm_xgboost$importance |>
 
 ```
 
-``` {.r}
+``` {r}
 #| label: tab-imputed-pmm-xgboost-train-metrics
 #| purl: true
 #| eval: true
@@ -68,7 +68,7 @@ tidy_pmm_xgboost$train_metrics |>
 
 ```
 
-``` {.r}
+``` {r}
 #| label: tab-imputed-pmm-xgboost-test-metrics
 #| purl: true
 #| eval: true
@@ -83,7 +83,7 @@ tidy_pmm_xgboost$test_metrics |>
 
 ## CART
 
-``` {.r}
+``` {r}
 #| label: fig-imputed-cart-xgboost
 #| purl: true
 #| eval: true
@@ -113,7 +113,7 @@ cowplot::plot_grid(imputed_cart_model_xgboost[[1]]$importance_plot,
 
 ## Random Forest
 
-``` {.r}
+``` {r}
 #| label: fig-imputed-rf-xgboost
 #| purl: true
 #| eval: true

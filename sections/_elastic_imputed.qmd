@@ -15,7 +15,7 @@ load(file = paste(r_dir, "imputed_rf_model_elastic.rds", sep = "/"))
 
 ## PMM
 
-``` {.r}
+``` {r}
 #| label: fig-imputed-pmm-elastic
 #| purl: true
 #| eval: true
@@ -43,7 +43,7 @@ cowplot::plot_grid(imputed_pmm_model_elastic[[1]]$importance_plot,
 
 ```
 
-``` {.r}
+``` {r}
 #| label: tab-imputed-pmm-elastic-importance
 #| purl: true
 #| eval: true
@@ -55,7 +55,7 @@ tidy_pmm_elastic$importance |>
 
 ```
 
-``` {.r}
+``` {r}
 #| label: tab-imputed-pmm-elastic-train-metrics
 #| purl: true
 #| eval: true
@@ -68,7 +68,7 @@ tidy_pmm_elastic$train_metrics |>
 
 ```
 
-``` {.r}
+``` {r}
 #| label: tab-imputed-pmm-elastic-test-metrics
 #| purl: true
 #| eval: true
@@ -83,7 +83,7 @@ tidy_pmm_elastic$test_metrics |>
 
 ## CART
 
-``` {.r}
+``` {r}
 #| label: fig-imputed-cart-elastic
 #| purl: true
 #| eval: true
@@ -113,7 +113,7 @@ cowplot::plot_grid(imputed_cart_model_elastic[[1]]$importance_plot,
 
 ## Random Forest
 
-``` {.r}
+``` {r}
 #| label: fig-imputed-rf-elastic
 #| purl: true
 #| eval: true
