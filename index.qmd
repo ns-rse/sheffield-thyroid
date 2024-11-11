@@ -97,10 +97,10 @@ r_scripts <- paste(base_dir, "r", sep = "/")
 
 ## Load data
 ##
-## The following line runs the `r/shf_thy_nod.R` script which reads the data from CSV and cleans/tidies it.
+## The following line runs the `r/clean.R` script which reads the data from CSV and cleans/tidies it.
 ## If something has changed in that file or the underlying data (in `data/csv/sheffield_thyroid_module.R`) then this
 ## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
-## source("r/shf_thy_nod.R")
+## source("r/clean.R")
 ## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
 ## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
 df <- readRDS(paste(r_dir, "clean.rds", sep="/"))

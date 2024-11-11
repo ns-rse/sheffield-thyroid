@@ -1,4 +1,4 @@
-``` {.r}
+``` {r}
 #| label: fig-imputed-pmm-xgboost
 #| purl: true
 #| eval: true
@@ -6,7 +6,7 @@
 #| output: false
 load(file = paste(r_dir, "imputed_cart_model_xgboost.rds", sep = "/"))
 load(file = paste(r_dir, "imputed_pmm_model_xgboost.rds", sep = "/"))
-load(file = paste(r_dir, "imputed_forest_model_xgboost.rds", sep = "/"))
+load(file = paste(r_dir, "imputed_rf_model_xgboost.rds", sep = "/"))
 
 ```
 
