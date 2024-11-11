@@ -143,7 +143,10 @@ mice_rf <- impute_data(method = "rf",
                         imputations = imputations,
                         iterations = iterations,
                         seed = 3151358)
-
+## Save a copy of the imputed data (mice_*) for loading and using in analysis
+saveRDS(mice_pmm, file = paste(r_dir, "mice_pmm.rds", sep = "/"))
+saveRDS(mice_cart, file = paste(r_dir, "mice_cart.rds", sep = "/"))
+saveRDS(mice_rf, file = paste(r_dir, "mice_rf.rds", sep = "/"))
 
 ```
 
@@ -580,10 +583,11 @@ cowplot::plot_grid(## mice_pmm$scatter$cervical_lymphadenopathy + theme(legend.p
 #| label: tbl-imputation-summary-pmm
 #| tbl-caption: Summary of data imputed via PMM.
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 mice_pmm$imputed |> gtsummary::tbl_summary(by=".imp")
+
 ```
 
 ## CART
@@ -592,7 +596,7 @@ mice_pmm$imputed |> gtsummary::tbl_summary(by=".imp")
 #| label: tbl-imputation-summary-cart
 #| tbl-caption: Summary of data imputed via CART.
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 mice_cart$imputed |> gtsummary::tbl_summary(by=".imp")
@@ -605,7 +609,7 @@ mice_cart$imputed |> gtsummary::tbl_summary(by=".imp")
 #| label: tbl-imputation-summary-rf
 #| tbl-caption: Summary of data imputed via Random Forest.
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| output: true
 mice_rf$imputed |> gtsummary::tbl_summary(by = ".imp")

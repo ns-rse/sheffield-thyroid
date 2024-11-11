@@ -61,22 +61,23 @@ execute:
 #| warning: false
 
 ## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
-library(dplyr)
-library(ggplot2)
-library(ggdark)
-library(gtsummary)
 library(Hmisc)
+library(dplyr)
+library(ggdark)
+library(ggplot2)
+library(gtsummary)
 library(knitr)
 library(mice)
+library(naniar)
 library(readr)
 library(rmarkdown)
 library(visdat)
-library(naniar)
-
 ## Libraries for Tidymodelling
 library(dials)
+library(furrr)
 library(kernlab)
 library(knitr)
+library(purrr)
 library(tidymodels)
 library(tidyverse)
 library(vip)
@@ -105,7 +106,7 @@ r_scripts <- paste(base_dir, "r", sep = "/")
 df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
 
 ## Load df_complete which has observations with missing final_pathology removed and has subset the variables.
-df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep))
+df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep="/"))
 
 ```
 
@@ -353,30 +354,35 @@ A total of `r df_complete |> nrow()` patients had complete data for the selected
 Because of the volume of missing data which if a saturated model were used would include only ~350 people with complete
 data across all co-variates imputed datasets were analysed instead.
 
+{{< include sections/_modelling.qmd >}}
+
 #### Logistic Regression
 
-{{< include sections/_logistic.qmd >}}
+<!-- {{< include sections/_logistic.qmd >}} -->
 
 #### LASSO
 
-{{< include sections/_lasso.qmd >}}
+<!-- OLD {{< include sections/_lasso.qmd >}} -->
+
+<!-- {{< include sections/_lasso_imputed.qmd >}} -->
 
 #### Elastic Net
 
-{{< include sections/_elastic.qmd >}}
+<!-- OLD {{< include sections/_elastic.qmd >}} -->
+
+<!-- {{< include sections/_elastic_imputed.qmd >}} -->
 
 #### Random Forest
 
-{{< include sections/_rforest.qmd >}}
+<!-- OLD {{< include sections/_rforest.qmd >}} -->
+
+<!-- {{< include sections/_forest_imputed.qmd >}} -->
 
 #### Gradient Boosting
 
-{{< include sections/_gradientboost.qmd >}}
+<!-- OLD {{< include sections/_xgboost.qmd >}} -->
 
-
-#### SVM
-
-<!-- {{< include sections/_svm.qmd >}} -->
+<!-- {{< include sections/_xgboost_imputed.qmd >}} -->
 
 
 #### Explainability
@@ -406,7 +412,7 @@ The take-away message is....these things are hard!
 ```{r}
 #| label: tbl-variables
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| warning: false
 #| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."

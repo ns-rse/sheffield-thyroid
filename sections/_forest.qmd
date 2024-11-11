@@ -9,20 +9,20 @@
 #| output: false
 ## Specify the Random Forest model
 rf_tune <- parsnip::rand_forest(
-  mtry = tune(),
+  mtry = hardhat::tune(),
   trees = 100,
-  min_n = tune()
+  min_n = hardhat::tune()
 ) |>
-  set_mode("classification") |>
-  set_engine("ranger", importance = "impurity")
+  parsnip::set_mode("classification") |>
+  parsnip::set_engine("ranger", importance = "impurity")
 
 
 ## Tune the parameters via Cross-validation
 rf_grid <- tune::tune_grid(
   add_model(thyroid_workflow, rf_tune),
   resamples = cv_folds, ## cv_loo,
-  grid = grid_regular(mtry(range = c(5, 10)), # smaller ranges will run quicker
-    min_n(range = c(2, 25)),
+  grid = grid_regular(dials::mtry(range = c(5, 10)), # smaller ranges will run quicker
+    dials::min_n(range = c(2, 25)),
     levels = 3
   )
 )

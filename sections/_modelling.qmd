@@ -1,0 +1,321 @@
+```{r}
+#| label: source-custom-functions
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: false
+#| cache: false
+source("r/functions.R")
+```
+
+```{r}
+#| label: model-cart-imputed-lasso
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for LASSO is 1.0 (for Elastic Net it is 0.5)
+cart_imputed <- mice_cart$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_cart_model_lasso <- cart_imputed |>
+    split(cart_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "elastic",
+        mixture = 1.0,
+        imputed = TRUE
+    ))
+tidy_cart_lasso <- tidy_imputed_models(imputed_cart_model_lasso, model_type="elastic")
+save(imputed_cart_model_lasso,
+     tidy_cart_lasso,
+     file = paste(r_dir, "imputed_cart_model_lasso.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-rf-imputed-lasso
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for LASSO is 1.0 (for Elastic Net it is 0.5)
+rf_imputed <- mice_rf$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_rf_model_lasso <- rf_imputed |>
+    split(rf_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "elastic",
+        mixture = 1.0,
+        imputed = TRUE
+    ))
+tidy_rf_lasso <- tidy_imputed_models(imputed_rf_model_lasso, model_type="elastic")
+save(imputed_rf_model_lasso,
+     tidy_rf_lasso,
+     file = paste(r_dir, "imputed_rf_model_lasso.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-pmm-imputed-lasso
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for LASSO is 1.0 (for Elastic Net it is 0.5)
+pmm_imputed <- mice_pmm$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_pmm_model_lasso <- pmm_imputed |>
+    split(pmm_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "elastic",
+        mixture = 1.0,
+        imputed = TRUE
+    ))
+tidy_pmm_lasso <- tidy_imputed_models(imputed_pmm_model_lasso, model_type="elastic")
+save(imputed_pmm_model_lasso,
+     tidy_pmm_lasso,
+     file = paste(r_dir, "imputed_pmm_model_lasso.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-cart-imputed-elastic
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for Elastic Net is 0.5 (for LASSO it is 1.0)
+cart_imputed <- mice_cart$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_cart_model_elastic <- cart_imputed |>
+    split(cart_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "elastic",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_cart_elastic <- tidy_imputed_models(imputed_cart_model_elastic, model_type="elastic")
+save(imputed_cart_model_elastic,
+     tidy_cart_elastic,
+     file = paste(r_dir, "imputed_cart_model_elastic.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-rf-imputed-elastic
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for Elastic Net is 0.5 (for LASSO it is 1.0)
+rf_imputed <- mice_rf$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_rf_model_elastic <- rf_imputed |>
+    split(rf_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "elastic",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_rf_elastic <- tidy_imputed_models(imputed_rf_model_elastic, model_type="elastic")
+save(imputed_rf_model_elastic,
+     tidy_rf_elastic,
+     file = paste(r_dir, "imputed_rf_model_elastic.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-pmm-imputed-elastic
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+## NB - Both LASSO and Elastic Net models are of model_type = "elastic", the difference is the value for the argument
+##      "mixture"  which for Elastic Net is 0.5 (for LASSO it is 1.0)
+pmm_imputed <- mice_pmm$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_pmm_model_elastic <- pmm_imputed |>
+    split(pmm_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "elastic",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_pmm_elastic <- tidy_imputed_models(imputed_pmm_model_elastic, model_type="elastic")
+save(imputed_pmm_model_elastic,
+     tidy_pmm_elastic,
+     file = paste(r_dir, "imputed_pmm_model_elastic.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-cart-imputed-forest
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+cart_imputed <- mice_cart$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_cart_model_forest <- cart_imputed |>
+    split(cart_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "forest",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_cart_forest <- tidy_imputed_models(imputed_cart_model_forest, model_type="forest")
+save(imputed_cart_model_forest,
+     tidy_cart_forest,
+     file = paste(r_dir, "imputed_cart_model_forest.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-rf-imputed-forest
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+rf_imputed <- mice_rf$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_rf_model_forest <- rf_imputed |>
+    split(rf_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "forest",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_rf_forest <- tidy_imputed_models(imputed_rf_model_forest, model_type="forest")
+save(imputed_rf_model_forest,
+     tidy_rf_forest,
+     file = paste(r_dir, "imputed_rf_model_forest.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-pmm-imputed-forest
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+pmm_imputed <- mice_pmm$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_pmm_model_forest <- pmm_imputed |>
+    split(pmm_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "forest",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_pmm_forest <- tidy_imputed_models(imputed_pmm_model_forest, model_type="forest")
+save(imputed_pmm_model_forest,
+     tidy_pmm_forest,
+     file = paste(r_dir, "imputed_pmm_model_forest.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-cart-imputed-xgboost
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+cart_imputed <- mice_cart$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_cart_model_xgboost <- cart_imputed |>
+    split(cart_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "xgboost",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_cart_xgboost <- tidy_imputed_models(imputed_cart_model_xgboost, model_type="xgboost")
+save(imputed_cart_model_xgboost,
+     tidy_cart_xgboost,
+     file = paste(r_dir, "imputed_cart_model_xgboost.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-rf-imputed-xgboost
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+rf_imputed <- mice_rf$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_rf_model_xgboost <- rf_imputed |>
+    split(rf_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "xgboost",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_rf_xgboost <- tidy_imputed_models(imputed_rf_model_xgboost, model_type="xgboost")
+save(imputed_rf_model_xgboost,
+     tidy_rf_xgboost,
+     file = paste(r_dir, "imputed_rf_model_xgboost.rds", sep = "/"))
+
+```
+
+```{r}
+#| label: model-pmm-imputed-xgboost
+#| purl: true
+#| eval: false
+#| echo: false
+#| output: false
+#| cache: true
+pmm_imputed <- mice_pmm$imputed |>
+    dplyr::filter(.imp != "Original") |>
+    dplyr::mutate(.imp = droplevels(.imp))
+imputed_pmm_model_xgboost <- pmm_imputed |>
+    split(pmm_imputed$.imp) |>
+    purrr::map(\(df) model_fitting(df,
+    ## furrr::future_map(\(df) model_fitting(df,
+        model_type = "xgboost",
+        mixture = 0.5,
+        imputed = TRUE
+    ))
+tidy_pmm_xgboost <- tidy_imputed_models(imputed_pmm_model_xgboost, model_type="xgboost")
+save(imputed_pmm_model_xgboost,
+     tidy_pmm_xgboost,
+     file = paste(r_dir, "imputed_pmm_model_xgboost.rds", sep = "/"))
+
+```

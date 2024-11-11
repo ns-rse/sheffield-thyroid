@@ -17,7 +17,7 @@ tune_spec_lasso <- parsnip::logistic_reg(penalty = hardhat::tune(), mixture = 1)
 lasso_grid <- tune::tune_grid(
   object = workflows::add_model(thyroid_workflow, tune_spec_lasso),
   resamples = cv_folds,
-  grid = dials::grid_regular(penalty(), levels = 50)
+  grid = dials::grid_regular(dials::penalty(), levels = 50)
 )
 ```
 
