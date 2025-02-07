@@ -31,9 +31,15 @@ model_fitting <- function(df,
                           repeats = 10,
                           missing_threshold = 0.0,
                           outcome = "final_pathology",
-                          continuous = c("albumin", "tsh_value", "lymphocytes", "monocyte", "size_nodule_mm"),
+                          continuous = c(
+                              # "albumin",
+                              "tsh_value",
+                              "lymphocytes",
+                              "monocyte",
+                              "size_nodule_mm"
+                          ),
                           categorical = c(
-                              "ethnicity",
+                              # "ethnicity",
                               "incidental_nodule",
                               "palpable_nodule",
                               "rapid_enlargement",
@@ -148,7 +154,7 @@ model_fitting <- function(df,
                              metrics = yardstick_metrics,
                              control = control
                          )
-    ## Select the best model based on ROC Area Under the Curve and finalise the workflow by adding the tunde model and
+    ## Select the best model based on ROC Area Under the Curve and finalise the workflow by adding the tuned model and
     ## best metric fit
     best_metric_fit <- tuned_model |>
         tune::select_best()
@@ -171,7 +177,8 @@ model_fitting <- function(df,
     importance_plot <- importance |>
         ggplot2::ggplot(mapping = aes(x = Importance, y = Variable, fill = Sign)) +
         ggplot2::geom_col() +
-        ggdark::dark_theme_minimal()
+        ggdark::dark_theme_minimal() +
+        ggplot2::ggtitle("Train")
     ########################################################
     ## Summarise model on train data set                  ##
     ########################################################
@@ -200,7 +207,8 @@ model_fitting <- function(df,
         ggplot2::geom_path() +
         ggplot2::geom_abline(lty = 3) +
         ggplot2::coord_equal() +
-        ggdark::dark_theme_minimal()
+        ggdark::dark_theme_minimal() +
+        ggplot2::ggtitle("Train")
     ########################################################
     ## Summarise model on test data set                   ##
     ########################################################
@@ -229,7 +237,8 @@ model_fitting <- function(df,
         ggplot2::geom_path() +
         ggplot2::geom_abline(lty = 3) +
         ggplot2::coord_equal() +
-        ggdark::dark_theme_minimal()
+        ggdark::dark_theme_minimal() +
+        ggplot2::ggtitle("Test")
     ## Combine results into a single list for returning
     results <- list()
     results$train <- train
