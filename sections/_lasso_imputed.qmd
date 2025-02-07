@@ -1,5 +1,5 @@
 ``` {r}
-#| label: fig-imputed-pmm-lasso
+#| label: load-imputed-pmm-lasso
 #| purl: true
 #| eval: true
 #| echo: false
@@ -111,6 +111,44 @@ cowplot::plot_grid(imputed_cart_model_lasso[[1]]$importance_plot,
 
 ```
 
+``` {r}
+#| label: tab-imputed-cart-lasso-importance
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Importance of features from LASSO model of five CART imputed datasets."
+tidy_cart_lasso$importance |>
+    knitr::kable(caption = "Importance of features from LASSO model of five CART imputed datasets.")
+
+```
+
+``` {r}
+#| label: tab-imputed-cart-lasso-train-metrics
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Classification metrics from LASSO model of five CART imputed datasets (Training Data)."
+tidy_cart_lasso$train_metrics |>
+    knitr::kable(caption = "Classification metrics from LASSO model of five CART imputed datasets (Training Data).",
+                 digits = 4)
+
+```
+
+``` {r}
+#| label: tab-imputed-cart-lasso-test-metrics
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Classification metrics from LASSO model of five CART imputed datasets (Testing Data)."
+tidy_cart_lasso$test_metrics |>
+    knitr::kable(caption = "Classification metrics from LASSO model of five CART imputed datasets (Testing Data).",
+                 digits = 4)
+
+```
+
 ## Random Forest
 
 ``` {r}
@@ -141,4 +179,42 @@ cowplot::plot_grid(imputed_rf_model_lasso[[1]]$importance_plot,
 
 ```
 
+
+``` {r}
+#| label: tab-imputed-rf-lasso-importance
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Importance of features from LASSO model of five RF imputed datasets."
+tidy_rf_lasso$importance |>
+    knitr::kable(caption = "Importance of features from LASSO model of five RF imputed datasets.")
+
+```
+
+``` {r}
+#| label: tab-imputed-rf-lasso-train-metrics
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Classification metrics from LASSO model of five RF imputed datasets (Training Data)."
+tidy_rf_lasso$train_metrics |>
+    knitr::kable(caption = "Classification metrics from LASSO model of five RF imputed datasets (Training Data).",
+                 digits = 4)
+
+```
+
+``` {r}
+#| label: tab-imputed-rf-lasso-test-metrics
+#| purl: true
+#| eval: true
+#| echo: false
+#| output: true
+#| tbl-caption: "Classification metrics from LASSO model of five RF imputed datasets (Testing Data)."
+tidy_rf_lasso$test_metrics |>
+    knitr::kable(caption = "Classification metrics from LASSO model of five RF imputed datasets (Testing Data).",
+                 digits = 4)
+
+```
 :::
