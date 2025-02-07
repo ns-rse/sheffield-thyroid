@@ -53,7 +53,62 @@ execute:
   cache: true
 ---
 
-{{< include sections/_setup.qmd >}}
+```{r}
+#| label: setup
+#| purl: true
+#| eval: true
+#| echo: false
+#| warning: false
+
+## Libraries for data manipulation, plotting and tabulating (sorted alphabetically)
+library(Hmisc)
+library(dplyr)
+library(ggdark)
+library(ggplot2)
+library(gtsummary)
+library(knitr)
+library(mice)
+library(naniar)
+library(readr)
+library(rmarkdown)
+library(visdat)
+## Libraries for Tidymodelling
+library(dials)
+library(furrr)
+library(kernlab)
+library(knitr)
+library(purrr)
+library(tidymodels)
+library(tidyverse)
+library(vip)
+
+
+## Set global options
+options(digits = 3)
+train <- 0.75
+test <- 0.25
+
+## Set directories based on current location
+base_dir <- getwd()
+data_dir <- paste(base_dir, "data", sep = "/")
+csv_dir <- paste(data_dir, "csv", sep = "/")
+r_dir <- paste(data_dir, "r", sep = "/")
+r_scripts <- paste(base_dir, "r", sep = "/")
+
+## Load data
+##
+## The following line runs the `r/clean.R` script which reads the data from CSV and cleans/tidies it.
+## If something has changed in that file or the underlying data (in `data/csv/sheffield_thyroid_module.R`) then this
+## line should be uncommented and the code will run. At the end of the file it saves the data to `data/r/clean.rds`.
+## source("r/clean.R")
+## If nothing has changed in the underlying data or the cleaning/tidying process then the last version of the data,
+## saved to `data/r/clean.rds` can be loaded by commenting out the line above and uncommenting the line below.
+df <- readRDS(paste(r_dir, "clean.rds", sep="/"))
+
+## Load df_complete which has observations with missing final_pathology removed and has subset the variables.
+df_complete <- readRDS(paste(r_dir, "df_complete.rds", sep="/"))
+
+```
 
 
 ## Introduction
@@ -103,8 +158,8 @@ Variable evaluated was based on findings from a systematic review evaluating pre
 with thyroid nodules. Data on the following variables were collected: patient demographics (age, gender, ethnicity),
 nodule presentation (incidental nodule, palpable nodule, rapid enlargement, compressive symptoms, vocal paresis), past
 medical history (hypertension, Graves' disease, Hashimotos' thyroiditis, family history of thyroid cancer, exposure to
-neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics (British
-Thyroid Association ultrasound (BTA U), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
+neck radiation), biochemistry (thyroid stimulating hormone, lymphocytes, monocytes), ultrasound characteristics ([British
+Thyroid Association ultrasound (BTA U)][bta_classification]), nodule size, solitary nodule, nodule consistency, cervical lymphadenopathy),
 Royal College of Pathology (RCP) FNAC  classification, type of thyroid surgery, and histological diagnosis.
 
 ### Data source
@@ -212,210 +267,10 @@ support vectors are the only data points that have an influence on the maximum m
 n_obs <- nrow(df)
 ```
 
-
-::: {.panel-tabset}
-
-## Demographics
-
-<!-- ```{r} -->
-<!-- #| label: tbl-patient-demographics -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Demographics of study population" -->
-<!-- patient_demo <- df |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   dplyr::select(c("age_at_scan", "gender", "ethnicity")) |> -->
-<!--   gtsummary::tbl_summary() |> -->
-<!--   gtsummary::modify_caption("Demographics of study population") -->
-<!-- patient_demo -->
-
-<!-- ``` -->
-
-## Clinical Characteristics
-
-<!-- ```{r} -->
-<!-- #| label: tbl-clinical-characteristics -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Clinical characteristics between benign and malignant thyrioid nodules" -->
-<!-- clinical_charac <- df |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   dplyr::select(c("age_at_scan", -->
-<!--                   "gender", -->
-<!--                   "incidental_nodule", -->
-<!--                   "palpable_nodule", -->
-<!--                   "rapid_enlargement", -->
-<!--                   "compressive_symptoms", -->
-<!--                   "hypertension", -->
-<!--                   "vocal_cord_paresis", -->
-<!--                   "graves_disease", -->
-<!--                   "hashimotos_thyroiditis", -->
-<!--                   "family_history_thyroid_cancer", -->
-<!--                   "exposure_radiation", -->
-<!--                   "final_pathology", -->
-<!--                   )) |> -->
-<!--   gtsummary::tbl_summary(by = final_pathology) |> add_p() |> -->
-<!--   gtsummary::modify_caption("Clinical characteristics between benign and malignant thyrioid nodules") -->
-<!-- clinical_charac -->
-
-<!-- ``` -->
-
-## Biomarkers
-
-<!-- ```{r} -->
-<!-- #| label: tbl-biomarkers-variables -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Biochemical variables evaluated between benign and malignant thyroid nodules" -->
-<!-- biochem_vars <- df |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   dplyr::select(c("albumin", -->
-<!--                   "tsh_value", -->
-<!--                   "lymphocytes", -->
-<!--                   "monocyte", -->
-<!--                   "final_pathology")) |> -->
-<!--   gtsummary::tbl_summary(by = final_pathology) |> -->
-<!--   gtsummary::modify_caption("Biochemical variables evaluated between benign and malignant thyroid nodules") -->
-<!-- biochem_vars -->
-
-<!-- ``` -->
-
-## Ultrasound
-
-<!-- ```{r} -->
-<!-- #| label: tbl-ultrasound-characteristics -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Ultrasound characteristics of benign and malignant nodules" -->
-<!-- ultrasound_char <- df |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   dplyr::select(c("size_nodule_mm", -->
-<!--                   "solitary_nodule", -->
-<!--                   "bta_u_classification", -->
-<!--                   "consistency_nodule", -->
-<!--                   "cervical_lymphadenopathy", -->
-<!--                   "final_pathology")) |> -->
-<!--   gtsummary::tbl_summary(by = final_pathology) |> -->
-<!--   gtsummary::modify_caption("Ultrasound characteristics of benign and malignant nodules") -->
-<!-- ultrasound_char -->
-
-<!-- ``` -->
-
-## BTA U
-
-<!-- ```{r} -->
-<!-- #| label: u-class-final-path -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "U class path" -->
-<!-- ultrasound_final_path <- df |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   dplyr::select(c("bta_u_classification", "final_pathology")) |> -->
-<!--   gtsummary::tbl_summary(by = bta_u_classification) |> -->
-<!--   gtsummary::modify_caption("BTA U classification by final pathology.") -->
-<!-- ultrasound_final_path -->
-
-<!-- ``` -->
-
-## Thyroid Classification
-
-<!-- ```{r} -->
-<!-- #| label: thy-class-final-path -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Thyroid classification by Final Pathology" -->
-<!-- thy_class_final_path <- df |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   dplyr::select(c("thy_classification", "final_pathology")) |> -->
-<!--   gtsummary::tbl_summary(by = thy_classification) |> -->
-<!--   gtsummary::modify_caption("Thyroid classification by final pathology.") -->
-<!-- thy_class_final_path -->
-
-<!-- ``` -->
-
-## Cytology
-
-<!-- ```{r} -->
-<!-- #| label: tbl-cytology-characteristics -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Cytological characteristics of benign and malignant nodules" -->
-<!-- cytology_char <- df |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   dplyr::select(c("thy_classification", -->
-<!--                   "final_pathology")) |> -->
-<!--   gtsummary::tbl_summary(by = final_pathology) |> -->
-<!--   gtsummary::modify_caption("Cytological characteristics of benign and malignant nodules") -->
-<!-- cytology_char -->
-
-<!-- ``` -->
-
-:::
-
-@tbl-patient-demographics shows the demographics of patients included in this study. A total of `r n_obs` patients were
-included in this study with a median (IQR) age of  `r df$age_at_scan |> stats::quantile(probs=c(0.5))` (
-`r df$age_at_scan |> stats::quantile(probs=c(0.25))`-`r df$age_at_scan |> stats::quantile(probs=c(0.75))`).
-@tbl-clinical-characteristics shows the distribution of clinical variables evaluated between benign and malignant
-thyroid nodules.
-
 ### Data Description
 
 
-A summary of the variables that are available in this data set can be found in @tbl-variables.
-
-
-<!-- ```{r} -->
-<!-- #| label: tbl-data-completeness -->
-<!-- #| purl: true -->
-<!-- #| eval: false -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Overall summary of all variables in the Sheffield dataset." -->
-<!-- df_summary <- df |> -->
-<!--   ## NB - We drop the study_id its not a variable, rather its an identifier -->
-<!--   dplyr::select(!(study_id)) |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   gtsummary::tbl_summary( -->
-<!--     type = all_continuous() ~ "continuous2", -->
-<!--     statistic = all_continuous() ~ c( -->
-<!--       "{N_nonmiss}", -->
-<!--       "{mean} ({sd})", -->
-<!--       "{median} ({p25}, {p75})", -->
-<!--       "{min}, {max}" -->
-<!--     ), -->
-<!--     percent="column",      # Include percentages for categorical variables by "column", "row" or "cell" -->
-<!--     missing="always"           # Exclude missing, options are "no", "ifany" and "always" -->
-<!--   ) |> -->
-<!--   gtsummary::modify_caption("Baseline characteristics and referral source of included patients") -->
-<!-- df_summary -->
-
-<!-- ``` -->
-
-The completeness of the original data is shown in tables @tbl-imputation-summary-pmm, @tbl-imputation-summary-cart,
-@tbl-imputation-summary-rf, along with summaries from four rounds of imputation for each of three imputation methods.
-Where variables continuous (e.g. `age` or `size_nodule_mm`) basic summary statistics in the form of mean, standard
-deviation, median and inter-quartile range are given. For categorical variables that are logical `TRUE`/`FALSE`
-(e.g. `palpable_nodule`) the number of `TRUE` observations and the percentage (of those with observed data for that
-variable) are shown along with the number that are _Unknown_. For categorical variables such as `gender` percentages
-in each category are reported. For all variables an indication of the number of missing observations is also given and
-it is worth noting that there are `r df |> dplyr::filter(is.na(final_pathology)) |> nrow()`
-instances where the `final_pathology` is not known which reduces the sample size to
-`r df |> dplyr::filter(!is.na(final_pathology)) |> nrow()`.
-
+{{< include sections/_data_description.qmd >}}
 
 #### Missing Data
 
@@ -432,29 +287,29 @@ instances where the `final_pathology` is not known which reduces the sample size
 
 The predictor variables selected to predict `final_pathology` are shown in @tbl-predictors
 
-<!-- ```{r} -->
-<!-- #| label: tbl-predictors -->
-<!-- #| purl: true -->
-<!-- #| eval: true -->
-<!-- #| echo: false -->
-<!-- #| warning: false -->
-<!-- #| tbl-caption: "Predictors evaluated in modelling." -->
-<!-- df_predictors_evaluated <- df_complete |> -->
-<!--   dplyr::ungroup() |> -->
-<!--   gtsummary::tbl_summary( -->
-<!--     type = all_continuous() ~ "continuous2", -->
-<!--     statistic = all_continuous() ~ c( -->
-<!--       "{N_nonmiss}", -->
-<!--       "{mean} ({sd})", -->
-<!--       "{median} ({p25}, {p75})", -->
-<!--       "{min}, {max}" -->
-<!--     ), -->
-<!--     percent="column",      # Include percentages for categorical variables by "column", "row" or "cell" -->
-<!--     missing="always"           # Exclude missing, options are "no", "ifany" and "always" -->
-<!--   ) |> -->
-<!--   gtsummary::modify_caption("Variables evaluated in the model") -->
-<!-- df_predictors_evaluated -->
-<!-- ``` -->
+```{r}
+#| label: tbl-predictors
+#| purl: true
+#| eval: false
+#| echo: false
+#| warning: false
+#| tbl-caption: "Predictors evaluated in modelling."
+df_predictors_evaluated <- df_complete |>
+  dplyr::ungroup() |>
+  gtsummary::tbl_summary(
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{mean} ({sd})",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"
+    ),
+    percent="column",      # Include percentages for categorical variables by "column", "row" or "cell"
+    missing="always"           # Exclude missing, options are "no", "ifany" and "always"
+  ) |>
+  gtsummary::modify_caption("Variables evaluated in the model")
+df_predictors_evaluated
+```
 
 Section that sets up the modelling
 
@@ -499,30 +354,35 @@ A total of `r df_complete |> nrow()` patients had complete data for the selected
 Because of the volume of missing data which if a saturated model were used would include only ~350 people with complete
 data across all co-variates imputed datasets were analysed instead.
 
+{{< include sections/_modelling.qmd >}}
+
 #### Logistic Regression
 
-{{< include sections/_logistic.qmd >}}
+<!-- {{< include sections/_logistic.qmd >}} -->
 
 #### LASSO
 
-{{< include sections/_lasso.qmd >}}
+<!-- OLD {{< include sections/_lasso.qmd >}} -->
+
+{{< include sections/_lasso_imputed.qmd >}}
 
 #### Elastic Net
 
-{{< include sections/_elastic.qmd >}}
+<!-- OLD {{< include sections/_elastic.qmd >}} -->
+
+{{< include sections/_elastic_imputed.qmd >}}
 
 #### Random Forest
 
-{{< include sections/_rforest.qmd >}}
+<!-- OLD {{< include sections/_rforest.qmd >}} -->
+
+{{< include sections/_forest_imputed.qmd >}}
 
 #### Gradient Boosting
 
-{{< include sections/_gradientboost.qmd >}}
+<!-- OLD {{< include sections/_xgboost.qmd >}} -->
 
-
-#### SVM
-
-<!-- {{< include sections/_svm.qmd >}} -->
+{{< include sections/_xgboost_imputed.qmd >}}
 
 
 #### Explainability
@@ -552,7 +412,7 @@ The take-away message is....these things are hard!
 ```{r}
 #| label: tbl-variables
 #| purl: true
-#| eval: true
+#| eval: false
 #| echo: false
 #| warning: false
 #| tbl-caption: "Description of variables in the Sheffield Thyroid dataset."
@@ -563,4 +423,5 @@ var_labels |>
 ```
 
 
+[bta_classification]: https://radiopaedia.org/articles/bta-ultrasound-u-classification-of-thyroid-nodules
 [mice]: https://amices.org/mice/
